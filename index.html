@@ -9,60 +9,67 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
 <style>
-/* Layout: 1画面の縦長の台。上に持ち玉とライフ、まん中に台（左に発射の通り道）、下に右ハンドル。
-   見た目は夜の草原（月・星・丘・草・木の杭）。光るのはホタルと FEVER だけ。夜に決めた単一テーマ */
+/* Layout: 台を画面いっぱいに（横はぴったり、上下のあまりは木のフレーム）。持ち玉・ライフ・WAVE は台の上の角に、
+   玉セットとハンドル（強さ）は台の下に重ねて出す。見た目は「ネオンな夜の草原」：木のフレームに草とつる、光る木の実 */
 :root{
-  --night:#0b1222; --panel:#121d30; --deep:#0a1019; --line:#26344a;
-  --ink:#eef1e2; --dim:#94a3a6;
-  --fire:#d8f26a; --moon:#f3e6b5; --leaf:#7cc47f; --wood:#a67a50; --berry:#ff8f7e;
+  --night:#0b1222; --panel:#16201f; --deep:#0c1412; --line:#3a4a3a; --frame:#2a1a0f;
+  --ink:#f1f3e4; --dim:#a3b0a0;
+  --fire:#c6ff4f; --moon:#f3e6b5; --leaf:#7cdc8a; --wood:#a67a50; --berry:#ff8f7e;
+  --neon-pink:#ff5fd2; --neon-cyan:#4ff0ff;
+  --glass:rgba(22,14,8,.72);
   --f-disp:"Kiwi Maru","M PLUS Rounded 1c","Hiragino Maru Gothic ProN",serif;
   --f-body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
   color-scheme:dark;
 }
-html{height:100%;box-sizing:border-box;background:var(--night)}
+html{height:100%;box-sizing:border-box;background:var(--frame)}
 *,*::before,*::after{box-sizing:inherit}
 [hidden]{display:none!important}
-body{height:100%;margin:0;background:var(--night);color:var(--ink);font-family:var(--f-body);font-size:14px;
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+body{height:100%;margin:0;background:var(--frame);color:var(--ink);font-family:var(--f-body);font-size:14px;
   overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-#app{height:100%;max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:6px;position:relative;padding-block:6px}
+#app{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);overflow:hidden}
+canvas{position:absolute;inset:0;display:block;touch-action:none}
 
-.hud{display:grid;grid-template-columns:1fr 1fr 1.35fr auto;gap:6px}
-.stat{border:1px solid var(--line);border-radius:10px;padding:3px 8px 4px;background:var(--panel);display:flex;flex-direction:column;min-width:0}
-.stat .lbl{font-size:10px;color:var(--dim);letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.stat b{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15;white-space:nowrap}
-#balls{color:var(--moon)} #life{color:var(--berry)} #wave{color:var(--leaf);font-size:15px}
-.iconbtn{font:700 11px var(--f-body);color:var(--dim);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:0 10px;cursor:pointer}
-.iconbtn[aria-pressed="true"]{color:var(--ink);border-color:var(--leaf)}
+/* 台の上に重ねる表示（透ける木の札） */
+.hud{position:absolute;z-index:2;top:6px;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));
+  display:flex;justify-content:space-between;align-items:flex-start;gap:6px;pointer-events:none}
+.grp{display:flex;gap:5px;align-items:center;min-width:0}
+.pill{display:flex;align-items:baseline;gap:5px;padding:3px 10px 4px;border-radius:99px;background:var(--glass);
+  border:1.5px solid rgba(198,255,79,.32);box-shadow:0 0 10px rgba(198,255,79,.14),0 2px 6px rgba(0,0,0,.45);white-space:nowrap}
+.pill .lbl{font-size:10px;color:var(--dim);letter-spacing:.06em}
+.pill b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
+#balls{color:var(--moon)} #life{color:var(--berry)} #wave{color:var(--fire);font-size:14px}
+.iconbtn{pointer-events:auto;font:700 11px var(--f-body);color:var(--dim);background:var(--glass);border:1.5px solid rgba(255,255,255,.18);border-radius:99px;padding:6px 10px;cursor:pointer}
+.iconbtn[aria-pressed="true"]{color:var(--ink);border-color:rgba(79,240,255,.5)}
 
-.deckbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--dim);min-height:20px}
+/* 台の下：左に玉セット、右にハンドル */
+.bottom{position:absolute;z-index:2;left:max(8px,env(safe-area-inset-left,0px));right:max(4px,env(safe-area-inset-right,0px));bottom:2px;
+  display:flex;justify-content:space-between;align-items:flex-end;gap:8px;pointer-events:none}
+.deckbar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--dim);min-width:0;max-width:62%}
+.deckbar>span:first-child{width:100%;font-size:10px;letter-spacing:.06em;text-shadow:0 1px 2px #000}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--ink);background:var(--deep);font:700 11px var(--f-body)}
+.deckbar .chip{background:var(--glass);border-color:rgba(255,255,255,.16)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:inset 0 -2px 0 rgba(0,0,0,.28);flex:none}
 .dot.big{width:14px;height:14px}
 .num{font-variant-numeric:tabular-nums}
 
-.boardwrap{flex:1;min-height:0;display:grid;place-items:center}
-canvas{display:block;touch-action:none;border-radius:24px}
-
-/* 右下のハンドル：本物の台のように右に丸いダイヤル。強さだけを変える（玉はずっと出ている） */
-.handle{border:1.5px solid rgba(166,122,80,.75);border-radius:16px;background:var(--panel);padding:7px 9px 7px 12px;touch-action:none;cursor:pointer;
-  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center}
-.handle:focus-visible{outline:2px solid var(--fire);outline-offset:2px}
-.hmain{display:flex;flex-direction:column;gap:5px;min-width:0}
-.track{height:22px;border-radius:99px;background:var(--deep);position:relative;border:1px solid var(--line)}
-.fill{position:absolute;left:0;top:0;bottom:0;border-radius:99px;background:linear-gradient(90deg,var(--leaf),var(--fire));opacity:.55}
-.knob{position:absolute;top:50%;width:26px;height:26px;border-radius:50%;transform:translate(-50%,-50%);background:var(--moon);box-shadow:0 2px 6px rgba(0,0,0,.5),inset 0 -3px 0 rgba(11,8,34,.2)}
-.hint{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--dim);white-space:nowrap}
-.hint span{overflow:hidden;text-overflow:ellipsis}
+/* ハンドル：本物の台のように右下の丸いダイヤル。回すと強さだけが変わる（玉はずっと出ている） */
+.handle{pointer-events:auto;display:flex;align-items:flex-end;gap:8px;touch-action:none;cursor:grab;outline:none}
+.handle:focus-visible .dial{outline:2px solid var(--fire);outline-offset:4px}
+.pow{display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding:4px 10px 5px;border-radius:12px;background:var(--glass);border:1.5px solid rgba(79,240,255,.32);box-shadow:0 0 10px rgba(79,240,255,.14)}
+.pow .lbl{font-size:10px;color:var(--dim);white-space:nowrap}
 #handleHint{color:var(--ink);font-weight:700}
-#powTxt{color:var(--moon);font-weight:700}
-.dial{width:56px;height:56px;border-radius:50%;border:3px solid var(--wood);position:relative;flex:none;
-  background:radial-gradient(circle at 40% 35%,#4a3423,#2a1c12 75%);box-shadow:0 3px 8px rgba(0,0,0,.5)}
-.dial::after{content:"";position:absolute;inset:9px;border-radius:50%;border:1px dashed rgba(243,230,181,.3)}
-.dial-knob{position:absolute;left:50%;top:50%;width:4px;height:20px;margin-left:-2px;margin-top:-20px;border-radius:2px;background:var(--moon);transform-origin:50% 100%}
-
-.overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding-block:10px;background:rgba(8,12,22,.82);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
-.panel{width:100%;max-height:100%;overflow:auto;border:1.5px solid var(--line);border-radius:20px;background:var(--panel);padding:18px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.pow b{font-size:20px;font-weight:800;color:var(--neon-cyan);font-variant-numeric:tabular-nums;line-height:1.1;text-shadow:0 0 8px rgba(79,240,255,.45)}
+.dial{width:72px;height:72px;margin:9px;border-radius:50%;position:relative;flex:none;border:3px solid #7a5232;
+  background:radial-gradient(circle at 40% 32%,#6a4a2e,#3a2616 72%);box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 -4px 0 rgba(0,0,0,.25)}
+.ring{position:absolute;inset:-9px;border-radius:50%;--p:.5;
+  background:conic-gradient(from 225deg,var(--fire) 0deg,var(--neon-cyan) calc(var(--p)*270deg),rgba(255,255,255,.14) calc(var(--p)*270deg) 270deg,transparent 270deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px))}
+.dial::after{content:"";position:absolute;inset:12px;border-radius:50%;border:1px dashed rgba(243,230,181,.32)}
+.dial-knob{position:absolute;left:50%;top:50%;width:5px;height:26px;margin-left:-2.5px;margin-top:-26px;border-radius:3px;background:var(--moon);box-shadow:0 0 6px rgba(243,230,181,.6);transform-origin:50% 100%}
+.dial-lbl{position:absolute;bottom:-8px;font-size:10px;font-weight:800;color:var(--ink);text-shadow:0 1px 2px #000}
+.dial-lbl.l{left:2px} .dial-lbl.r{right:2px}
+.overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:rgba(8,12,22,.82);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.panel{width:100%;max-width:440px;max-height:100%;overflow:auto;border:1.5px solid var(--line);border-radius:20px;background:var(--panel);padding:18px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 .logo{font-family:var(--f-disp);font-weight:500;line-height:1;text-align:center;margin:6px 0 0}
 .logo .a{display:block;font-size:clamp(44px,15vw,64px);color:var(--moon);text-shadow:0 0 24px rgba(216,242,106,.35)}
 .logo .b{display:block;font-size:clamp(20px,7vw,30px);color:var(--leaf);letter-spacing:.12em;margin-top:8px}
@@ -91,7 +98,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .chip.rm .rmx{color:var(--berry);font-size:10px}
 .chip.rm:disabled{opacity:.4;cursor:not-allowed}
 
-.sheet{position:absolute;left:0;right:0;bottom:0;z-index:6;padding-bottom:env(safe-area-inset-bottom,0px)}
+.sheet{position:absolute;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:8px;z-index:6;max-width:460px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,0px)}
 .sheet-in{border:1.5px solid var(--line);border-radius:18px;background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -6px 30px rgba(0,0,0,.7)}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .sheet-head h3{margin:0;font-size:15px;color:var(--ink)}
@@ -102,21 +109,23 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 <body>
 
 <div id="app">
+  <canvas id="cv" aria-label="くぎだまディフェンスの台"></canvas>
   <header class="hud">
-    <div class="stat"><span class="lbl">持ち玉</span><b id="balls">0</b></div>
-    <div class="stat"><span class="lbl">ライフ</span><b id="life">10</b></div>
-    <div class="stat"><span class="lbl" id="stageLbl">1面 草原</span><b id="wave">WAVE 1/5</b></div>
-    <button class="iconbtn" id="mute" aria-pressed="true">音 ON</button>
-  </header>
-  <div class="deckbar" id="deckbar"></div>
-  <div class="boardwrap" id="boardwrap"><canvas id="cv" aria-label="くぎだまディフェンスの台"></canvas></div>
-  <div class="handle" id="handle" tabindex="0" role="slider" aria-label="ハンドル。玉を打つ強さ" aria-valuemin="0" aria-valuemax="100" aria-valuenow="30">
-    <div class="hmain">
-      <div class="hint"><span id="handleHint">ハンドル</span><span>強さ <span class="num" id="powTxt">30%</span></span></div>
-      <div class="track" id="track"><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
-      <div class="hint"><span>弱い＝左に落ちる</span><span>強い＝右まで届く</span></div>
+    <div class="grp">
+      <div class="pill"><span class="lbl">持ち玉</span><b id="balls">0</b></div>
     </div>
-    <div class="dial" id="dial" aria-hidden="true"><div class="dial-knob" id="dialKnob"></div></div>
+    <div class="grp">
+      <div class="pill"><span class="lbl">ライフ</span><b id="life">10</b></div>
+      <div class="pill"><span class="lbl" id="stageLbl">1面 草原</span><b id="wave">WAVE 1/5</b></div>
+      <button class="iconbtn" id="mute" aria-pressed="true">音 ON</button>
+    </div>
+  </header>
+  <div class="bottom">
+    <div class="deckbar" id="deckbar"></div>
+    <div class="handle" id="handle" tabindex="0" role="slider" aria-label="ハンドル。回して玉を打つ強さを変える" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
+      <div class="pow"><span class="lbl" id="handleHint">ハンドル</span><span class="lbl">強さ</span><b id="powTxt">50%</b></div>
+      <div class="dial" id="dial" aria-hidden="true"><div class="ring" id="ring"></div><div class="dial-knob" id="dialKnob"></div><span class="dial-lbl l">弱</span><span class="dial-lbl r">強</span></div>
+    </div>
   </div>
 
   <div class="overlay" id="title">
@@ -124,7 +133,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
       <h1 class="logo"><span class="a">くぎだま</span><span class="b">ディフェンス</span></h1>
       <ul class="rules">
         <li><span>打つ</span><span>玉は1分に100発、ずっと出続けるよ。本物の台と同じで、左下から打ち上がって、上のレールを回って落ちる</span></li>
-        <li><span>強さ</span><span>下のハンドルで強さを変えると、玉の落ちる場所が変わる（レールの上の三角がねらい）</span></li>
+        <li><span>強さ</span><span>右下のハンドルを回すと強さが変わるよ。50%でまん中、弱いと左、強いと右に落ちる（上の▼が落ちる場所）</span></li>
         <li><span>建てる</span><span>杭（くい）をタップすると、持ち玉を払ってタワーを建てられる</span></li>
         <li><span>育てる</span><span>タワーに玉を当てると、しばらく連射。経験値もたまってレベルアップ</span></li>
         <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! 玉が増えて、タワーが強くなる</span></li>
@@ -188,7 +197,11 @@ const XI=CX-RI, XB=CX-RB, WALL_R=CX+RO;      // 内レール 29・玉の通り�
 const LAUNCH_Y=576, STRAIGHT=LAUNCH_Y-CY, RAIL_BOTTOM=592;
 const EXIT0=rad(34);                          // 内レールの終わり（戻り玉防止の弁）
 const FIRE_GAP=.6;                            // 1分に100発（本物の台と同じ）
-const exitAngle=s=>Math.PI-rad(40+s*112);     // 強さ0＝左上で落ちる、強さ1＝右の上まで回る（角度は右が0・上が90°）
+// 強さ→レールから出る角度（右が0・上が90°）と速さ。強さ0＝左、50%＝台のまん中（x188）、100%＝右に落ちるように、落ちる場所から逆算した表
+const AIM=[142.9,134.9,128.4,122.8,117.6,112.9,107.8,102.8,97.3,90.4,79.7];
+const exitAngle=s=>{const v=Math.max(0,Math.min(1,s))*10,i=Math.min(9,Math.floor(v));return rad(AIM[i]+(AIM[i+1]-AIM[i])*(v-i))};
+const exitSpeed=s=>.35+2.65*s;
+const aimX=s=>76+224*s;                       // その強さで玉が落ちるあたり（上の▼）
 
 const BALLS={
   normal:{name:'ノーマル玉',color:'#dfe6ec',e:.5,g:.16,r:5,dmg:1,price:0,desc:'ふつうの玉'},
@@ -215,11 +228,11 @@ const XP_NEED=[0,4,10,18];
 const START_DECK=['normal','normal','normal','normal','normal','normal'];
 const SAVE_KEY='kugidama-save-v1';
 
-const G={state:'title',stage:0,wave:1,life:10,balls:150,deck:START_DECK.slice(),unlocked:{basic:true,ice:false,long:false},
+const G={fruits:[],state:'title',stage:0,wave:1,life:10,balls:150,deck:START_DECK.slice(),unlocked:{basic:true,ice:false,long:false},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
-  fever:0,feverPay:0,feverPayT:0,flash:0,strength:.3,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
-let scale=1, dpr=1;
+  fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
+let scale=1, dpr=1, ox=0, oy=0, VW=W, VH=H;   // ox,oy＝画面の中の台の位置(px)、VW,VH＝画面の大きさ(px)
 
 /* ---------- 描画の道具 ---------- */
 function hexA(hex,a){const n=parseInt(hex.slice(1),16);return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`}
@@ -346,9 +359,10 @@ function fieldPath(c,r,bottom){c.beginPath();c.arc(CX,CY,r,Math.PI,Math.PI*2);c.
 function buildStatic(){
   if(!cv.width) return;
   staticCv.width=cv.width; staticCv.height=cv.height;
-  const c=staticCv.getContext('2d'), k=scale*dpr;
-  c.setTransform(k,0,0,k,0,0);
-  if(STAGES[G.stage].style==='meadow') buildMeadow(c); else buildNeon(c);
+  const c=staticCv.getContext('2d'), k=scale*dpr, V=view();
+  c.setTransform(k,0,0,k,ox*dpr,oy*dpr);
+  if(STAGES[G.stage].style==='meadow') buildMeadow(c,V);
+  else{c.fillStyle='#0b0716';c.fillRect(V.x0,V.y0,V.x1-V.x0,V.y1-V.y0);buildNeon(c)}
 }
 // 杭（木の杭を正面から見た頭）。止まっている杭は台の絵に、タワーの杭は毎回描く
 function drawStake(c,x,y,r){
@@ -361,15 +375,121 @@ function drawStake(c,x,y,r){
   c.strokeStyle='#3a2515'; c.lineWidth=1.3; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.stroke();
   c.strokeStyle='rgba(243,230,181,.5)'; c.lineWidth=1.4; c.beginPath(); c.arc(x,y,r-1.6,Math.PI*1.05,Math.PI*1.6); c.stroke();
 }
-// 1面の夜の草原：空 → 星 → 月 → 丘 → 草と花 → レール → 木の枠 → ヘソ → 杭
-function buildMeadow(c){
-  const rnd=seeded(4242);
+// 1面「ネオンな夜の草原」：木のフレーム（つる・草・光る木の実） → 空 → 星 → 月 → 木 → 光るふちの丘 → 草と花 → レール → ヘソ → 杭
+const NEON={pink:'#ff5fd2',cyan:'#4ff0ff',lime:'#c6ff4f',amber:'#ffc94f',violet:'#b27bff'};
+function sglow(c,color,x,y,R,a){c.globalAlpha=a;c.drawImage(glowSprite(color),x-R,y-R,R*2,R*2);c.globalAlpha=1}
+function woodFrame(c,V){
+  const rnd=seeded(77), w=V.x1-V.x0, h=V.y1-V.y0;
+  const g=c.createLinearGradient(V.x0,0,V.x1,0);
+  g.addColorStop(0,'#33200f'); g.addColorStop(.5,'#4a2e18'); g.addColorStop(1,'#33200f');
+  c.fillStyle=g; c.fillRect(V.x0,V.y0,w,h);
+  c.lineWidth=1;
+  for(let i=0;i<90;i++){
+    const y=V.y0+rnd()*h, amp=.8+rnd()*2.6, f=.015+rnd()*.03, ph=rnd()*6;
+    c.strokeStyle=rnd()<.55?'rgba(18,9,3,.38)':'rgba(176,122,74,.14)';
+    c.beginPath(); let first=true;
+    for(let x=V.x0;x<=V.x1+6;x+=6){const yy=y+Math.sin(x*f+ph)*amp;if(first){c.moveTo(x,yy);first=false}else c.lineTo(x,yy)}
+    c.stroke();
+  }
+  for(let i=0;i<6;i++){
+    const x=V.x0+rnd()*w, y=V.y0+rnd()*h;
+    c.strokeStyle='rgba(18,9,3,.45)';
+    for(const s of [1,.6]){c.beginPath();c.ellipse(x,y,5*s,2.4*s,0,0,Math.PI*2);c.stroke()}
+  }
+}
+// 台のふち（彫った木の段）
+function woodRim(c){
+  const edge=r=>{c.beginPath();c.moveTo(CX-r,H-6+(r-RO));c.lineTo(CX-r,CY);c.arc(CX,CY,r,Math.PI,Math.PI*2);c.lineTo(CX+r,H-6+(r-RO))};
   c.lineCap='round';
-  rrPath(c,0,0,W,H,24); c.fillStyle='#2b1d13'; c.fill();
+  c.strokeStyle='rgba(0,0,0,.5)'; c.lineWidth=10; edge(RO+6); c.stroke();
+  c.strokeStyle='#8b5d35'; c.lineWidth=7; edge(RO+5); c.stroke();
+  c.strokeStyle='rgba(214,160,104,.55)'; c.lineWidth=1.6; edge(RO+7.5); c.stroke();
+  c.strokeStyle='rgba(30,16,6,.8)'; c.lineWidth=1.4; edge(RO+1.6); c.stroke();
+  c.strokeStyle='#8b5d35'; c.lineWidth=7; c.beginPath(); c.moveTo(CX-RO-5,H-1); c.lineTo(CX+RO+5,H-1); c.stroke();
+  c.strokeStyle='rgba(214,160,104,.45)'; c.lineWidth=1.4; c.beginPath(); c.moveTo(CX-RO-3,H+2); c.lineTo(CX+RO+3,H+2); c.stroke();
+}
+function leaf(c,x,y,a,L,col){
+  c.save(); c.translate(x,y); c.rotate(a);
+  c.fillStyle=col; c.beginPath(); c.moveTo(0,0); c.quadraticCurveTo(L*.5,-L*.42,L,0); c.quadraticCurveTo(L*.5,L*.42,0,0); c.fill();
+  c.strokeStyle='rgba(198,255,79,.45)'; c.lineWidth=.7; c.beginPath(); c.moveTo(1,0); c.lineTo(L*.85,0); c.stroke();
+  c.restore();
+}
+// 光る木の実（ふさ）。光のゆらぎは draw() で G.fruits を使って足す
+function fruit(c,x,y,col,r){
+  c.globalCompositeOperation='lighter'; sglow(c,col,x,y,r*4.2,.55); c.globalCompositeOperation='source-over';
+  const g=c.createRadialGradient(x-r*.35,y-r*.4,r*.1,x,y,r);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(.35,col); g.addColorStop(1,shade(col,.55));
+  c.fillStyle=g; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.fill();
+  G.fruits.push({x,y,r,c:col,ph:(x*7+y*3)%6.28});
+}
+function vines(c,V){
+  const rnd=seeded(515), RV=RO+12, cols=[NEON.pink,NEON.cyan,NEON.lime,NEON.amber,NEON.violet];
+  const pts=[];
+  // 左の柱 → 上のアーチ → 右の柱
+  for(let y=H-14;y>CY;y-=6) pts.push([CX-RV+Math.sin(y*.09)*1.6,y,Math.PI]);
+  for(let d=180;d>=0;d-=3){const a=rad(d),w=Math.sin(d*.31)*2.2;pts.push([CX+(RV+w)*Math.cos(a),CY-(RV+w)*Math.sin(a),a])}
+  for(let y=CY;y<H-14;y+=6) pts.push([CX+RV+Math.sin(y*.09+1)*1.6,y,0]);
+  c.strokeStyle='#2c5226'; c.lineWidth=2.4; c.lineCap='round';
+  c.beginPath(); pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y)); c.stroke();
+  c.strokeStyle='rgba(198,255,79,.25)'; c.lineWidth=.8; c.stroke();
+  pts.forEach(([x,y,a],i)=>{
+    if(i%2) return;
+    const out=a+(i%4?.5:-.5)*1.2, L=(Math.abs(x-CX)>RO?5:6.5)+rnd()*3.5;
+    // 外向き（台の外側）にだけ葉を出す
+    const ang=Math.atan2(-(Math.sin(out)),Math.cos(out));
+    leaf(c,x,y,ang,L,rnd()<.5?'#3d8a3a':'#2f7034');
+  });
+  // 実のなる所：上の角とアーチ、左右の柱
+  const spots=[[165],[148],[132],[118],[62],[46],[30],[14]];
+  spots.forEach(([d],i)=>{
+    const a=rad(d), x=CX+(RV+4)*Math.cos(a), y=CY-(RV+4)*Math.sin(a)+4, col=cols[i%5];
+    c.strokeStyle='#2c5226'; c.lineWidth=1.2; c.beginPath(); c.moveTo(x,y-5); c.lineTo(x,y); c.stroke();
+    fruit(c,x,y+2,col,3.6); fruit(c,x+4.5,y+4.5,col,2.8); if(i%2) fruit(c,x-3.8,y+5.5,col,2.4);
+  });
+  for(const [x,y,i] of [[3,250,0],[3,380,2],[3,505,4],[357,300,1],[357,430,3],[357,545,0]]){
+    fruit(c,x+(x<CX?3:-3),y,cols[i],3.2); fruit(c,x+(x<CX?6:-6),y+4,cols[i],2.4);
+  }
+}
+// 台の下の木の部分：草と光るキノコ
+function frameGrass(c,V){
+  const rnd=seeded(909);
+  const tuft=(x,y,h,tip)=>{
+    for(let j=0;j<5;j++){
+      const bx=x+(j-2)*2.2, bh=h*(.6+rnd()*.5), bend=(rnd()-.5)*7;
+      c.strokeStyle='#245c2c'; c.lineWidth=1.8; c.beginPath(); c.moveTo(bx,y); c.quadraticCurveTo(bx+bend*.3,y-bh*.6,bx+bend,y-bh); c.stroke();
+      if(tip&&rnd()<.5){c.strokeStyle=tip;c.lineWidth=1.1;c.beginPath();c.moveTo(bx+bend*.75,y-bh*.8);c.lineTo(bx+bend,y-bh);c.stroke()}
+    }
+  };
+  // ふちの下にはえる草
+  for(let x=CX-RO;x<=CX+RO;x+=7+rnd()*8) tuft(x,H+6,8+rnd()*7,rnd()<.5?NEON.lime:NEON.cyan);
+  // 両わきの柱のねもと
+  for(const x of [2,8,352,358]) tuft(x,H-8,14+rnd()*6,NEON.lime);
+  // 画面の下のはし
+  if(V.y1>H+24){
+    for(let x=V.x0;x<=V.x1;x+=6+rnd()*6) tuft(x,V.y1+2,12+rnd()*18,rnd()<.4?NEON.lime:rnd()<.5?NEON.cyan:null);
+    const mush=(x,y,s,col)=>{
+      c.fillStyle='#e9e2c8'; c.fillRect(x-1.6*s,y-6*s,3.2*s,6*s);
+      c.globalCompositeOperation='lighter'; sglow(c,col,x,y-7*s,16*s,.55); c.globalCompositeOperation='source-over';
+      c.fillStyle=col; c.beginPath(); c.ellipse(x,y-6*s,6*s,4*s,0,Math.PI,Math.PI*2); c.fill();
+      c.fillStyle='rgba(255,255,255,.7)'; for(const [dx,dy] of [[-2.5,-7.5],[1.5,-8.5],[3.5,-6.8]]){c.beginPath();c.arc(x+dx*s,y+dy*s,.8*s,0,Math.PI*2);c.fill()}
+    };
+    const yb=Math.min(V.y1-4,H+(V.y1-H)*.55);
+    mush(CX-38,yb,1.2,NEON.violet); mush(CX-26,yb+3,.85,NEON.pink); mush(CX+30,yb+1,1.05,NEON.cyan);
+  }
+}
+function buildMeadow(c,V){
+  const rnd=seeded(4242);
+  G.fruits=[];
+  c.lineCap='round';
+  woodFrame(c,V);
   c.save(); fieldPath(c,RO,H-6); c.clip();
   const sky=c.createLinearGradient(0,0,0,H);
-  sky.addColorStop(0,'#070d24'); sky.addColorStop(.42,'#112246'); sky.addColorStop(.7,'#1a3452'); sky.addColorStop(1,'#122a33');
+  sky.addColorStop(0,'#050a1f'); sky.addColorStop(.4,'#0e1b42'); sky.addColorStop(.66,'#13294d'); sky.addColorStop(1,'#0a2530');
   c.fillStyle=sky; c.fillRect(0,0,W,H);
+  // うすいオーロラ
+  c.globalCompositeOperation='lighter';
+  sglow(c,'#3fe0c8',90,250,170,.08); sglow(c,NEON.violet,280,200,150,.07);
+  c.globalCompositeOperation='source-over';
   c.fillStyle='#f6f2dc';
   for(let i=0;i<80;i++){const x=24+rnd()*320,y=12+rnd()*360,r=rnd()<.12?1.25:.65;c.globalAlpha=.25+rnd()*.55;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
   c.globalAlpha=1;
@@ -380,19 +500,39 @@ function buildMeadow(c){
   c.fillStyle=mg; c.beginPath(); c.arc(mx,my,16,0,Math.PI*2); c.fill();
   c.fillStyle='rgba(180,160,110,.35)';
   for(const [dx,dy,r] of [[-5,-3,3.2],[4,5,2.4],[6,-6,1.6]]){c.beginPath();c.arc(mx+dx,my+dy,r,0,Math.PI*2);c.fill()}
-  const hill=(y0,amp,f,ph,color)=>{c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=8)c.lineTo(x,y0-Math.sin(x*f+ph)*amp-Math.sin(x*f*2.3+ph*1.7)*amp*.35);c.lineTo(W,H);c.closePath();c.fillStyle=color;c.fill()};
-  hill(392,20,.011,1.2,'#142a3e'); hill(452,16,.014,3.1,'#112a2f'); hill(526,10,.02,.4,'#0d221d');
-  c.strokeStyle='#17392b'; c.lineWidth=1.6;
+  const hillY=(x,y0,amp,f,ph)=>y0-Math.sin(x*f+ph)*amp-Math.sin(x*f*2.3+ph*1.7)*amp*.35;
+  const hill=(y0,amp,f,ph,color,rim)=>{
+    c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=6)c.lineTo(x,hillY(x,y0,amp,f,ph));c.lineTo(W,H);c.closePath();c.fillStyle=color;c.fill();
+    c.beginPath();for(let x=0;x<=W;x+=6)x?c.lineTo(x,hillY(x,y0,amp,f,ph)):c.moveTo(x,hillY(x,y0,amp,f,ph));
+    c.globalCompositeOperation='lighter';
+    c.strokeStyle=hexA(rim,.16); c.lineWidth=6; c.stroke();
+    c.strokeStyle=hexA(rim,.7); c.lineWidth=1.3; c.stroke();
+    c.globalCompositeOperation='source-over';
+  };
+  // 奥の丘の木（光る実がなる）
+  hill(392,20,.011,1.2,'#13253f',NEON.violet);
+  const tree=(x,y,s,cols)=>{
+    c.fillStyle='#0b1a26'; c.fillRect(x-2*s,y,4*s,22*s);
+    for(const [dx,dy,r] of [[0,-6,15],[-10,2,11],[10,2,11],[0,6,10]]){c.beginPath();c.arc(x+dx*s,y+dy*s,r*s,0,Math.PI*2);c.fill()}
+    const rr=seeded(x|0);
+    for(let i=0;i<7;i++){const fx=x+(rr()-.5)*30*s,fy=y-4*s+(rr()-.5)*22*s,col=cols[i%cols.length];
+      c.globalCompositeOperation='lighter';sglow(c,col,fx,fy,7*s,.7);c.globalCompositeOperation='source-over';
+      c.fillStyle=mixW(col,.35);c.beginPath();c.arc(fx,fy,1.7*s,0,Math.PI*2);c.fill()}
+  };
+  tree(48,362,1,[NEON.pink,NEON.amber]); tree(326,370,.85,[NEON.cyan,NEON.lime]);
+  hill(452,16,.014,3.1,'#0f2832','#3fe0c8');
+  hill(526,10,.02,.4,'#0c2119',NEON.lime);
+  // 光る草
   for(let x=32;x<W-12;x+=4.5){
-    const h=6+rnd()*12, b=(rnd()-.5)*6, y=528-Math.sin(x*.02+.4)*10-Math.sin(x*.046+.68)*3.5;
+    const h=6+rnd()*12, b=(rnd()-.5)*6, y=hillY(x,528,10,.02,.4)+2;
+    c.strokeStyle='#17402d'; c.lineWidth=1.6;
     c.beginPath(); c.moveTo(x,y); c.quadraticCurveTo(x+b*.3,y-h*.6,x+b,y-h); c.stroke();
+    if(rnd()<.45){c.strokeStyle=rnd()<.6?NEON.lime:NEON.cyan;c.lineWidth=1;c.beginPath();c.moveTo(x+b*.8,y-h*.82);c.lineTo(x+b,y-h);c.stroke()}
   }
-  for(let i=0;i<10;i++){
-    const x=44+rnd()*286,y=542+rnd()*28;
-    c.fillStyle=rnd()<.5?'rgba(246,236,214,.75)':'rgba(240,190,210,.7)';
-    for(let j=0;j<5;j++){const a=j*Math.PI*2/5;c.beginPath();c.arc(x+Math.cos(a)*1.8,y+Math.sin(a)*1.8,1.3,0,Math.PI*2);c.fill()}
-    c.fillStyle='#e8c860'; c.beginPath(); c.arc(x,y,.9,0,Math.PI*2); c.fill();
-  }
+  // 光る花
+  c.globalCompositeOperation='lighter';
+  for(let i=0;i<12;i++){const x=44+rnd()*286,y=542+rnd()*28,col=[NEON.pink,NEON.violet,NEON.cyan][i%3];sglow(c,col,x,y,9,.55)}
+  c.globalCompositeOperation='source-over';
   c.restore();
   // レール（月明かりの細い線）
   c.beginPath(); c.moveTo(XI,RAIL_BOTTOM); c.lineTo(XI,CY); c.arc(CX,CY,RI,Math.PI,Math.PI+EXIT0,false); c.arc(CX,CY,RO,Math.PI+EXIT0,Math.PI,true); c.lineTo(CX-RO,RAIL_BOTTOM); c.closePath();
@@ -404,14 +544,16 @@ function buildMeadow(c){
   c.strokeStyle='#c9a46a'; c.lineWidth=2.4;
   c.beginPath(); c.moveTo(CX-RI*Math.cos(EXIT0),CY-RI*Math.sin(EXIT0)); c.lineTo(CX-RO*Math.cos(EXIT0),CY-RO*Math.sin(EXIT0)); c.stroke();
   c.strokeStyle='#8a6140'; c.lineWidth=3; c.beginPath(); c.moveTo(CX-RO,RAIL_BOTTOM); c.lineTo(XI,RAIL_BOTTOM); c.stroke();
-  // 木の枠
-  c.strokeStyle='#6b4a30'; c.lineWidth=4; rrPath(c,2,2,W-4,H-4,22); c.stroke();
-  c.strokeStyle='rgba(0,0,0,.45)'; c.lineWidth=1.5; rrPath(c,5,5,W-10,H-10,19); c.stroke();
-  // ヘソ（木の受け口）
+  // 木のフレーム：ふち → つると光る実 → 草
+  woodRim(c); vines(c,V); frameGrass(c,V);
+  // ヘソ（木の受け口に、ネオンのふち）
   for(const q of G.pockets) if(q.k==='heso'){
+    c.globalCompositeOperation='lighter'; sglow(c,NEON.pink,q.x,q.y+7,22,.4); c.globalCompositeOperation='source-over';
     c.fillStyle='#0b0805'; c.beginPath(); c.ellipse(q.x,q.y+6,10,4.5,0,0,Math.PI*2); c.fill();
     c.strokeStyle='#a67a50'; c.lineWidth=3;
     c.beginPath(); c.moveTo(q.x-15,q.y); c.lineTo(q.x-11,q.y+13); c.lineTo(q.x+11,q.y+13); c.lineTo(q.x+15,q.y); c.stroke();
+    c.strokeStyle=NEON.pink; c.lineWidth=1.2;
+    c.beginPath(); c.moveTo(q.x-13,q.y+1); c.lineTo(q.x-10,q.y+11); c.lineTo(q.x+10,q.y+11); c.lineTo(q.x+13,q.y+1); c.stroke();
     c.fillStyle=MOON; c.font=`700 10px ${BODYF}`; c.textAlign='center'; c.fillText('ヘソ',q.x,q.y+28);
   }
   // 受け皿（敵がここまで来たらライフ -1）
@@ -520,14 +662,21 @@ function buildNeon(c){
   c.shadowBlur=0;
 }
 
+// 台を画面いっぱいに。縦長の画面では横ぴったりにして、下に玉セットとハンドルの場所（84px）を残す
 function resize(){
-  const r=$('boardwrap').getBoundingClientRect();
+  const r=$('app').getBoundingClientRect();
   if(r.width<10||r.height<10) return;
-  scale=Math.min(r.width/W,r.height/H); dpr=Math.min(window.devicePixelRatio||1,2);
-  cv.style.width=Math.floor(W*scale)+'px'; cv.style.height=Math.floor(H*scale)+'px';
-  cv.width=Math.round(W*scale*dpr); cv.height=Math.round(H*scale*dpr);
+  VW=r.width; VH=r.height;
+  const res=VH>VW*1.2?64:0;
+  scale=Math.min(VW/W,(VH-res)/H); dpr=Math.min(window.devicePixelRatio||1,2);
+  const extra=VH-H*scale;
+  ox=(VW-W*scale)/2; oy=Math.max(0,Math.min(extra-84,extra*.3));
+  cv.style.width=VW+'px'; cv.style.height=VH+'px';
+  cv.width=Math.round(VW*dpr); cv.height=Math.round(VH*dpr);
   buildStatic();
 }
+// 画面の中で見えている広さ（台の座標で）
+const view=()=>({x0:-ox/scale,y0:-oy/scale,x1:(VW-ox)/scale,y1:(VH-oy)/scale});
 
 /* ---------- ウェーブ ---------- */
 function waveList(stage,w){
@@ -553,8 +702,8 @@ function launch(){
   if(G.bs.length>=32) return false;
   const t=G.deck[Math.floor(Math.random()*G.deck.length)];
   G.balls--;
-  const ex=Math.max(rad(24),Math.min(rad(142),exitAngle(G.strength)+rad((Math.random()-.5)*6)));
-  G.bs.push({x:XB,y:LAUNCH_Y,vx:0,vy:0,t,r:BALLS[t].r*G.bscale,age:0,still:0,hit:{},gone:false,rail:true,s:0,ex,vt:2.6+2.4*G.strength});
+  const ex=Math.max(rad(24),Math.min(rad(144),exitAngle(G.strength)+rad((Math.random()-.5)*4)));
+  G.bs.push({x:XB,y:LAUNCH_Y,vx:0,vy:0,t,r:BALLS[t].r*G.bscale,age:0,still:0,hit:{},gone:false,rail:true,s:0,ex,vt:exitSpeed(G.strength)*(.96+Math.random()*.08)});
   G.launchFx=.2; sfx.launch(); return true;
 }
 function addText(x,y,s,c,big){G.texts.push({x,y,s,c,big:!!big,t:1})}
@@ -853,7 +1002,7 @@ function draw(){
   let sx=0,sy=0;
   if(G.shake>0&&!reduce){sx=(Math.random()-.5)*8*G.shake*k;sy=(Math.random()-.5)*8*G.shake*k}
   ctx.drawImage(staticCv,sx,sy);
-  ctx.setTransform(k,0,0,k,sx,sy);
+  ctx.setTransform(k,0,0,k,ox*dpr+sx,oy*dpr+sy);
   const S=STAGES[G.stage], t=G.time, Q=G.heso, meadow=S.style==='meadow', fev=G.fever>0;
   ctx.lineCap='round';
 
@@ -878,6 +1027,7 @@ function draw(){
     if(G.state==='play'){const a=exitAngle(G.strength);glow(GOLD,CX+RO*Math.cos(a),CY-RO*Math.sin(a),10,.55+.25*Math.sin(t*5))}
   }else if(fev) G.pegs.forEach((p,i)=>glow(RAINBOW[(i+Math.floor(t*6))%6],p.x,p.y,p.r+12,.55));
   if(fev&&Q){const c=RAINBOW[Math.floor(t*8)%6];glow(c,Q.x,Q.y+6,26,.7)}
+  if(meadow) for(const fr of G.fruits) glow(fr.c,fr.x,fr.y,fr.r*(fev?6:4.6),(fev?.6:.18)+.22*Math.sin(t*1.6+fr.ph));
   ctx.globalCompositeOperation='source-over';
 
   if(meadow){
@@ -885,8 +1035,11 @@ function draw(){
     for(const p of G.pegs) if(!p.tower&&p.flash>0){ctx.strokeStyle=`rgba(243,230,181,${Math.min(.9,p.flash*4)})`;ctx.lineWidth=2;circle(p.x,p.y,p.r+2+(.22-p.flash)*14);ctx.stroke()}
     if(G.launchFx>0){ctx.strokeStyle=`rgba(243,230,181,${Math.min(.9,G.launchFx*4)})`;ctx.lineWidth=1.5;circle(XB,LAUNCH_Y,6+(.2-G.launchFx)*30);ctx.stroke()}
     if(G.state==='play'){
-      const a=exitAngle(G.strength), x=CX+(RO-1)*Math.cos(a), y=CY-(RO-1)*Math.sin(a), nx=-Math.cos(a), ny=Math.sin(a);
-      ctx.fillStyle=MOON; ctx.beginPath(); ctx.moveTo(x+nx*10,y+ny*10); ctx.lineTo(x-ny*5,y-nx*5); ctx.lineTo(x+ny*5,y+nx*5); ctx.closePath(); ctx.fill();
+      // ねらい：その強さで玉が落ちるあたりに▼と点線
+      const x=aimX(G.strength), y=CY-Math.sqrt(RO*RO-(x-CX)**2)+5, bob=Math.sin(t*5)*1.5;
+      ctx.strokeStyle='rgba(79,240,255,.35)'; ctx.lineWidth=1.2; ctx.setLineDash([3,5]);
+      ctx.beginPath(); ctx.moveTo(x,y+12); ctx.lineTo(x,y+48); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle='#4ff0ff'; ctx.beginPath(); ctx.moveTo(x,y+11+bob); ctx.lineTo(x-6,y+1+bob); ctx.lineTo(x+6,y+1+bob); ctx.closePath(); ctx.fill();
     }
   }
 
@@ -937,8 +1090,10 @@ function draw(){
   else{ctx.globalCompositeOperation='lighter';for(const q of G.parts) glow(q.c,q.x,q.y,5,Math.min(1,q.t*2));ctx.globalCompositeOperation='source-over'}
   // 手前の草（ゆれる）
   if(meadow){
-    ctx.strokeStyle='#0c2219'; ctx.lineWidth=3;
-    for(const gb of G.grass){const sw=Math.sin(t*1.2+gb.ph)*4;ctx.beginPath();ctx.moveTo(gb.x,H-6);ctx.quadraticCurveTo(gb.x+sw*.4,H-6-gb.h*.55,gb.x+sw,H-6-gb.h);ctx.stroke()}
+    ctx.lineWidth=3;
+    for(const gb of G.grass){const sw=Math.sin(t*1.2+gb.ph)*4;ctx.strokeStyle='#0c2a1d';ctx.beginPath();ctx.moveTo(gb.x,H-6);ctx.quadraticCurveTo(gb.x+sw*.4,H-6-gb.h*.55,gb.x+sw,H-6-gb.h);ctx.stroke()}
+    ctx.lineWidth=1.4; ctx.strokeStyle='rgba(198,255,79,.75)';
+    for(const gb of G.grass){const sw=Math.sin(t*1.2+gb.ph)*4;ctx.beginPath();ctx.moveTo(gb.x+sw*.82,H-6-gb.h*.84);ctx.lineTo(gb.x+sw,H-6-gb.h);ctx.stroke()}
   }
   // 文字
   ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
@@ -994,8 +1149,8 @@ function renderDeck(){
 function setStrength(s){
   G.strength=Math.max(0,Math.min(1,s));
   const pc=Math.round(G.strength*100);
-  $('knob').style.left=pc+'%'; $('fill').style.width=pc+'%';
-  $('dialKnob').style.transform=`rotate(${-120+G.strength*240}deg)`;
+  $('ring').style.setProperty('--p',G.strength);
+  $('dialKnob').style.transform=`rotate(${-135+G.strength*270}deg)`;
   $('powTxt').textContent=pc+'%';
   $('handle').setAttribute('aria-valuenow',pc);
 }
@@ -1124,7 +1279,7 @@ $('sheetClose').onclick=()=>closeSheet();
 
 cv.addEventListener('pointerdown',e=>{
   if(G.state!=='play'||G.paused) return;
-  const r=cv.getBoundingClientRect(), x=(e.clientX-r.left)/r.width*W, y=(e.clientY-r.top)/r.height*H;
+  const r=cv.getBoundingClientRect(), x=(e.clientX-r.left-ox)/scale, y=(e.clientY-r.top-oy)/scale;
   let best=null,bd=Infinity;
   for(const p of G.pegs){if(p.fixed)continue;const d=(p.x-x)**2+(p.y-y)**2;if(d<(p.r+16)**2&&d<bd){bd=d;best=p}}
   if(!best) return;
@@ -1133,19 +1288,21 @@ cv.addEventListener('pointerdown',e=>{
 });
 
 /* ---------- ハンドル（強さだけ。玉はずっと出ている） ---------- */
-const handle=$('handle'), track=$('track');
+// ダイヤルのまわりを指で回す（右回り＝強く）。まん中近くは向きがぶれるので、指を右・上へ動かした分でも変わる
+const handle=$('handle'), dial=$('dial');
 let drag=null;
+const dialAng=e=>{const r=dial.getBoundingClientRect();return{a:Math.atan2(e.clientY-(r.top+r.height/2),e.clientX-(r.left+r.width/2)),d:Math.hypot(e.clientX-(r.left+r.width/2),e.clientY-(r.top+r.height/2))}};
 handle.addEventListener('pointerdown',e=>{
   e.preventDefault(); ensureAudio();
   try{handle.setPointerCapture(e.pointerId)}catch(_){}
-  const r=track.getBoundingClientRect();
-  if(e.clientX<=r.right+6){drag={abs:true};setStrength((e.clientX-r.left)/r.width)}
-  else drag={abs:false,x:e.clientX,y:e.clientY,s:G.strength,w:r.width};
+  drag={...dialAng(e),x:e.clientX,y:e.clientY};
 });
 handle.addEventListener('pointermove',e=>{
   if(!drag) return;
-  if(drag.abs){const r=track.getBoundingClientRect();setStrength((e.clientX-r.left)/r.width)}
-  else setStrength(drag.s+((e.clientX-drag.x)-(e.clientY-drag.y))/drag.w);
+  const n=dialAng(e);
+  if(n.d>14&&drag.d>14){let da=n.a-drag.a;if(da>Math.PI)da-=Math.PI*2;if(da<-Math.PI)da+=Math.PI*2;setStrength(G.strength+da/(Math.PI*1.5))}
+  else setStrength(G.strength+((e.clientX-drag.x)-(e.clientY-drag.y))/160);
+  drag={...n,x:e.clientX,y:e.clientY};
 });
 const endDrag=()=>{drag=null};
 handle.addEventListener('pointerup',endDrag);
@@ -1170,9 +1327,9 @@ function loop(now){
   hud(); draw();
   requestAnimationFrame(loop);
 }
-setStrength(.3);
+setStrength(.5);
 setupStage(); resize(); renderDeck(); updateContinue();
-try{new ResizeObserver(resize).observe($('boardwrap'))}catch(_){window.addEventListener('resize',resize)}
+try{new ResizeObserver(resize).observe($('app'))}catch(_){window.addEventListener('resize',resize)}
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(buildStatic).catch(()=>{});
 requestAnimationFrame(t=>{last=t;loop(t)});
 })();
