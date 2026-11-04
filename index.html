@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
 <style>
-/* Layout: 台を画面いっぱいに（横はぴったり、上下のあまりは木のフレーム）。持ち玉・ライフ・WAVE は台の上の角に、
-   玉セットとハンドル（強さ）は台の下に重ねて出す。見た目は「ネオンな夜の草原」：木のフレームに草とつる、光る木の実 */
+/* Layout: 台を画面いっぱいに（横はぴったり、上下のあまりは木のフレーム）。お金（コイン）・ライフのバー・WAVE は台の上の角に枠なしで、
+   ハンドル（強さ）は右下に重ねて出す。見た目は「ネオンな夜の草原」：木のフレームに草とつる、光る木の実 */
 :root{
   --night:#0b1222; --panel:#16201f; --deep:#0c1412; --line:#3a4a3a; --frame:#2a1a0f;
   --ink:#f1f3e4; --dim:#a3b0a0;
@@ -29,36 +29,45 @@ body{height:100%;margin:0;background:var(--frame);color:var(--ink);font-family:v
 #app{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);overflow:hidden}
 canvas{position:absolute;inset:0;display:block;touch-action:none}
 
-/* 台の上に重ねる表示（透ける木の札） */
-.hud{position:absolute;z-index:2;top:6px;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));
-  display:flex;justify-content:space-between;align-items:flex-start;gap:6px;pointer-events:none}
-.grp{display:flex;gap:5px;align-items:center;min-width:0}
-.pill{display:flex;align-items:baseline;gap:5px;padding:3px 10px 4px;border-radius:99px;background:var(--glass);
-  border:1.5px solid rgba(198,255,79,.32);box-shadow:0 0 10px rgba(198,255,79,.14),0 2px 6px rgba(0,0,0,.45);white-space:nowrap}
-.pill .lbl{font-size:10px;color:var(--dim);letter-spacing:.06em}
-.pill b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.2}
-#balls{color:var(--moon)} #life{color:var(--berry)} #wave{color:var(--fire);font-size:14px}
-.iconbtn{pointer-events:auto;font:700 11px var(--f-body);color:var(--dim);background:var(--glass);border:1.5px solid rgba(255,255,255,.18);border-radius:99px;padding:6px 10px;cursor:pointer}
-.iconbtn[aria-pressed="true"]{color:var(--ink);border-color:rgba(79,240,255,.5)}
+/* 台の上に重ねる表示：枠なし。左上にお金（コイン）、右上にライフのバーとWAVE・音 */
+.hud{position:absolute;z-index:2;top:8px;left:max(10px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));
+  display:flex;justify-content:space-between;align-items:flex-start;gap:8px;pointer-events:none;
+  text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 6px rgba(0,0,0,.6)}
+.coin{display:inline-block;flex:none;width:1em;height:1em;border-radius:50%;vertical-align:-.12em;
+  background:radial-gradient(circle at 34% 30%,#fff6c2 0 14%,#ffd84a 42%,#d79a12 100%);
+  box-shadow:inset 0 0 0 .1em rgba(150,96,6,.55),inset 0 0 0 .2em rgba(255,240,170,.35),0 0 .5em rgba(255,216,74,.45)}
+.money{display:flex;align-items:center;gap:6px;font-size:19px}
+.money b{font-size:22px;font-weight:800;line-height:1;color:#ffe27a;font-variant-numeric:tabular-nums;transition:color .2s}
+.money.empty b{color:var(--berry)}
+.hud-r{display:flex;flex-direction:column;align-items:flex-end;gap:5px}
+.liferow{display:flex;align-items:center;gap:6px}
+.heart{width:17px;height:17px;flex:none;filter:drop-shadow(0 0 4px rgba(255,79,109,.6)) drop-shadow(0 1px 1px rgba(0,0,0,.8))}
+.lifebar{position:relative;width:96px;height:11px;border-radius:99px;background:rgba(10,8,20,.72);
+  box-shadow:0 0 0 1px rgba(255,255,255,.22),0 1px 3px rgba(0,0,0,.6);overflow:hidden}
+.lifebar i{position:absolute;left:0;top:0;bottom:0;width:100%;border-radius:99px;--c:#7be36a;
+  background:linear-gradient(180deg,rgba(255,255,255,.45),rgba(255,255,255,0) 55%),var(--c);box-shadow:0 0 8px var(--c);
+  transition:width .3s ease,background-color .3s}
+.lifebar::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0 calc(10% - 1px),rgba(10,8,20,.55) calc(10% - 1px) 10%)}
+.lifebar.hurt{animation:hurt .35s}
+@keyframes hurt{30%{box-shadow:0 0 0 2px #ff4f6d,0 0 12px #ff4f6d}}
+.wave{font:800 13px var(--f-body);color:var(--fire);letter-spacing:.04em;line-height:1}
+.snd{pointer-events:auto;width:30px;height:30px;margin:-7px -4px -7px 0;padding:6px;border:0;background:transparent;color:var(--ink);cursor:pointer;
+  filter:drop-shadow(0 1px 2px rgba(0,0,0,.9))}
+.snd svg{width:100%;height:100%;display:block}
+.snd .sx{display:none} .snd[aria-pressed="false"] .sx{display:inline} .snd[aria-pressed="false"] .sw{display:none}
+.snd[aria-pressed="false"]{color:var(--dim)}
 
-/* 台の下：左に玉セット、右にハンドル */
+/* 台の下：右にハンドルだけ */
 .bottom{position:absolute;z-index:2;left:max(8px,env(safe-area-inset-left,0px));right:max(4px,env(safe-area-inset-right,0px));bottom:2px;
-  display:flex;justify-content:space-between;align-items:flex-end;gap:8px;pointer-events:none}
-.deckbar{display:flex;gap:4px;flex-wrap:wrap;align-items:center;font-size:11px;color:var(--dim);min-width:0;max-width:62%}
-.deckbar>span:first-child{width:100%;font-size:10px;letter-spacing:.06em;text-shadow:0 1px 2px #000}
+  display:flex;justify-content:flex-end;align-items:flex-end;pointer-events:none}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--ink);background:var(--deep);font:700 11px var(--f-body)}
-.deckbar .chip{background:var(--glass);border-color:rgba(255,255,255,.16);padding:2px 7px;gap:3px}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:inset 0 -2px 0 rgba(0,0,0,.28);flex:none}
 .dot.big{width:14px;height:14px}
 .num{font-variant-numeric:tabular-nums}
 
 /* ハンドル：本物の台のように右下の丸いダイヤル。回すと強さだけが変わる（玉はずっと出ている） */
-.handle{pointer-events:auto;display:flex;align-items:flex-end;gap:8px;touch-action:none;cursor:grab;outline:none}
+.handle{pointer-events:auto;display:flex;align-items:flex-end;touch-action:none;cursor:grab;outline:none}
 .handle:focus-visible .dial{outline:2px solid var(--fire);outline-offset:4px}
-.pow{display:flex;flex-direction:column;align-items:flex-end;gap:1px;padding:4px 10px 5px;border-radius:12px;background:var(--glass);border:1.5px solid rgba(79,240,255,.32);box-shadow:0 0 10px rgba(79,240,255,.14)}
-.pow .lbl{font-size:10px;color:var(--dim);white-space:nowrap}
-#handleHint{color:var(--ink);font-weight:700}
-.pow b{font-size:20px;font-weight:800;color:var(--neon-cyan);font-variant-numeric:tabular-nums;line-height:1.1;text-shadow:0 0 8px rgba(79,240,255,.45)}
 .dial{width:72px;height:72px;margin:9px;border-radius:50%;position:relative;flex:none;border:3px solid #7a5232;
   background:radial-gradient(circle at 40% 32%,#6a4a2e,#3a2616 72%);box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 -4px 0 rgba(0,0,0,.25)}
 .ring{position:absolute;inset:-9px;border-radius:50%;--p:.5;
@@ -84,7 +93,8 @@ h2{font-family:var(--f-disp);font-weight:500;font-size:26px;margin:0;text-align:
 h3{font-size:13px;margin:0 0 8px;color:var(--leaf);letter-spacing:.04em}
 h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .lines{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px;text-align:center;font-size:15px}
-.purse{margin:0;text-align:center;color:var(--dim)} .purse b{font:800 22px var(--f-body);color:var(--moon);margin-left:6px;font-variant-numeric:tabular-nums}
+.purse{margin:0;text-align:center;color:var(--dim)} .purse b{font:800 22px var(--f-body);color:#ffe27a;margin-left:5px;font-variant-numeric:tabular-nums}
+.purse .coin{font-size:20px;margin-left:4px} .buy .coin{margin-right:4px} .d .coin,.lines .coin,small .coin{margin:0 2px 0 1px}
 .items{display:flex;flex-direction:column;gap:8px}
 .item{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--deep)}
 .item>div{min-width:0}
@@ -111,19 +121,18 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 <div id="app">
   <canvas id="cv" aria-label="くぎだまディフェンスの台"></canvas>
   <header class="hud">
-    <div class="grp">
-      <div class="pill"><span class="lbl">持ち玉</span><b id="balls">0</b></div>
-    </div>
-    <div class="grp">
-      <div class="pill"><span class="lbl">ライフ</span><b id="life">10</b></div>
-      <div class="pill"><span class="lbl" id="stageLbl">1面 草原</span><b id="wave">WAVE 1/5</b></div>
-      <button class="iconbtn" id="mute" aria-pressed="true">音 ON</button>
+    <div class="money" id="money" role="img" aria-label="お金 0"><i class="coin"></i><b id="balls">0</b></div>
+    <div class="hud-r">
+      <div class="liferow">
+        <svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff4f6d" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.1 5.3 3 1.7-1.9 3.2-3 5.3-3 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/><path fill="#fff" opacity=".45" d="M6.6 7.2c-1.3.1-2.2 1.2-2 2.5.1.5.7.6.9.1.3-.9.8-1.4 1.4-1.6.6-.2.4-1.1-.3-1z"/></svg>
+        <div class="lifebar" id="lifeBar" role="img" aria-label="ライフ 10/10"><i id="lifeFill"></i></div>
+        <button class="snd" id="mute" aria-pressed="true" aria-label="音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path fill="currentColor" stroke="none" d="M3 9.5h3.5L11 5.5v13l-4.5-4H3z"/><g class="sw"><path d="M14.5 9a4 4 0 0 1 0 6"/><path d="M17 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="sx"><path d="M15 9.5l5 5M20 9.5l-5 5"/></g></svg></button>
+      </div>
+      <div class="wave" id="wave">WAVE 1/5</div>
     </div>
   </header>
   <div class="bottom">
-    <div class="deckbar" id="deckbar"></div>
     <div class="handle" id="handle" tabindex="0" role="slider" aria-label="ハンドル。回して玉を打つ強さを変える" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
-      <div class="pow"><span class="lbl" id="handleHint">ハンドル</span><span class="lbl">強さ</span><b id="powTxt">50%</b></div>
       <div class="dial" id="dial" aria-hidden="true"><div class="ring" id="ring"></div><div class="dial-knob" id="dialKnob"></div><span class="dial-lbl l">弱</span><span class="dial-lbl r">強</span></div>
     </div>
   </div>
@@ -132,12 +141,12 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
     <div class="panel">
       <h1 class="logo"><span class="a">くぎだま</span><span class="b">ディフェンス</span></h1>
       <ul class="rules">
-        <li><span>打つ</span><span>玉は1分に50発、ずっと出続けるよ。左下から打ち上がって、上のレールを回り、勢いがなくなった所で落ちる</span></li>
-        <li><span>強さ</span><span>右下のハンドルを回すと強さが変わるよ。50%でまん中、弱いと左寄り、強いと右に落ちる（上の▼が落ちる場所）</span></li>
-        <li><span>建てる</span><span>杭（くい）をタップすると、持ち玉を払ってタワーを建てられる</span></li>
-        <li><span>育てる</span><span>タワーに玉を当てると経験値。火炎弾・氷結弾などを当てると弾に属性がつき、同じ属性が重なると「ばくはつ」などのとくしゅ効果、ちがう属性なら「わざ」が出る。鉛玉は攻撃力、BB弾は連射アップ。属性タワーはお店で</span></li>
-        <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! 玉が増えて、タワーが強くなる</span></li>
-        <li><span>まもる</span><span>敵が下の受け皿まで来るとライフが減るよ。5ウェーブ守ればクリア</span></li>
+        <li><span>打つ</span><span>玉は1分に50発、ずっと出続けるよ（1発でコイン1枚）。左下から打ち上がって、上のレールを回り、勢いがなくなった所で落ちる</span></li>
+        <li><span>強さ</span><span>右下のハンドルを回すと強さが変わるよ。まわりの光る輪が強さで、まん中なら台のまん中、弱いと左寄り、強いと右に落ちる（上の▼が落ちる場所）</span></li>
+        <li><span>建てる</span><span>杭（くい）をタップすると、お金（コイン）を払ってタワーを建てられる</span></li>
+        <li><span>育てる</span><span>タワーに玉を当てると経験値。火炎弾・氷結弾などを当てると弾に属性がつき、同じ属性が重なると「ばくはつ」などのとくしゅ効果、ちがう属性なら「わざ」が出る。敵の上でも、ちがう属性が出会えば「わざ」。鉛玉は攻撃力、BB弾は連射アップ。属性タワーはお店で</span></li>
+        <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! コインがたくさん出て、タワーが強くなる</span></li>
+        <li><span>まもる</span><span>敵が下の受け皿まで来ると右上のライフのバーが減るよ。5ウェーブ守ればクリア</span></li>
       </ul>
       <div class="btnrow">
         <button class="btn primary" id="startBtn">あそぶ</button>
@@ -160,9 +169,9 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
   <div class="overlay" id="shop" hidden>
     <div class="panel">
       <h2>お店</h2>
-      <p class="purse">持ち玉<b id="shopBalls">0</b></p>
+      <p class="purse">お金 <i class="coin"></i><b id="shopBalls">0</b></p>
       <section><h3>特殊な玉をセットに足す</h3><div class="items" id="shopBallList"></div></section>
-      <section><h3>玉をセットから抜く<small>1つ 25玉・3つまで減らせる</small></h3><div class="chips" id="shopDeck"></div></section>
+      <section><h3>玉をセットから抜く<small>1つ <i class="coin"></i>25・3つまで減らせる</small></h3><div class="chips" id="shopDeck"></div></section>
       <section><h3>タワーの種類</h3><div class="items" id="shopTowers"></div></section>
       <button class="btn primary" id="shopNext">次の面へ</button>
     </div>
@@ -186,6 +195,7 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PINK='#ff4fd8',CYAN='#3ef2ff',GOLD='#ffd84a',INK='#f3eeff';
 const MOON='#f3e6b5',FIRE='#d8f26a',BERRY='#ff8f7e';
 const RAINBOW=['#ff4f6d','#ffa94f','#ffe94f','#5fff8a','#4fd8ff','#c26bff'];
+const COIN='<i class="coin"></i>';           // お金のマーク（持ち玉はお金として見せる）
 const NUMF='"M PLUS Rounded 1c",sans-serif';
 const DISPF='"Kiwi Maru","M PLUS Rounded 1c",serif';
 const BODYF='"M PLUS Rounded 1c",sans-serif';
@@ -239,6 +249,7 @@ const COMBO={
   'ice+poison':{name:'こおり毒',color:'#a99bff',desc:'とてもおそくして、どくもつける'},
   'bolt+poison':{name:'しびれ毒',color:'#dcff5f',desc:'どくがとびうつって広がる'},
 };
+const LIFE_MAX=10;                            // ライフ（上のバー）
 const BUFF_T=10;                              // 玉でついた属性・とくしゅ効果・わざ・攻撃UP・連射UP がつづく秒数
 const TOWERS={
   basic:{name:'ふつうタワー',color:'#a6e38c',range:78,rate:.9,dmg:1,cost:30,desc:'近くの敵を自動で撃つ'},
@@ -381,7 +392,7 @@ function setupStage(){
   G.lcd=L.lcd; G.frame=L.frame||null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
   G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];
-  G.life=10;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
+  G.life=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
   G.flies=Array.from({length:meadow?32:16},()=>({x:45+rnd()*285,y:(meadow?120:90)+rnd()*(meadow?420:430),ph:rnd()*6.28,sp:.3+rnd()*.5,bl:.8+rnd()*1.6}));
@@ -696,7 +707,7 @@ function buildNeon(c){
   c.shadowBlur=0;
 }
 
-// 台を画面いっぱいに。縦長の画面では横ぴったりにして、下に玉セットとハンドルの場所（84px）を残す
+// 台を画面いっぱいに。縦長の画面では横ぴったりにして、下にハンドルの場所（84px）を残す
 function resize(){
   const r=$('app').getBoundingClientRect();
   if(r.width<10||r.height<10) return;
@@ -825,6 +836,23 @@ function applyCombo(e,k,dmg){
   else if(k==='ice+poison'){applyEl(e,'ice',3);applyEl(e,'poison',2)}
   else if(k==='bolt+poison'){applyEl(e,'poison',2);zapFrom(e,2,dmg*.4,o=>applyEl(o,'poison',2))}
 }
+// 敵の今の属性（やけど＝火・おそい＝氷・しびれ＝雷・どく＝毒）
+function enemyEls(e){
+  const o=[]; if(e.burn>0)o.push('fire'); if(e.slow>0)o.push('ice'); if(e.shock>0||e.stun>0)o.push('bolt'); if(e.psnT>0)o.push('poison');
+  return o;
+}
+// 属性弾が敵に当たったとき：ちがう属性がついていれば、敵の上でも「わざ」
+function ballElOnEnemy(e,el,dmg){
+  if(e.dead) return;
+  const other=enemyEls(e).find(x=>x!==el);
+  if(other){
+    const k=comboKey(other,el), C=COMBO[k];
+    applyCombo(e,k,Math.max(1,dmg));
+    addText(e.x,e.y-e.r-12,C.name+'！',C.color);
+    burst(e.x,e.y,C.color,10); G.rings.push({x:e.x,y:e.y,R:26,c:C.color,t:.4}); sfx.lv();
+  }else applyEl(e,el,1,dmg);
+  if(el==='bolt'&&!e.dead) e.shock=2;                      // 雷弾が当たった敵は、2秒しびれのしるし
+}
 function heso(q){
   if(G.fever>0){G.balls+=10;addText(q.x,q.y-12,'+10',GOLD,true);burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}
   G.fever=8; G.feverPay=60; G.feverPayT=0; G.flash=.6;
@@ -952,7 +980,7 @@ function stepBalls(f){
         b.x=e.x+nx*rr; b.y=e.y+ny*rr;
         const vn=b.vx*nx+b.vy*ny; if(vn<0){b.vx-=1.6*vn*nx;b.vy-=1.6*vn*ny}
         const key='e'+e.id;
-        if(G.time-(b.hit[key]??-9)>.3){b.hit[key]=G.time;hurtEnemy(e,B.dmg*(G.fever>0?2:1));if(B.el)applyEl(e,B.el,1,B.dmg)}
+        if(G.time-(b.hit[key]??-9)>.3){b.hit[key]=G.time;hurtEnemy(e,B.dmg*(G.fever>0?2:1));if(B.el)ballElOnEnemy(e,B.el,B.dmg)}
       }
       for(const q of G.pockets){
         const hw=pocketHW(q); if(hw<=0) continue;
@@ -979,7 +1007,7 @@ function update(dt){
   // 敵が進む
   for(const e of G.en){
     if(e.dead) continue;
-    e.slow=Math.max(0,e.slow-dt); e.flash=Math.max(0,e.flash-dt); e.stun=Math.max(0,(e.stun||0)-dt);
+    e.slow=Math.max(0,e.slow-dt); e.flash=Math.max(0,e.flash-dt); e.stun=Math.max(0,(e.stun||0)-dt); e.shock=Math.max(0,(e.shock||0)-dt);
     if(e.burn>0){e.burn-=dt;hurtEnemy(e,e.burnD*dt,true)}
     if(e.psnT>0){e.psnT-=dt;hurtEnemy(e,e.psnD*dt,true)}
     if(e.dead) continue;
@@ -1127,7 +1155,7 @@ function drawEnemy(e){
   ctx.fillStyle='#1b1424'; circle(e.x-ex,ey+r*.04,r*.1); ctx.fill(); circle(e.x+ex,ey+r*.04,r*.1); ctx.fill();
   if(e.slow>0){ctx.strokeStyle='rgba(191,230,255,.85)';ctx.lineWidth=1.2;ctx.setLineDash([2,3]);circle(e.x,e.y,r+7);ctx.stroke();ctx.setLineDash([])}
   // やけど・どく・しびれ：頭の上の小さなしるし
-  const marks=[]; if(e.burn>0)marks.push(ELEM.fire.color); if(e.psnT>0)marks.push(ELEM.poison.color); if(e.stun>0)marks.push(ELEM.bolt.color);
+  const marks=[]; if(e.burn>0)marks.push(ELEM.fire.color); if(e.psnT>0)marks.push(ELEM.poison.color); if(e.stun>0||e.shock>0)marks.push(ELEM.bolt.color);
   marks.forEach((c,i)=>{const x=e.x+(i-(marks.length-1)/2)*8,y=e.y-r-9+Math.sin(G.time*6+i)*1.5;ctx.globalCompositeOperation='lighter';glow(c,x,y,7,.8);ctx.globalCompositeOperation='source-over';ctx.fillStyle=c;circle(x,y,2.2);ctx.fill()});
   const fr=Math.max(0,e.hp/e.max);
   ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=3.5; circle(e.x,e.y,r+3.5); ctx.stroke();
@@ -1279,21 +1307,16 @@ function draw(){
 /* ---------- 画面の表示 ---------- */
 const hc={};
 function hud(){
-  const set=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v}};
-  set('balls',G.balls); set('life',G.life); set('wave',`WAVE ${G.wave}/5`);
-  set('stageLbl',`${G.stage+1}面 ${STAGES[G.stage].name}`);
-  set('handleHint',G.state!=='play'?'ハンドル':G.paused?'止まってるよ':G.balls>0?'発射中・1分に50発':'持ち玉がないよ');
-}
-function renderDeck(){
-  const box=$('deckbar'); box.textContent='';
-  const lbl=document.createElement('span'); lbl.textContent='玉セット'; box.append(lbl);
-  const cnt={}; for(const k of G.deck) cnt[k]=(cnt[k]||0)+1;
-  for(const k of Object.keys(BALLS)){
-    if(!cnt[k]) continue;
-    const c=document.createElement('span'); c.className='chip';
-    const sh={normal:'ノーマル',fire:'火',ice:'氷',bolt:'雷',poison:'毒',lead:'鉛',bb:'BB'}[k]||BALLS[k].name;
-    c.title=BALLS[k].name; c.innerHTML=`<span class="dot" style="color:${BALLS[k].color}"></span>${sh}<span class="num">×${cnt[k]}</span>`;
-    box.append(c);
+  const set=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;return true}return false};
+  if(set('balls',G.balls)){$('money').classList.toggle('empty',G.balls<=0);$('money').setAttribute('aria-label','お金 '+G.balls)}
+  set('wave',`WAVE ${G.wave}/5`);
+  if(hc.life!==G.life){
+    const was=hc.life; hc.life=G.life;
+    const fr=Math.max(0,Math.min(1,G.life/LIFE_MAX)), f=$('lifeFill'), bar=$('lifeBar');
+    f.style.width=(fr*100)+'%';
+    f.style.setProperty('--c',fr>.5?'#7be36a':fr>.25?'#ffd24a':'#ff4f6d');
+    bar.setAttribute('aria-label',`ライフ ${G.life}/${LIFE_MAX}`);
+    if(was!==undefined&&G.life<was){bar.classList.remove('hurt');void bar.offsetWidth;bar.classList.add('hurt')}
   }
 }
 function setStrength(s){
@@ -1301,14 +1324,13 @@ function setStrength(s){
   const pc=Math.round(G.strength*100);
   $('ring').style.setProperty('--p',G.strength);
   $('dialKnob').style.transform=`rotate(${-135+G.strength*270}deg)`;
-  $('powTxt').textContent=pc+'%';
   $('handle').setAttribute('aria-valuenow',pc);
 }
 function hideOverlays(){for(const id of ['title','result','shop']) $(id).hidden=true}
 function showResult(title,lines,btn,fn,btn2,fn2){
   $('resTitle').textContent=title;
   const ul=$('resLines'); ul.textContent='';
-  for(const l of lines){const li=document.createElement('li');li.textContent=l;ul.append(li)}
+  for(const l of lines){const li=document.createElement('li');li.innerHTML=l;ul.append(li)}
   const b=$('resBtn'); b.textContent=btn; b.onclick=()=>{ensureAudio();fn()};
   const b2=$('resBtn2'); b2.hidden=!btn2;
   if(btn2){b2.textContent=btn2; b2.onclick=()=>{ensureAudio();fn2()}}
@@ -1317,7 +1339,7 @@ function showResult(title,lines,btn,fn,btn2,fn2){
 function itemRow(color,name,desc,price,enabled,onBuy,owned){
   const row=document.createElement('div'); row.className='item';
   row.innerHTML=`<span class="dot big" style="color:${color}"></span><div><div class="t">${name}</div><div class="d">${desc}</div></div>`;
-  const b=document.createElement('button'); b.className='buy'+(owned?' owned':''); b.textContent=price; b.disabled=!enabled;
+  const b=document.createElement('button'); b.className='buy'+(owned?' owned':''); if(typeof price==='number')b.innerHTML=COIN+price;else b.textContent=price; b.disabled=!enabled;
   if(onBuy) b.onclick=onBuy; row.append(b); return row;
 }
 
@@ -1349,7 +1371,7 @@ function newRun(){
 }
 function startStage(){
   setupStage(); hideOverlays(); closeSheet(true);
-  G.state='play'; renderDeck(); startWave(1);
+  G.state='play'; startWave(1);
   const S=STAGES[G.stage]; banner(`${G.stage+1}面 ${S.name}`+(S.kind?'・'+S.kind:''),S.accent,2.2,200);
 }
 function stageClear(){
@@ -1358,10 +1380,10 @@ function stageClear(){
   const S=STAGES[G.stage];
   if(G.stage<STAGES.length-1){
     writeSave();
-    showResult(`${G.stage+1}面 ${S.name} クリア！`,[`のこりライフ ${G.life}`,`クリアボーナス +${bonus}玉`,`持ち玉 ${G.balls}`,'ここまでセーブしたよ'],'お店へ',openShop);
+    showResult(`${G.stage+1}面 ${S.name} クリア！`,[`のこりライフ ${G.life}`,`クリアボーナス ${COIN}+${bonus}`,`お金 ${COIN}${G.balls}`,'ここまでセーブしたよ'],'お店へ',openShop);
   }else{
     clearSave();
-    showResult(`${G.stage+1}面までクリア！`,['試作はここまで',`倒した敵 ${G.kills}`,`持ち玉 ${G.balls}`],'1面からもう一度',newRun);
+    showResult(`${G.stage+1}面までクリア！`,['試作はここまで',`倒した敵 ${G.kills}`,`お金 ${COIN}${G.balls}`],'1面からもう一度',newRun);
   }
 }
 function gameOver(){
@@ -1375,21 +1397,21 @@ function renderShop(){
   const L=$('shopBallList'); L.textContent='';
   for(const k of ['fire','ice','bolt','poison','lead','bb']){
     const B=BALLS[k];
-    L.append(itemRow(B.color,B.name,B.desc,B.price+'玉',G.balls>=B.price,()=>{G.balls-=B.price;G.deck.push(k);sfx.build();renderShop();renderDeck()}));
+    L.append(itemRow(B.color,B.name,B.desc,B.price,G.balls>=B.price,()=>{G.balls-=B.price;G.deck.push(k);sfx.build();renderShop()}));
   }
   const D=$('shopDeck'); D.textContent='';
   G.deck.forEach((k,i)=>{
     const b=document.createElement('button'); b.className='chip rm';
     b.innerHTML=`<span class="dot" style="color:${BALLS[k].color}"></span>${BALLS[k].name}<span class="rmx">抜く</span>`;
     b.disabled=G.deck.length<=3||G.balls<25;
-    b.onclick=()=>{G.balls-=25;G.deck.splice(i,1);sfx.build();renderShop();renderDeck()};
+    b.onclick=()=>{G.balls-=25;G.deck.splice(i,1);sfx.build();renderShop()};
     D.append(b);
   });
   const T=$('shopTowers'); T.textContent='';
   for(const k of ['fire','ice','bolt','poison','long']){
     const t=TOWERS[k];
-    if(G.unlocked[k]) T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${t.cost}玉`,'持ってる',false,null,true));
-    else T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${t.cost}玉`,t.unlock+'玉',G.balls>=t.unlock,()=>{G.balls-=t.unlock;G.unlocked[k]=true;sfx.lv();renderShop()}));
+    if(G.unlocked[k]) T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${COIN}${t.cost}`,'持ってる',false,null,true));
+    else T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${COIN}${t.cost}`,t.unlock,G.balls>=t.unlock,()=>{G.balls-=t.unlock;G.unlocked[k]=true;sfx.lv();renderShop()}));
   }
   const n=STAGES[G.stage+1];
   $('shopNext').textContent=n?`${G.stage+2}面 ${n.name}へ`:'次へ';
@@ -1404,7 +1426,7 @@ function openBuild(p){
   for(const k of Object.keys(TOWERS)){
     const t=TOWERS[k];
     if(G.unlocked[k]){
-      body.append(itemRow(t.color,t.name,`${t.desc}（とどく広さ ${t.range}）`,t.cost+'玉',G.balls>=t.cost,()=>{
+      body.append(itemRow(t.color,t.name,`${t.desc}（とどく広さ ${t.range}）`,t.cost,G.balls>=t.cost,()=>{
         G.balls-=t.cost; p.tower={type:k,lv:1,xp:0,cd:.3,rapid:0,pow:0,el:null,elT:0,sp:null,spT:0,combo:null,comboT:0,pop:.3,shot:0}; p.r=Math.max(p.r,7);
         buildStatic(); burst(p.x,p.y,t.color,16); sfx.build(); closeSheet();
       }));
@@ -1470,7 +1492,7 @@ handle.addEventListener('keydown',e=>{
   if(e.key==='ArrowRight'||e.key==='ArrowUp'){setStrength(G.strength+.05);e.preventDefault()}
 });
 
-$('mute').onclick=()=>{muted=!muted;$('mute').textContent=muted?'音 OFF':'音 ON';$('mute').setAttribute('aria-pressed',String(!muted));if(!muted)ensureAudio()};
+$('mute').onclick=()=>{muted=!muted;$('mute').setAttribute('aria-pressed',String(!muted));$('mute').setAttribute('aria-label',muted?'音 OFF':'音 ON');if(!muted)ensureAudio()};
 $('startBtn').onclick=()=>{ensureAudio();newRun()};
 $('contBtn').onclick=()=>{ensureAudio();continueRun()};
 
@@ -1485,7 +1507,7 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 setStrength(.5);
-setupStage(); resize(); renderDeck(); updateContinue();
+setupStage(); resize(); updateContinue();
 try{new ResizeObserver(resize).observe($('app'))}catch(_){window.addEventListener('resize',resize)}
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(buildStatic).catch(()=>{});
 requestAnimationFrame(t=>{last=t;loop(t)});
