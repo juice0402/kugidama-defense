@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Dela+Gothic+One&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
 <style>
-/* Layout: 1画面の縦長パチンコ台。上に持ち玉とライフ、まん中に台（右に発射の通り道）、下に右ハンドル。夜のネオン台に決めた単一テーマ */
+/* Layout: 1画面の縦長パチンコ台。上に持ち玉とライフ、まん中に台（左に発射の通り道）、下に右ハンドル。夜のネオン台に決めた単一テーマ */
 :root{
   --night:#0b0822; --board:#151036; --deep:#0e0a28; --line:#2e2666;
   --ink:#f3eeff; --dim:#a097cf;
@@ -116,7 +116,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
     <div class="hmain">
       <div class="hint"><span id="handleHint">ハンドル</span><span>強さ <span class="num" id="powTxt">30%</span></span></div>
       <div class="track" id="track"><div class="fill" id="fill"></div><div class="knob" id="knob"></div></div>
-      <div class="hint"><span>弱い＝右に落ちる</span><span>強い＝左まで届く</span></div>
+      <div class="hint"><span>弱い＝左に落ちる</span><span>強い＝右まで届く</span></div>
     </div>
     <div class="dial" id="dial" aria-hidden="true"><div class="dial-knob" id="dialKnob"></div></div>
   </div>
@@ -125,7 +125,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
     <div class="panel">
       <h1 class="logo"><span class="a">くぎだま</span><span class="b">ディフェンス</span></h1>
       <ul class="rules">
-        <li><span>打つ</span><span>玉は1分に100発、ずっと出続けるよ。右下から打ち上がって、上のレールを回って落ちる</span></li>
+        <li><span>打つ</span><span>玉は1分に100発、ずっと出続けるよ。本物の台と同じで、左下から打ち上がって、上のレールを回って落ちる</span></li>
         <li><span>強さ</span><span>下のハンドルで強さを変えると、玉の落ちる場所が変わる（金色の光がねらい）</span></li>
         <li><span>建てる</span><span>釘をタップすると、持ち玉を払ってタワーにできる</span></li>
         <li><span>育てる</span><span>タワーに玉を当てると、しばらく連射。経験値もたまってレベルアップ</span></li>
@@ -183,13 +183,13 @@ const DISPF='"Dela Gothic One","M PLUS Rounded 1c",sans-serif';
 const BODYF='"M PLUS Rounded 1c",sans-serif';
 const rad=d=>d*Math.PI/180;
 
-/* 台の形：上が半円の外レール。玉は右下の発射口から右の通り道を上がり、上のレールを左へ回って台に落ちる */
+/* 台の形：上が半円の外レール。玉は左下の発射口から左の通り道を上がり、上のレールを右へ回って台に落ちる（本物の台と同じ） */
 const CX=180, CY=180, RO=166, RI=151, RB=158.5;
-const XI=CX+RI, XB=CX+RB, WALL_L=CX-RO;      // 内レール 331・玉の通り道 338.5・左の外レール 14
+const XI=CX-RI, XB=CX-RB, WALL_R=CX+RO;      // 内レール 29・玉の通り道 21.5・右の外レール 346
 const LAUNCH_Y=576, STRAIGHT=LAUNCH_Y-CY, RAIL_BOTTOM=592;
 const EXIT0=rad(34);                          // 内レールの終わり（戻り玉防止の弁）
 const FIRE_GAP=.6;                            // 1分に100発（本物の台と同じ）
-const exitAngle=s=>rad(40+s*112);             // 強さ0＝右上で落ちる、強さ1＝左の上まで回る
+const exitAngle=s=>Math.PI-rad(40+s*112);     // 強さ0＝左上で落ちる、強さ1＝右の上まで回る（角度は右が0・上が90°）
 
 const BALLS={
   normal:{name:'ノーマル玉',color:'#eaf6ff',e:.5,g:.16,r:5,dmg:1,price:0,desc:'ふつうの玉'},
@@ -299,15 +299,16 @@ function layoutTulip(){
       {k:'heso',x:180,y:476},{k:'pocket',x:52,y:512},{k:'pocket',x:296,y:512},
     ]};
 }
-// 2面：今の「液晶台」。弱く打つと右の道（風車 → 道釘 → ヘソ）、液晶の横のワープからステージ → ヘソ。強く打つと左の道（FEVER中はアタッカーが開く）
+// 2面：今の「液晶台」。弱く打つと左の道（風車 → 道釘 → ヘソ）、液晶の左横のワープからステージ → ヘソ。強く打つと右の道（FEVER中は右打ちでアタッカーへ）
+// ※配置の座標は左右反対の向きで書いてあり、setupStage の flipLayout で本物の向きにする
 function layoutLcd(){
   const P=[],F=[],walls=[];
   P.push(...arcRow(126,46,134,11),...arcRow(108,52,128,19));                 // 天釘
   P.push([150,132],[180,124],[210,132],[128,154],[164,152],[196,152],[232,154]); // 液晶の上のバラ釘
-  P.push([276,150],[300,150],[288,170],[312,170],[276,190],[300,190],[288,210],[312,210],[300,230]); // 右の道
+  P.push([276,150],[300,150],[288,170],[312,170],[276,190],[300,190],[288,210],[312,210],[300,230]); // 弱く打った玉の道（反転後は左）
   roll(P,walls,310,246,296,270,3); P.push([276,306],[304,306]);              // ヨロイ・ハカマ
   roll(P,walls,312,326,238,350,6); P.push([180,350]);  // ステージの下の釘                                            // 道釘
-  P.push([36,180],[60,180],[84,180],[48,200],[72,200],[36,220],[60,220],[84,220],[48,240],[72,240],[36,260],[60,260],[84,260],[48,280],[72,280],[84,300],[58,316]); // 左の道・入賞口の傘
+  P.push([36,180],[60,180],[84,180],[48,200],[72,200],[36,220],[60,220],[84,220],[48,240],[72,240],[36,260],[60,260],[84,260],[48,280],[72,280],[84,300],[58,316]); // 強く打った玉の道（反転後は右）・入賞口の傘
   roll(P,walls,22,388,44,412,3); P.push([146,400],[214,400]);                // アタッカーへ寄せる釘・ジャンプ釘
   P.push([120,460],[150,476],[210,476],[240,460],[270,486],[300,470],[110,500],[140,520],[220,520],[250,505],[290,530],[40,500],[70,520],[100,546],[180,520],[260,548],[316,500]);
   F.push([170.8,372],[189.2,372]);                                                // 命釘
@@ -323,13 +324,25 @@ function layoutLcd(){
 }
 
 /* ---------- 台を作る ---------- */
+// 配置は左右反対の向きで書いてあるので、ここで左右を入れかえて本物の台の向き（左から打つ）にする
+function flipLayout(L){
+  const fx=x=>360-x;
+  return {...L,
+    P:L.P.map(([x,y])=>[fx(x),y]), F:L.F.map(([x,y])=>[fx(x),y]),
+    walls:L.walls.map(([x1,y1,x2,y2,r])=>[fx(x1),y1,fx(x2),y2,r]),
+    frame:L.frame&&L.frame.map(([x,y])=>[fx(x),y]),
+    lcd:L.lcd&&{...L.lcd,x:360-L.lcd.x-L.lcd.w},
+    mills:L.mills.map(m=>({...m,x:fx(m.x),dir:-m.dir})),
+    pockets:L.pockets.map(q=>({...q,x:fx(q.x)})),
+  };
+}
 function setupStage(){
-  const L=STAGES[G.stage].layout();
+  const L=flipLayout(STAGES[G.stage].layout());
   G.pegs=[]; let id=0;
   for(const [x,y] of L.P) G.pegs.push({id:id++,x,y,r:4,tower:null,fixed:false,flash:0});
   for(const [x,y] of L.F) G.pegs.push({id:id++,x,y,r:4,tower:null,fixed:true,flash:0});
   const E=EXIT0;
-  G.walls=[[CX+RI*Math.cos(E),CY-RI*Math.sin(E),CX+RO*Math.cos(E),CY-RO*Math.sin(E)],...L.walls];
+  G.walls=[[CX-RI*Math.cos(E),CY-RI*Math.sin(E),CX-RO*Math.cos(E),CY-RO*Math.sin(E)],...L.walls];
   G.pockets=L.pockets.map(q=>({...q,open:false}));
   G.heso=G.pockets.find(q=>q.k==='heso');
   G.mills=L.mills.map(m=>({...m,ang:0,spin:2.2}));
@@ -337,7 +350,7 @@ function setupStage(){
   G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];
   G.life=10;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
-  G.flies=Array.from({length:16},()=>({x:30+rnd()*285,y:90+rnd()*430,ph:rnd()*6.28,sp:.4+rnd()*.6}));
+  G.flies=Array.from({length:16},()=>({x:45+rnd()*285,y:90+rnd()*430,ph:rnd()*6.28,sp:.4+rnd()*.6}));
   buildStatic();
 }
 
@@ -355,38 +368,38 @@ function buildStatic(){
   c.save(); fieldPath(c,RO,H-6); c.clip();
   if(S.deco==='grass'){
     c.shadowColor=S.accent; c.shadowBlur=5; c.strokeStyle=hexA(S.accent,.55); c.lineWidth=1.4;
-    for(let x=18;x<XI-4;x+=6){
+    for(let x=XI+4;x<W-18;x+=6){
       const h=7+rnd()*10, bend=(rnd()-.5)*6;
       c.beginPath(); c.moveTo(x,H-10); c.quadraticCurveTo(x+bend*.3,H-10-h*.6,x+bend,H-10-h); c.stroke();
     }
   }else{
     c.shadowColor=S.accent; c.shadowBlur=6; c.strokeStyle=hexA('#5fff8a',.35); c.lineWidth=1.6;
-    for(const side of [22,XI-8]){
+    for(const side of [XI+8,W-22]){
       c.beginPath();
       for(let y=150;y<=H-30;y+=6){const x=side+Math.sin(y*.045+side)*5; y===150?c.moveTo(x,y):c.lineTo(x,y)}
       c.stroke();
     }
-    for(const [mx,my,ms] of [[34,H-22,9],[54,H-18,6],[290,H-22,10],[310,H-17,6]]){
+    for(const [mx,my,ms] of [[50,H-22,9],[70,H-18,6],[306,H-22,10],[326,H-17,6]]){
       c.strokeStyle=hexA(S.accent,.8); c.lineWidth=1.6;
       c.beginPath(); c.moveTo(mx,my); c.lineTo(mx,my-ms*.8); c.stroke();
       c.beginPath(); c.arc(mx,my-ms*.8,ms,Math.PI,0); c.closePath(); c.stroke();
     }
   }
   c.restore();
-  // 発射の通り道（右）
-  c.beginPath(); c.moveTo(XI,RAIL_BOTTOM); c.lineTo(XI,CY); c.arc(CX,CY,RI,0,-EXIT0,true); c.arc(CX,CY,RO,-EXIT0,0,false); c.lineTo(CX+RO,RAIL_BOTTOM); c.closePath();
+  // 発射の通り道（左）
+  c.beginPath(); c.moveTo(XI,RAIL_BOTTOM); c.lineTo(XI,CY); c.arc(CX,CY,RI,Math.PI,Math.PI+EXIT0,false); c.arc(CX,CY,RO,Math.PI+EXIT0,Math.PI,true); c.lineTo(CX-RO,RAIL_BOTTOM); c.closePath();
   c.fillStyle=hexA(CYAN,.07); c.fill();
   // 外レールと内レール
   c.shadowColor=CYAN; c.shadowBlur=9; c.strokeStyle=hexA(CYAN,.8); c.lineWidth=2;
   c.beginPath(); c.moveTo(CX-RO,RAIL_BOTTOM); c.lineTo(CX-RO,CY); c.arc(CX,CY,RO,Math.PI,Math.PI*2,false); c.lineTo(CX+RO,RAIL_BOTTOM); c.stroke();
   c.strokeStyle=hexA(CYAN,.55); c.lineWidth=1.6;
-  c.beginPath(); c.moveTo(XI,RAIL_BOTTOM); c.lineTo(XI,CY); c.arc(CX,CY,RI,0,-EXIT0,true); c.stroke();
+  c.beginPath(); c.moveTo(XI,RAIL_BOTTOM); c.lineTo(XI,CY); c.arc(CX,CY,RI,Math.PI,Math.PI+EXIT0,false); c.stroke();
   // 戻り玉防止の弁
   c.shadowColor=GOLD; c.strokeStyle=GOLD; c.lineWidth=2;
-  c.beginPath(); c.moveTo(CX+RI*Math.cos(EXIT0),CY-RI*Math.sin(EXIT0)); c.lineTo(CX+RO*Math.cos(EXIT0),CY-RO*Math.sin(EXIT0)); c.stroke();
+  c.beginPath(); c.moveTo(CX-RI*Math.cos(EXIT0),CY-RI*Math.sin(EXIT0)); c.lineTo(CX-RO*Math.cos(EXIT0),CY-RO*Math.sin(EXIT0)); c.stroke();
   // 発射口
   c.shadowColor=PINK; c.strokeStyle=PINK; c.lineWidth=2;
-  c.beginPath(); c.moveTo(XI,RAIL_BOTTOM); c.lineTo(CX+RO,RAIL_BOTTOM); c.stroke();
+  c.beginPath(); c.moveTo(CX-RO,RAIL_BOTTOM); c.lineTo(XI,RAIL_BOTTOM); c.stroke();
   c.shadowBlur=0;
   // 枠
   c.shadowColor=PINK; c.shadowBlur=14; c.strokeStyle=PINK; c.lineWidth=2.5;
@@ -401,7 +414,7 @@ function buildStatic(){
     c.shadowColor=S.accent; c.shadowBlur=8; c.strokeStyle=hexA(S.accent,.9); c.lineWidth=2;
     c.beginPath(); c.moveTo(120,314); c.lineTo(122,322); c.lineTo(172,334); c.stroke();
     c.beginPath(); c.moveTo(188,334); c.lineTo(238,322); c.lineTo(240,314); c.stroke();
-    c.shadowBlur=0; c.fillStyle=hexA(S.accent,.85); c.font=`700 8px ${BODYF}`; c.textAlign='center'; c.fillText('ステージ',150,344);
+    c.shadowBlur=0; c.fillStyle=hexA(S.accent,.85); c.font=`700 8px ${BODYF}`; c.textAlign='center'; c.fillText('ステージ',210,344);
   }
   // 入賞口
   const cup=(x,y,w,color,label,ly)=>{
@@ -423,8 +436,8 @@ function buildStatic(){
     }
     if(q.k==='warp'){
       c.shadowColor=CYAN; c.shadowBlur=8; c.strokeStyle=CYAN; c.lineWidth=1.6;
-      c.beginPath(); c.moveTo(q.x-6,q.y); c.lineTo(q.x-6,q.y+10); c.lineTo(q.x+6,q.y+10); c.stroke();
-      c.shadowBlur=0; c.fillStyle=CYAN; c.font=`700 8px ${BODYF}`; c.textAlign='center'; c.fillText('ワープ',q.x+2,q.y+20);
+      c.beginPath(); c.moveTo(q.x+6,q.y); c.lineTo(q.x+6,q.y+10); c.lineTo(q.x-6,q.y+10); c.stroke();
+      c.shadowBlur=0; c.fillStyle=CYAN; c.font=`700 8px ${BODYF}`; c.textAlign='center'; c.fillText('ワープ',q.x-2,q.y+20);
     }
   }
   // アウト口
@@ -433,8 +446,8 @@ function buildStatic(){
   c.shadowBlur=0; c.fillStyle=hexA(CYAN,.7); c.font=`700 7px ${NUMF}`; c.textAlign='center'; c.fillText('OUT',180,564.5);
   // 受け皿
   c.shadowColor=PINK; c.shadowBlur=8; c.setLineDash([6,6]); c.strokeStyle=hexA(PINK,.8); c.lineWidth=2;
-  c.beginPath(); c.moveTo(22,580); c.lineTo(XI-6,580); c.stroke(); c.setLineDash([]);
-  c.shadowBlur=0; c.fillStyle=hexA(PINK,.9); c.font=`700 10px ${BODYF}`; c.textAlign='left'; c.fillText('受け皿',24,574);
+  c.beginPath(); c.moveTo(XI+6,580); c.lineTo(W-22,580); c.stroke(); c.setLineDash([]);
+  c.shadowBlur=0; c.fillStyle=hexA(PINK,.9); c.font=`700 10px ${BODYF}`; c.textAlign='left'; c.fillText('受け皿',XI+8,574);
   // 釘
   for(const p of G.pegs){
     if(p.tower) continue;
@@ -469,7 +482,7 @@ function startWave(w){
   banner('WAVE '+w,CYAN,1.6,260); sfx.wave();
 }
 function spawn(t){
-  const E=ENEMIES[t], mul=1+.45*G.stage+.08*(G.wave-1), x=40+Math.random()*260;
+  const E=ENEMIES[t], mul=1+.45*G.stage+.08*(G.wave-1), x=56+Math.random()*264;
   G.en.push({id:G.eid++,t,x,y:CY-Math.sqrt(RO*RO-(x-CX)**2)-8,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r:E.r,ph:Math.random()*6.28,slow:0,flash:0,dead:false});
 }
 
@@ -478,7 +491,7 @@ function launch(){
   if(G.bs.length>=32) return false;
   const t=G.deck[Math.floor(Math.random()*G.deck.length)];
   G.balls--;
-  const ex=Math.max(rad(38),Math.min(rad(156),exitAngle(G.strength)+rad((Math.random()-.5)*6)));
+  const ex=Math.max(rad(24),Math.min(rad(142),exitAngle(G.strength)+rad((Math.random()-.5)*6)));
   G.bs.push({x:XB,y:LAUNCH_Y,vx:0,vy:0,t,r:BALLS[t].r,age:0,still:0,hit:{},gone:false,rail:true,s:0,ex,vt:2.6+2.4*G.strength});
   G.launchFx=.2; sfx.launch(); return true;
 }
@@ -513,7 +526,7 @@ function heso(q){
   if(G.fever>0){G.balls+=10;addText(q.x,q.y-12,'+10',GOLD,true);burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}
   G.fever=8; G.feverPay=60; G.feverPayT=0; G.flash=.6;
   banner('FEVER!!','rainbow',2.2,250); burst(q.x,q.y+6,'rainbow',40); sfx.fever();
-  if(G.pockets.some(p=>p.k==='attacker')) banner('← 強く打ってアタッカーへ',GOLD,2.6,300);
+  if(G.pockets.some(p=>p.k==='attacker')) banner('右打ち！ アタッカーへ →',GOLD,2.6,300);
   if(G.pockets.some(p=>p.k==='tulip')) banner('チューリップ全開！',GOLD,2.2,300);
 }
 
@@ -524,7 +537,7 @@ function posts(q){
     case 'tulip': return tulipOpen(q)?[[q.x-13,q.y-7],[q.x+13,q.y-7]]:[[q.x-9.5,q.y-1],[q.x+9.5,q.y-1]];
     case 'pocket': return [[q.x-11,q.y+2],[q.x+11,q.y+2]];
     case 'attacker': return G.fever>0?[[q.x-33,q.y],[q.x+33,q.y]]:[];
-    case 'warp': return [[q.x+9,q.y+2]];
+    case 'warp': return [[q.x-9,q.y+2]];
   }
   return [];
 }
@@ -540,7 +553,7 @@ function pocketHW(q){
 }
 function enterPocket(q,b){
   G.stat[q.k]=(G.stat[q.k]||0)+1;G.stat[q.k+q.x]=(G.stat[q.k+q.x]||0)+1;
-  if(q.k==='warp'){b.x=232;b.y=311;b.vx=-1.3;b.vy=0;addText(q.x,q.y-10,'ワープ',CYAN);sfx.warp();return}
+  if(q.k==='warp'){b.x=128;b.y=311;b.vx=1.3;b.vy=0;addText(q.x,q.y-10,'ワープ',CYAN);sfx.warp();return}
   b.gone=true;
   if(q.k==='heso'){heso(q);return}
   if(q.k==='attacker'){G.balls+=10;addText(b.x,q.y-8,'+10',GOLD,true);burst(b.x,q.y+6,GOLD,8);sfx.pocket();return}
@@ -549,6 +562,8 @@ function enterPocket(q,b){
 }
 
 /* 当たり判定 */
+// アタッカーのふた（閉じているとき）。台のまん中へ玉が転がるように傾ける
+const lid=q=>q.x<180?[q.x-30,q.y-4,q.x+30,q.y+4]:[q.x-30,q.y+4,q.x+30,q.y-4];
 function segHit(b,s,e){
   const ax=s[0],ay=s[1],vx=s[2]-ax,vy=s[3]-ay, L2=vx*vx+vy*vy||1;
   let t=((b.x-ax)*vx+(b.y-ay)*vy)/L2; t=t<0?0:t>1?1:t;
@@ -569,24 +584,24 @@ function bound(b){
   const r=b.r;
   if(b.y<CY){
     const dx=b.x-CX, dy=b.y-CY, d=Math.hypot(dx,dy)||1, th=Math.atan2(-dy,dx);
-    const lim=(th<EXIT0?RI:RO)-1.5-r;
+    const lim=(th>Math.PI-EXIT0?RI:RO)-1.5-r;
     if(d>lim){const nx=dx/d,ny=dy/d;b.x=CX+nx*lim;b.y=CY+ny*lim;const vn=b.vx*nx+b.vy*ny;if(vn>0){b.vx-=1.3*vn*nx;b.vy-=1.3*vn*ny}}
   }
-  if(b.x<WALL_L+1.5+r){b.x=WALL_L+1.5+r;if(b.vx<0)b.vx=-b.vx*.5}
-  if(b.y>=CY-2&&b.x>XI-1.5-r){b.x=XI-1.5-r;if(b.vx>0)b.vx=-b.vx*.5}
+  if(b.x>WALL_R-1.5-r){b.x=WALL_R-1.5-r;if(b.vx>0)b.vx=-b.vx*.5}
+  if(b.y>=CY-2&&b.x<XI+1.5+r){b.x=XI+1.5+r;if(b.vx<0)b.vx=-b.vx*.5}
 }
 
 function stepBalls(f){
   for(const b of G.bs){
     const B=BALLS[b.t];
     if(b.rail){
-      // 右の通り道を上がって、外レールにそって左へ回る
+      // 左の通り道を上がって、外レールにそって右へ回る
       b.s+=(b.s<STRAIGHT?17:13.5)*f;
-      const th=(b.s-STRAIGHT)/RB;
+      const th=Math.PI-(b.s-STRAIGHT)/RB;
       if(b.s<=STRAIGHT){b.x=XB;b.y=LAUNCH_Y-b.s}
-      else if(th<b.ex){b.x=CX+RB*Math.cos(th);b.y=CY-RB*Math.sin(th)}
+      else if(th>b.ex){b.x=CX+RB*Math.cos(th);b.y=CY-RB*Math.sin(th)}
       else{
-        const e=b.ex, tx=-Math.sin(e), ty=-Math.cos(e), nx=-Math.cos(e), ny=Math.sin(e);
+        const e=b.ex, tx=Math.sin(e), ty=Math.cos(e), nx=-Math.cos(e), ny=Math.sin(e);
         b.x=CX+(RB-1.5)*Math.cos(e); b.y=CY-(RB-1.5)*Math.sin(e);
         b.vx=tx*b.vt+nx*.7; b.vy=ty*b.vt+ny*.7; b.rail=false;
       }
@@ -601,7 +616,7 @@ function stepBalls(f){
       for(const w of G.walls) segHit(b,w,.3);
       for(const q of G.pockets){
         for(const [x,y] of posts(q)) dotHit(b,x,y,2.5,.4);
-        if(q.k==='attacker'&&G.fever<=0) segHit(b,[q.x-30,q.y-4,q.x+30,q.y+4],.2);
+        if(q.k==='attacker'&&G.fever<=0) segHit(b,lid(q),.2);
       }
       bound(b);
       for(const p of G.pegs){
@@ -657,7 +672,7 @@ function update(dt){
     if(e.dead) continue;
     e.slow=Math.max(0,e.slow-dt); e.flash=Math.max(0,e.flash-dt);
     e.y+=e.sp*(e.slow>0?.45:1)*f;
-    e.x=Math.max(24,Math.min(318,e.x+Math.sin(G.time*1.7+e.ph)*.28*f));
+    e.x=Math.max(42,Math.min(336,e.x+Math.sin(G.time*1.7+e.ph)*.28*f));
     if(e.y>=578){
       e.dead=true; G.life--; G.shake=.35;
       addText(e.x,562,'ライフ -1',PINK,true); burst(e.x,580,PINK,10); sfx.hurt();
@@ -695,7 +710,7 @@ function update(dt){
   if(G.life<=0){G.life=0;gameOver();return}
   // ウェーブの区切り
   if(!G.spawnQ.length&&!G.en.length&&!G.waveDone){
-    if(G.wave<5){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(170,300,'WAVE クリア +15',GOLD,true)}
+    if(G.wave<5){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true)}
     else{stageClear();return}
   }
   if(G.waveDone){G.waveGap-=dt;if(G.waveGap<=0)startWave(G.wave+1)}
@@ -725,7 +740,7 @@ function drawLcd(t){
     ctx.font=`400 26px ${DISPF}`; ctx.fillStyle=col; ctx.fillText(String(n),x,y+1);
   }
   ctx.font=`700 10px ${BODYF}`; ctx.fillStyle=fever?GOLD:hexA(INK,.7);
-  ctx.fillText(fever?'← 強く打ってアタッカーへ':'ヘソに入れると 777',L.x+L.w/2,L.y+L.h-13);
+  ctx.fillText(fever?'右打ち → アタッカーへ':'ヘソに入れると 777',L.x+L.w/2,L.y+L.h-13);
 }
 function draw(){
   const k=scale*dpr;
@@ -778,7 +793,7 @@ function draw(){
         ctx.strokeStyle=GOLD; ctx.lineWidth=2; rrPath(ctx,q.x-29,q.y-2,58,12,4); ctx.stroke();
         ctx.fillStyle=GOLD; ctx.font=`400 10px ${DISPF}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('OPEN',q.x,q.y-12);
       }else{
-        ctx.strokeStyle=hexA(PINK,.85); ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(q.x-30,q.y-4); ctx.lineTo(q.x+30,q.y+4); ctx.stroke();
+        const L=lid(q); ctx.strokeStyle=hexA(PINK,.85); ctx.lineWidth=3; ctx.beginPath(); ctx.moveTo(L[0],L[1]); ctx.lineTo(L[2],L[3]); ctx.stroke();
       }
     }
   }
@@ -862,7 +877,7 @@ function draw(){
   for(const b of G.banners){
     const p=b.t/b.dur, a=p<.15?p/.15:p>.78?(1-p)/.22:1, sc=.8+.2*Math.min(1,p/.15);
     const big=b.color==='rainbow', size=big?46:b.text.length>8?18:34;
-    ctx.save(); ctx.globalAlpha=a; ctx.translate(172,b.y); ctx.scale(sc,sc);
+    ctx.save(); ctx.globalAlpha=a; ctx.translate(188,b.y); ctx.scale(sc,sc);
     ctx.font=`400 ${size}px ${DISPF}`;
     let fill=b.color;
     if(big){const g=ctx.createLinearGradient(-120,0,120,0);RAINBOW.forEach((c,i)=>g.addColorStop(((i+t*3)%6)/6,c));fill=g}
@@ -949,7 +964,7 @@ function startStage(){
 }
 function stageClear(){
   G.state='clear'; G.fever=0; G.bs=[]; G.bl=[];
-  const bonus=30+G.life*3; G.balls+=bonus; sfx.fever(); burst(172,300,'rainbow',30);
+  const bonus=30+G.life*3; G.balls+=bonus; sfx.fever(); burst(188,300,'rainbow',30);
   const S=STAGES[G.stage];
   if(G.stage<STAGES.length-1){
     writeSave();
