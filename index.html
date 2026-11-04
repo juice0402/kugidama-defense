@@ -135,7 +135,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
         <li><span>打つ</span><span>玉は1分に50発、ずっと出続けるよ。左下から打ち上がって、上のレールを回り、勢いがなくなった所で落ちる</span></li>
         <li><span>強さ</span><span>右下のハンドルを回すと強さが変わるよ。50%でまん中、弱いと左寄り、強いと右に落ちる（上の▼が落ちる場所）</span></li>
         <li><span>建てる</span><span>杭（くい）をタップすると、持ち玉を払ってタワーを建てられる</span></li>
-        <li><span>育てる</span><span>タワーに玉を当てると経験値。火炎弾・氷結弾などを当てるとタワーに属性がつき、ちがう属性を重ねると「わざ」が出る。鉛玉は攻撃力、BB弾は連射アップ</span></li>
+        <li><span>育てる</span><span>タワーに玉を当てると経験値。火炎弾・氷結弾などを当てると弾に属性がつき、同じ属性が重なると「ばくはつ」などのとくしゅ効果、ちがう属性なら「わざ」が出る。鉛玉は攻撃力、BB弾は連射アップ。属性タワーはお店で</span></li>
         <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! 玉が増えて、タワーが強くなる</span></li>
         <li><span>まもる</span><span>敵が下の受け皿まで来るとライフが減るよ。5ウェーブ守ればクリア</span></li>
       </ul>
@@ -223,18 +223,29 @@ const ELEM={
 };
 const EL_ORDER=['fire','ice','bolt','poison'];
 const comboKey=(a,b)=>EL_ORDER.indexOf(a)<EL_ORDER.indexOf(b)?a+'+'+b:b+'+'+a;
+// 同じ属性が重なると「とくしゅ効果」（属性タワーなら、その属性弾が1つ当たるだけで出る）
+const SPECIAL={
+  fire:{name:'ばくはつ',color:'#ff9a3d',desc:'弾が当たると爆発して、まわりの敵にもダメージとやけど'},
+  ice:{name:'氷の霧',color:'#d8f6ff',desc:'弾が当たった所に霧が残って、中の敵はとてもおそくなる'},
+  bolt:{name:'いなずま',color:'#fff27a',desc:'4体にとびうつって、少しのあいだ止める'},
+  poison:{name:'毒の沼',color:'#b77bff',desc:'弾が当たった所に毒の沼が残って、中の敵にどく'},
+};
+// ちがう属性が出会うと「わざ」
 const COMBO={
   'fire+ice':{name:'スチーム',color:'#eaf6ff',desc:'弾が当たると、まわりの敵もやけど＋おそくなる'},
-  'fire+bolt':{name:'ばくはつ',color:'#ffb347',desc:'弾が当たると爆発して、まわりの敵にもダメージ'},
+  'fire+bolt':{name:'プラズマ',color:'#ffb347',desc:'3体にとびうつって、とびうつった敵も燃える'},
   'fire+poison':{name:'どくの炎',color:'#ff6fae',desc:'やけどとどくを、2倍の強さでつける'},
   'ice+bolt':{name:'かみなり氷',color:'#a8fbff',desc:'3体にとびうつって、少しのあいだ止める'},
   'ice+poison':{name:'こおり毒',color:'#a99bff',desc:'とてもおそくして、どくもつける'},
   'bolt+poison':{name:'しびれ毒',color:'#dcff5f',desc:'どくがとびうつって広がる'},
 };
-const BUFF_T=10;                              // 属性・わざ・攻撃UP・連射UP がつづく秒数
+const BUFF_T=10;                              // 玉でついた属性・とくしゅ効果・わざ・攻撃UP・連射UP がつづく秒数
 const TOWERS={
   basic:{name:'ふつうタワー',color:'#a6e38c',range:78,rate:.9,dmg:1,cost:30,desc:'近くの敵を自動で撃つ'},
-  ice:{name:'こおりタワー',color:'#a8dcff',range:72,rate:1,dmg:.5,cost:45,el:'ice',unlock:80,desc:'いつも「氷」。氷結弾でもっと強く、ほかの属性弾でわざが出る'},
+  fire:{name:'ほのおタワー',color:'#ff8a4a',range:74,rate:.95,dmg:1,cost:45,el:'fire',unlock:80,desc:'弾でやけど。火炎弾が当たると「ばくはつ」'},
+  ice:{name:'こおりタワー',color:'#a8dcff',range:72,rate:1,dmg:.7,cost:45,el:'ice',unlock:80,desc:'弾でおそく。氷結弾が当たると「氷の霧」'},
+  bolt:{name:'かみなりタワー',color:'#ffe14f',range:76,rate:1.1,dmg:.9,cost:50,el:'bolt',unlock:90,desc:'弾がとびうつる。雷弾が当たると「いなずま」'},
+  poison:{name:'どくタワー',color:'#c08bff',range:70,rate:1,dmg:.6,cost:40,el:'poison',unlock:70,desc:'弾でどく。毒弾が当たると「毒の沼」'},
   long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:2.2,cost:55,unlock:100,desc:'遠くまで届く。撃つのはゆっくり'},
 };
 const ENEMIES={
@@ -251,7 +262,7 @@ const XP_NEED=[0,4,10,18];
 const START_DECK=['normal','normal','normal','normal','fire','ice'];
 const SAVE_KEY='kugidama-save-v1';
 
-const G={fruits:[],zaps:[],rings:[],state:'title',stage:0,wave:1,life:10,balls:150,deck:START_DECK.slice(),unlocked:{basic:true,ice:false,long:false},
+const G={fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,balls:150,deck:START_DECK.slice(),unlocked:{basic:true,fire:false,ice:false,bolt:false,poison:false,long:false},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -742,27 +753,30 @@ function pegHit(p,b,impact){
   }else p.flash=.22;
   if(impact>.6) sfx.tick();
 }
-// タワーの今の属性（玉でついた属性。なければタワーそのものの属性）と、その強さ
+// タワーの今の属性（玉でついた属性。なければタワーそのものの属性）
 const curEl=T=>T.elT>0?T.el:(TOWERS[T.type].el||null);
-const curLv=T=>T.elT>0?T.elLv:1;
 function towerHit(p,b){
   const T=p.tower, D=TOWERS[T.type], B=BALLS[b.t];
   T.xp++; T.pop=.3;
   if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,D.color,14);sfx.lv()}
   if(B.buff==='pow'){if(T.pow<=0)addText(p.x,p.y-16,'攻撃UP',B.color);T.pow=BUFF_T}
   if(B.buff==='rapid'){if(T.rapid<=0)addText(p.x,p.y-16,'連射UP',B.color);T.rapid=BUFF_T}
-  if(!B.el) return;
-  const now=curEl(T), E=ELEM[B.el];
-  if(T.comboT>0&&T.combo.split('+').includes(B.el)){T.comboT=BUFF_T;return}   // 同じわざの属性ならのばす
-  if(!now||now===B.el){
-    // 同じ属性を重ねると強くなる（属性のタワーに同じ属性弾なら一気に最大）
-    const lv=!now?1:Math.min(3,curLv(T)+(D.el===B.el&&T.elT<=0?2:1));
-    T.el=B.el; T.elT=BUFF_T; T.elLv=lv;
-    addText(p.x,p.y-16,E.name+(lv>1?' Lv'+lv:''),E.color);
+  const E=B.el; if(!E) return;
+  if(T.comboT>0){
+    if(T.combo.split('+').includes(E)){T.comboT=BUFF_T;return}            // 同じわざの属性ならのばす
+    T.comboT=0;                                                            // ほかの属性なら、わざは終わって出なおし
+  }
+  if(T.spT>0&&T.sp===E){T.spT=BUFF_T;return}
+  const now=curEl(T);
+  if(!now){T.el=E;T.elT=BUFF_T;addText(p.x,p.y-16,ELEM[E].name,ELEM[E].color);return}  // ふつう・ロングは、弾に属性がつくだけ
+  if(now===E){
+    // 同じ属性が重なると、とくしゅ効果
+    const S=SPECIAL[E]; T.sp=E; T.spT=BUFF_T; T.el=E; T.elT=BUFF_T;
+    addText(p.x,p.y-22,S.name+'！',S.color,true); burst(p.x,p.y,S.color,16); G.rings.push({x:p.x,y:p.y,R:30,c:S.color,t:.5}); sfx.lv();
   }else{
-    // ちがう属性が出会うと「わざ」
-    const k=comboKey(now,B.el), C=COMBO[k];
-    T.combo=k; T.comboT=BUFF_T; T.elT=0;
+    // ちがう属性が出会うと、わざ
+    const k=comboKey(now,E), C=COMBO[k];
+    T.combo=k; T.comboT=BUFF_T; T.elT=0; T.spT=0;
     addText(p.x,p.y-22,C.name+'！',C.color,true); burst(p.x,p.y,C.color,18); G.rings.push({x:p.x,y:p.y,R:34,c:C.color,t:.5}); sfx.lv();
   }
 }
@@ -794,10 +808,18 @@ function zapFrom(e,n,dmg,extra){
     hurtEnemy(best,dmg); if(extra) extra(best); from=best;
   }
 }
+// とくしゅ効果（同じ属性が重なったとき）
+function applySpecial(e,el,dmg){
+  const S=SPECIAL[el];
+  if(el==='fire'){around(e,40,o=>{if(o!==e)hurtEnemy(o,dmg*.8);applyEl(o,'fire',2)});G.rings.push({x:e.x,y:e.y,R:40,c:S.color,t:.4});burst(e.x,e.y,S.color,10);G.shake=Math.max(G.shake,.12)}
+  else if(el==='ice'){applyEl(e,'ice',2);G.zones.push({x:e.x,y:e.y,R:34,t:3,max:3,k:'ice'})}
+  else if(el==='bolt'){e.stun=Math.max(e.stun||0,.4);zapFrom(e,4,dmg*.7,o=>{o.stun=Math.max(o.stun||0,.4)})}
+  else if(el==='poison'){applyEl(e,'poison',1);G.zones.push({x:e.x,y:e.y,R:32,t:4,max:4,k:'poison'})}
+}
 function applyCombo(e,k,dmg){
   const C=COMBO[k];
   if(k==='fire+ice'){around(e,42,o=>{applyEl(o,'fire',1);applyEl(o,'ice',1)});G.rings.push({x:e.x,y:e.y,R:42,c:C.color,t:.45})}
-  else if(k==='fire+bolt'){around(e,44,o=>{if(o!==e)hurtEnemy(o,dmg*1.2)});G.rings.push({x:e.x,y:e.y,R:44,c:C.color,t:.4});burst(e.x,e.y,C.color,10);G.shake=Math.max(G.shake,.12)}
+  else if(k==='fire+bolt'){applyEl(e,'fire',2);zapFrom(e,3,dmg*.6,o=>applyEl(o,'fire',2))}
   else if(k==='fire+poison'){applyEl(e,'fire',2);applyEl(e,'poison',2)}
   else if(k==='ice+bolt'){e.stun=Math.max(e.stun||0,.6);zapFrom(e,3,dmg*.6,o=>{o.stun=Math.max(o.stun||0,.6)})}
   else if(k==='ice+poison'){applyEl(e,'ice',3);applyEl(e,'poison',2)}
@@ -971,14 +993,14 @@ function update(dt){
   // タワー
   for(const p of G.pegs){
     const T=p.tower; if(!T) continue; const D=TOWERS[T.type];
-    T.rapid=Math.max(0,T.rapid-dt); T.pow=Math.max(0,T.pow-dt); T.elT=Math.max(0,T.elT-dt); T.comboT=Math.max(0,T.comboT-dt);
+    T.rapid=Math.max(0,T.rapid-dt); T.pow=Math.max(0,T.pow-dt); T.elT=Math.max(0,T.elT-dt); T.spT=Math.max(0,T.spT-dt); T.comboT=Math.max(0,T.comboT-dt);
     T.pop=Math.max(0,T.pop-dt); T.shot=Math.max(0,T.shot-dt); T.cd-=dt;
     if(T.cd<=0){
       const R=D.range*(1+.08*(T.lv-1))*G.rscale; let best=null,by=-1;
       for(const e of G.en){if(e.dead)continue;const dx=e.x-p.x,dy=e.y-p.y;if(dx*dx+dy*dy<=R*R&&e.y>by){best=e;by=e.y}}
       if(best){
-        const el=curEl(T), fx=T.comboT>0?{combo:T.combo}:el?{el,lv:curLv(T)}:null;
-        const c=T.comboT>0?COMBO[T.combo].color:el?ELEM[el].color:D.color;
+        const el=curEl(T), fx=T.comboT>0?{combo:T.combo}:T.spT>0?{sp:T.sp}:el?{el,lv:1}:null;
+        const c=T.comboT>0?COMBO[T.combo].color:T.spT>0?SPECIAL[T.sp].color:el?ELEM[el].color:D.color;
         G.bl.push({x:p.x,y:p.y,tg:best,dmg:D.dmg*(1+.4*(T.lv-1))*(T.pow>0?1.7:1)*(G.fever>0?2:1),c,fx,gone:false});
         T.cd=D.rate*Math.pow(.85,T.lv-1)*(T.rapid>0?.5:1)*(G.fever>0?.5:1); T.shot=.08;
       }else T.cd=.12;
@@ -989,12 +1011,19 @@ function update(dt){
     const dx=u.tg.x-u.x, dy=u.tg.y-u.y, d=Math.hypot(dx,dy), sp=7*f;
     if(d<=sp+u.tg.r*.5){
       const tg=u.tg; hurtEnemy(tg,u.dmg);
-      if(u.fx){if(u.fx.combo)applyCombo(tg,u.fx.combo,u.dmg);else applyEl(tg,u.fx.el,u.fx.lv,u.dmg)}
+      if(u.fx){if(u.fx.combo)applyCombo(tg,u.fx.combo,u.dmg);else if(u.fx.sp)applySpecial(tg,u.fx.sp,u.dmg);else applyEl(tg,u.fx.el,u.fx.lv,u.dmg)}
       u.gone=true;
     }
     else{u.x+=dx/d*sp;u.y+=dy/d*sp}
   }
   G.bl=G.bl.filter(u=>!u.gone);
+  for(const z of G.zones){
+    z.t-=dt;
+    for(const e of G.en){if(e.dead)continue;const dx=e.x-z.x,dy=e.y-z.y;if(dx*dx+dy*dy>z.R*z.R)continue;
+      if(z.k==='ice'){e.slowF=e.slow>0?Math.min(e.slowF||1,.28):.28;e.slow=Math.max(e.slow,.3)}
+      else{e.psnD=Math.max(e.psnT>0?e.psnD||0:0,.7);e.psnT=Math.max(e.psnT||0,1.2)}}
+  }
+  G.zones=G.zones.filter(z=>z.t>0);
   G.en=G.en.filter(e=>!e.dead);
   // フィーバー
   if(G.fever>0){
@@ -1059,21 +1088,26 @@ function drawTower(p,t){
   ctx.fillStyle=D.color; ctx.strokeStyle=D.color; ctx.lineWidth=Math.max(1.4,R*.15);
   if(T.type==='basic'){ctx.beginPath();ctx.moveTo(p.x,p.y-s);ctx.lineTo(p.x+s*.87,p.y+s*.55);ctx.lineTo(p.x-s*.87,p.y+s*.55);ctx.closePath();ctx.fill()}
   else if(T.type==='ice'){for(let i=0;i<3;i++){const a=i*Math.PI/3+Math.PI/2;ctx.beginPath();ctx.moveTo(p.x-Math.cos(a)*s,p.y-Math.sin(a)*s);ctx.lineTo(p.x+Math.cos(a)*s,p.y+Math.sin(a)*s);ctx.stroke()}}
+  else if(T.type==='fire'){ctx.beginPath();ctx.moveTo(p.x,p.y-s*1.15);ctx.quadraticCurveTo(p.x+s*1.05,p.y+s*.1,p.x,p.y+s*.85);ctx.quadraticCurveTo(p.x-s*1.05,p.y+s*.1,p.x,p.y-s*1.15);ctx.fill()}
+  else if(T.type==='bolt'){ctx.beginPath();ctx.moveTo(p.x+s*.35,p.y-s*1.1);ctx.lineTo(p.x-s*.45,p.y+s*.1);ctx.lineTo(p.x+s*.2,p.y+s*.1);ctx.lineTo(p.x-s*.35,p.y+s*1.1);ctx.stroke()}
+  else if(T.type==='poison'){for(const [dx,dy,r] of [[-.45,.3,.42],[.45,.3,.42],[0,-.45,.48]]){circle(p.x+dx*s,p.y+dy*s,r*s);ctx.fill()}}
   else{circle(p.x,p.y,s*.75);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-s*1.1,p.y);ctx.lineTo(p.x+s*1.1,p.y);ctx.moveTo(p.x,p.y-s*1.1);ctx.lineTo(p.x,p.y+s*1.1);ctx.stroke()}
   if(T.lv<4){const a=XP_NEED[T.lv-1], b=XP_NEED[T.lv], fr=(T.xp-a)/(b-a);ctx.strokeStyle=MOON;ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,R+5,-Math.PI/2,-Math.PI/2+fr*Math.PI*2);ctx.stroke()}
   ctx.fillStyle=MOON;
   for(let i=0;i<T.lv;i++){const a=Math.PI/2+(i-(T.lv-1)/2)*.38;circle(p.x+Math.cos(a)*(R+9),p.y+Math.sin(a)*(R+9),2);ctx.fill()}
   // 属性・わざ：色の光と、のこり時間の弧
-  const el=curEl(T), col=T.comboT>0?COMBO[T.combo].color:el?ELEM[el].color:null;
+  const el=curEl(T), big=T.comboT>0||T.spT>0, col=T.comboT>0?COMBO[T.combo].color:T.spT>0?SPECIAL[T.sp].color:el?ELEM[el].color:null;
   if(col){
-    ctx.globalCompositeOperation='lighter'; glow(col,p.x,p.y,R*(T.comboT>0?3.4:2.4)+(T.comboT>0?Math.sin(t*8)*3:0),T.comboT>0?.75:.35+.12*curLv(T)); ctx.globalCompositeOperation='source-over';
-    const left=T.comboT>0?T.comboT/BUFF_T:T.elT>0?T.elT/BUFF_T:1;
-    ctx.strokeStyle=col; ctx.lineWidth=T.comboT>0?3:1.6+curLv(T)*.6;
+    ctx.globalCompositeOperation='lighter'; glow(col,p.x,p.y,R*(big?3.4:2.2)+(big?Math.sin(t*8)*3:0),big?.75:.4); ctx.globalCompositeOperation='source-over';
+    const left=T.comboT>0?T.comboT/BUFF_T:T.spT>0?T.spT/BUFF_T:T.elT>0?T.elT/BUFF_T:1;
+    ctx.strokeStyle=col; ctx.lineWidth=big?3:2;
     ctx.beginPath(); ctx.arc(p.x,p.y,R+13,-Math.PI/2,-Math.PI/2+left*Math.PI*2); ctx.stroke();
-    if(T.comboT>0){ctx.setLineDash([2,5]);ctx.lineDashOffset=t*24;circle(p.x,p.y,R+17);ctx.stroke();ctx.setLineDash([]);ctx.lineDashOffset=0}
-    const lbl=T.comboT>0?COMBO[T.combo].name:ELEM[el].name+(curLv(T)>1?curLv(T):'');
-    ctx.font=`800 ${T.comboT>0?10:11}px ${BODYF}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
+    if(big){ctx.setLineDash([2,5]);ctx.lineDashOffset=t*24;circle(p.x,p.y,R+17);ctx.stroke();ctx.setLineDash([]);ctx.lineDashOffset=0}
+    const lbl=T.comboT>0?COMBO[T.combo].name:T.spT>0?SPECIAL[T.sp].name:ELEM[el].name;
+    if(T.comboT>0||T.spT>0||T.elT>0){
+    ctx.font=`800 ${big?10:11}px ${BODYF}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
     ctx.lineWidth=3; ctx.strokeStyle='rgba(8,12,22,.9)'; ctx.strokeText(lbl,p.x,p.y-R-21); ctx.fillStyle=col; ctx.fillText(lbl,p.x,p.y-R-21);
+    }
   }
   // 攻撃UP（鉛玉）：上向きの三角、連射UP（BB弾）：まわる点線
   if(T.pow>0){ctx.fillStyle=BALLS.lead.color;for(const dx of [-1,1]){const x=p.x+dx*(R+11),y=p.y+2;ctx.beginPath();ctx.moveTo(x,y-5);ctx.lineTo(x+4,y+2);ctx.lineTo(x-4,y+2);ctx.closePath();ctx.fill()}}
@@ -1184,6 +1218,13 @@ function draw(){
     const p=G.sel, R=(p.tower?TOWERS[p.tower.type].range*(1+.08*(p.tower.lv-1)):TOWERS.basic.range)*G.rscale;
     ctx.setLineDash([4,5]); ctx.strokeStyle=hexA(MOON,.7); ctx.lineWidth=1.2; circle(p.x,p.y,R); ctx.stroke(); ctx.setLineDash([]);
     ctx.strokeStyle=MOON; ctx.lineWidth=2; circle(p.x,p.y,p.r+6+Math.sin(t*6)*1.5); ctx.stroke();
+  }
+  for(const z of G.zones){
+    const a=Math.min(1,z.t/.4)*Math.min(1,(z.max-z.t)/.2+.3), c=z.k==='ice'?SPECIAL.ice.color:SPECIAL.poison.color;
+    ctx.globalCompositeOperation='lighter'; glow(c,z.x,z.y,z.R*1.25,.45*a); ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=a; ctx.strokeStyle=hexA(z.k==='ice'?'#d8f6ff':'#b77bff',.6); ctx.lineWidth=1.2; ctx.setLineDash([3,4]); circle(z.x,z.y,z.R); ctx.stroke(); ctx.setLineDash([]);
+    if(z.k==='poison'){ctx.fillStyle='#d9b6ff';for(let i=0;i<4;i++){const ph=(t*1.3+i*.25)%1,x=z.x+Math.cos(i*1.9)*z.R*.5,y=z.y+Math.sin(i*2.3)*z.R*.4-ph*8;ctx.globalAlpha=a*(1-ph);circle(x,y,1.6+ph*1.5);ctx.fill()}}
+    ctx.globalAlpha=1;
   }
   for(const p of G.pegs) if(p.tower) drawTower(p,t);
   for(const e of G.en) drawEnemy(e);
@@ -1297,13 +1338,13 @@ function updateContinue(){const s=readSave(),b=$('contBtn');b.hidden=!s;if(s)b.t
 function continueRun(){
   const s=readSave(); if(!s){newRun();return}
   G.stage=s.cleared; G.balls=Math.max(0,s.balls|0); G.deck=s.deck.slice();
-  G.unlocked=Object.assign({basic:true,ice:false,long:false},s.unlocked||{}); G.kills=s.kills|0;
+  G.unlocked=Object.assign({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false},s.unlocked||{}); G.kills=s.kills|0;
   setupStage(); closeSheet(true); openShop();
 }
 
 /* ---------- 流れ ---------- */
 function newRun(){
-  G.stage=0; G.balls=150; G.deck=START_DECK.slice(); G.unlocked={basic:true,ice:false,long:false}; G.kills=0;
+  G.stage=0; G.balls=150; G.deck=START_DECK.slice(); G.unlocked={basic:true,fire:false,ice:false,bolt:false,poison:false,long:false}; G.kills=0;
   startStage();
 }
 function startStage(){
@@ -1345,7 +1386,7 @@ function renderShop(){
     D.append(b);
   });
   const T=$('shopTowers'); T.textContent='';
-  for(const k of ['ice','long']){
+  for(const k of ['fire','ice','bolt','poison','long']){
     const t=TOWERS[k];
     if(G.unlocked[k]) T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${t.cost}玉`,'持ってる',false,null,true));
     else T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${t.cost}玉`,t.unlock+'玉',G.balls>=t.unlock,()=>{G.balls-=t.unlock;G.unlocked[k]=true;sfx.lv();renderShop()}));
@@ -1364,7 +1405,7 @@ function openBuild(p){
     const t=TOWERS[k];
     if(G.unlocked[k]){
       body.append(itemRow(t.color,t.name,`${t.desc}（とどく広さ ${t.range}）`,t.cost+'玉',G.balls>=t.cost,()=>{
-        G.balls-=t.cost; p.tower={type:k,lv:1,xp:0,cd:.3,rapid:0,pow:0,el:null,elT:0,elLv:1,combo:null,comboT:0,pop:.3,shot:0}; p.r=Math.max(p.r,7);
+        G.balls-=t.cost; p.tower={type:k,lv:1,xp:0,cd:.3,rapid:0,pow:0,el:null,elT:0,sp:null,spT:0,combo:null,comboT:0,pop:.3,shot:0}; p.r=Math.max(p.r,7);
         buildStatic(); burst(p.x,p.y,t.color,16); sfx.build(); closeSheet();
       }));
     }else{
@@ -1381,12 +1422,13 @@ function openInfo(p){
   const info=document.createElement('p'); info.className='info';
   const el=curEl(T), now=[];
   if(T.comboT>0) now.push(`わざ <b>${COMBO[T.combo].name}</b>（のこり${Math.ceil(T.comboT)}秒）：${COMBO[T.combo].desc}`);
-  else if(el) now.push(`属性 <b>${ELEM[el].name}${curLv(T)>1?' Lv'+curLv(T):''}</b>`+(T.elT>0?`（のこり${Math.ceil(T.elT)}秒）`:'（いつも）'));
+  else if(T.spT>0) now.push(`とくしゅ効果 <b>${SPECIAL[T.sp].name}</b>（のこり${Math.ceil(T.spT)}秒）：${SPECIAL[T.sp].desc}`);
+  else if(el) now.push(`属性 <b>${ELEM[el].name}</b>`+(T.elT>0?`（のこり${Math.ceil(T.elT)}秒）`:'（いつも）'));
   if(T.pow>0) now.push(`<b>攻撃UP</b>（のこり${Math.ceil(T.pow)}秒）`);
   if(T.rapid>0) now.push(`<b>連射UP</b>（のこり${Math.ceil(T.rapid)}秒）`);
   info.innerHTML=(T.lv<4?`経験値 <b class="num">${T.xp} / ${XP_NEED[T.lv]}</b>`:'<b>レベル最大</b>')+
     (now.length?'<br>'+now.join('<br>'):'')+
-    `<br>${D.desc}。玉を当てると経験値、属性弾で属性、ちがう属性を重ねると「わざ」`;
+    `<br>${D.desc}。玉を当てると経験値。同じ属性が重なるとくしゅ効果、ちがう属性で「わざ」`;
   body.append(info); $('sheet').hidden=false;
 }
 function closeSheet(){$('sheet').hidden=true;G.sel=null;G.paused=false}
