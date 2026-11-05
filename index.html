@@ -7,7 +7,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@500&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Kiwi+Maru:wght@500&family=M+PLUS+Rounded+1c:wght@500;700;800&display=swap">
 <style>
 /* Layout: 台を画面いっぱいに（横はぴったり、上下のあまりは木のフレーム）。お金（コイン）・ライフのバー・WAVE は台の上の角に枠なしで、
    ハンドル（強さ）は右下に重ねて出す。見た目は「ネオンな夜の草原」：木のフレームに草とつる、光る木の実 */
@@ -19,6 +19,8 @@
   --glass:rgba(22,14,8,.72);
   --f-disp:"Kiwi Maru","M PLUS Rounded 1c","Hiragino Maru Gothic ProN",serif;
   --f-body:"M PLUS Rounded 1c","Hiragino Maru Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-arc:"Bungee","M PLUS Rounded 1c",sans-serif;
+  --arc-bg:#0c0918; --neon-p:#ff4fd8; --neon-c:#3ef2ff; --neon-y:#ffd84a;
   color-scheme:dark;
 }
 html{height:100%;box-sizing:border-box;background:var(--frame)}
@@ -93,19 +95,99 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .buy{font:700 13px var(--f-body);padding:8px 10px;border-radius:10px;border:1.5px solid var(--moon);color:var(--moon);background:transparent;white-space:nowrap;cursor:pointer}
 .buy:disabled{opacity:.35;cursor:not-allowed}
 .buy.owned{border-color:var(--line);color:var(--dim);opacity:1}
-.chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip.rm{cursor:pointer;padding:5px 10px}
-.chip.rm .rmx{color:var(--berry);font-size:10px}
-.chip.rm:disabled{opacity:.4;cursor:not-allowed}
-
-.boards{display:flex;flex-direction:column;gap:8px}
-.board{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--deep)}
-.board>div{min-width:0}
-.board .thumb{width:56px;height:56px;border-radius:10px;border:1.5px solid #7a5232;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
-.board .t{font-weight:800;font-size:15px} .board .d{font-size:12px;color:var(--dim);line-height:1.45}
-.board.soon{opacity:.6} .board.soon .thumb{border-color:var(--line)}
-.badge{display:inline-block;font:800 10px var(--f-body);padding:1px 7px;border-radius:99px;background:var(--leaf);color:var(--night);margin-left:6px;vertical-align:2px}
-.buy.go{background:var(--fire);border-color:var(--fire);color:var(--night);padding:10px 14px;font-size:14px}
+/* ロビー（台えらび・お店・セット）：夜のゲームセンター。ネオンの看板と走る電球、じゅうたんの模様、下にタブ */
+.hub{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;overflow:hidden;
+  background:radial-gradient(circle at 18% 8%,rgba(255,79,216,.13),transparent 42%),radial-gradient(circle at 88% 72%,rgba(62,242,255,.1),transparent 46%),var(--arc-bg)}
+.hub::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
+  background-image:radial-gradient(circle at 10px 10px,rgba(255,216,74,.2) 0 1.2px,transparent 1.7px),radial-gradient(circle at 34px 30px,rgba(62,242,255,.18) 0 1.4px,transparent 1.9px),radial-gradient(circle at 27px 7px,rgba(255,79,216,.16) 0 1px,transparent 1.5px);
+  background-size:44px 40px}
+.hub-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px 8px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sign{display:flex;flex-direction:column;gap:5px;line-height:1;min-width:0}
+.sign small{font:400 11px var(--f-arc);letter-spacing:.3em;color:var(--neon-c);text-shadow:0 0 6px rgba(62,242,255,.8)}
+.sign b{font:500 27px var(--f-disp);color:#fff;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 10px var(--neon-p),0 0 22px var(--neon-p),0 0 40px rgba(255,79,216,.55)}
+.wallet{flex:none;display:flex;align-items:center;gap:7px;padding:6px 13px 6px 8px;border-radius:99px;background:#07050f;border:1.5px solid rgba(255,216,74,.6);
+  box-shadow:0 0 12px rgba(255,216,74,.25),inset 0 0 10px rgba(255,216,74,.12)}
+.wallet .coin{font-size:20px}
+.wallet b{font:400 18px var(--f-arc);color:var(--neon-y);text-shadow:0 0 8px rgba(255,216,74,.7);font-variant-numeric:tabular-nums}
+.wallet.spend{animation:spend .45s ease-out}
+@keyframes spend{0%{transform:scale(1.14);box-shadow:0 0 26px rgba(255,216,74,.7)}100%{transform:none}}
+.bulbs{position:relative;flex:none;height:10px;margin:0 max(10px,env(safe-area-inset-left,0px)) 0 max(10px,env(safe-area-inset-right,0px));
+  background:radial-gradient(circle at 7px 5px,#fff3c4 0 1.6px,#ffd84a 2.3px,transparent 3.1px) 0 0/14px 10px repeat-x;filter:drop-shadow(0 0 3px rgba(255,216,74,.9))}
+.bulbs::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 7px 5px,rgba(22,14,4,.88) 0 3.2px,transparent 3.6px) 0 0/28px 10px repeat-x;animation:chase .8s steps(1) infinite}
+@keyframes chase{50%{background-position-x:14px}}
+.hub-body{position:relative;flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:14px;padding-block:14px 22px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.lead{margin:0;font-size:12px;line-height:1.55;color:#b9b2d6}
+.lead b{color:#fff}
+.sect{font:400 12px var(--f-arc);letter-spacing:.22em;color:var(--neon-c);text-shadow:0 0 6px rgba(62,242,255,.6);margin:4px 0 -4px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{--c:#ff4fd8;--cg:rgba(255,79,216,.35);--cs:rgba(255,79,216,.14);position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;
+  padding:8px 9px 12px;border-radius:16px;border:1.5px solid var(--c);background:linear-gradient(180deg,var(--cs),rgba(10,8,22,.94) 58%);
+  box-shadow:0 0 14px var(--cg),inset 0 0 0 1px rgba(255,255,255,.04);color:var(--ink);font:inherit;text-align:center;cursor:pointer;transition:transform .1s}
+.card:active{transform:scale(.96)}
+.card:focus-visible,.bcard button:focus-visible,.tabs button:focus-visible,.socket:focus-visible,.nbtn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.card .ico{width:100%;aspect-ratio:5/4;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle at 50% 56%,var(--cs),rgba(5,3,12,.75) 72%)}
+.card .ico img{width:84%;max-width:118px;height:auto}
+.card .nm{font:800 15px var(--f-body);line-height:1.2}
+.card .ds{font-size:11px;line-height:1.4;color:#a59fc4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em}
+.price{margin-top:5px;display:inline-flex;align-items:center;gap:5px;padding:5px 14px 4px;border-radius:99px;background:linear-gradient(180deg,#fff0a6,#ffc21f);color:#2a1800;
+  font:400 15px var(--f-arc);box-shadow:0 3px 0 #a86f00,0 0 12px rgba(255,216,74,.45)}
+.price .coin{font-size:14px}
+.price.short{background:#262040;color:#8a83a8;box-shadow:0 3px 0 #120f24}
+.tagown{margin-top:5px;padding:4px 12px;border-radius:99px;border:1.5px solid #5fff8a;color:#c8ffd6;font:800 12px var(--f-body);box-shadow:0 0 10px rgba(95,255,138,.35)}
+.cnt{position:absolute;top:7px;right:7px;padding:2px 8px 1px;border-radius:99px;background:#07050f;border:1px solid var(--c);color:#fff;font:400 12px var(--f-arc)}
+.setstrip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:1.5px solid rgba(62,242,255,.55);background:rgba(10,8,22,.85);box-shadow:0 0 14px rgba(62,242,255,.18)}
+.setstrip>span{font:800 12px var(--f-body);color:#cfe9ff;white-space:nowrap}
+.minis{display:flex;gap:4px;flex:1;min-width:0}
+.minis img{width:26px;height:26px}
+.linkbtn{flex:none;padding:7px 12px;border-radius:99px;border:1.5px solid var(--neon-c);background:transparent;color:#dffbff;font:800 12px var(--f-body);cursor:pointer;box-shadow:0 0 10px rgba(62,242,255,.3)}
+.bcard{position:relative;display:flex;flex-direction:column;border-radius:18px;overflow:hidden;border:1.5px solid var(--neon-p);background:#0d0a1c;box-shadow:0 0 18px rgba(255,79,216,.28)}
+.bthumb{position:relative;aspect-ratio:3/1;max-width:100%;background-size:cover!important;background-position:center!important}
+.bthumb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(13,10,28,.9))}
+.stamp{position:absolute;z-index:1;top:10px;right:12px;padding:3px 10px 2px;border:2px solid #5fff8a;border-radius:8px;color:#d9ffe4;font:400 13px var(--f-arc);letter-spacing:.08em;transform:rotate(-7deg);text-shadow:0 0 8px #5fff8a;box-shadow:0 0 10px rgba(95,255,138,.5)}
+.soonsign{position:absolute;z-index:1;inset:0;display:grid;place-items:center;font:400 20px var(--f-arc);letter-spacing:.12em;color:#5a5278;text-shadow:0 0 2px rgba(255,79,216,.4)}
+.binfo{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:4px 14px 14px}
+.bname{font:500 21px var(--f-disp);color:#fff;text-shadow:0 0 8px rgba(255,79,216,.6)}
+.bdesc{grid-column:1;font-size:12px;color:#a59fc4;line-height:1.45}
+.play{grid-column:2;grid-row:1/span 2;padding:12px 20px;border-radius:14px;border:0;background:linear-gradient(180deg,#ff8ae6,#ff4fd8 55%,#d02ab0);color:#fff;font:800 16px var(--f-body);
+  text-shadow:0 1px 0 rgba(0,0,0,.3);box-shadow:0 4px 0 #8a1574,0 0 18px rgba(255,79,216,.55);cursor:pointer}
+.play:active{transform:translateY(2px);box-shadow:0 2px 0 #8a1574,0 0 18px rgba(255,79,216,.55)}
+.play:disabled{background:#262040;color:#7d769c;box-shadow:0 4px 0 #120f24;cursor:not-allowed}
+.bcard.soon{border-color:#3a3358;box-shadow:none}
+.tray{display:flex;flex-direction:column;gap:10px;padding:14px 12px 12px;border-radius:18px;border:1.5px solid rgba(62,242,255,.6);background:linear-gradient(#140f28,#0a0716);box-shadow:0 0 16px rgba(62,242,255,.2)}
+.slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.socket{position:relative;aspect-ratio:1;max-width:100%;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.14);background:radial-gradient(circle at 50% 60%,#05030b,#1d1636);display:grid;place-items:center;cursor:pointer}
+.socket img{width:92%;height:auto}
+.socket .x{position:absolute;top:-2px;right:-2px;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#ff4f6d;color:#fff;font:800 11px/1 var(--f-body);box-shadow:0 0 8px rgba(255,79,109,.7)}
+.socket.pop{animation:pop .35s ease-out}
+@keyframes pop{0%{transform:scale(1.25);box-shadow:0 0 22px var(--neon-c)}100%{transform:none}}
+.tray .lead{text-align:center}
+.empty{padding:18px 14px;border-radius:16px;border:1.5px dashed rgba(255,255,255,.18);text-align:center;color:#a59fc4;font-size:13px;line-height:1.6;display:flex;flex-direction:column;align-items:center;gap:10px}
+.tabs{position:relative;flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-block:6px 8px;padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px));
+  background:linear-gradient(180deg,#120d24,#07050f);border-top:1.5px solid rgba(255,79,216,.55);box-shadow:0 -6px 18px rgba(255,79,216,.18)}
+.tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;border:0;border-radius:12px;background:none;color:#8f88b0;font:800 11px var(--f-body);cursor:pointer}
+.tabs svg{width:25px;height:25px;display:block}
+.tabs button.on{color:#fff;background:radial-gradient(ellipse at 50% 100%,rgba(255,79,216,.38),transparent 72%);text-shadow:0 0 8px var(--neon-p)}
+.tabs button.on svg{filter:drop-shadow(0 0 5px var(--neon-p))}
+.toast{position:absolute;z-index:8;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);width:max-content;max-width:calc(100% - 32px);padding:9px 16px;border-radius:14px;background:rgba(7,5,15,.95);
+  border:1.5px solid var(--neon-c);color:#fff;font:800 13px var(--f-body);text-align:center;line-height:1.45;box-shadow:0 0 16px rgba(62,242,255,.35);animation:toast .25s ease-out}
+@keyframes toast{from{opacity:0;transform:translate(-50%,8px)}}
+.buysheet{position:absolute;inset:0;z-index:9;display:flex;align-items:flex-end;justify-content:center}
+.buy-back{position:absolute;inset:0;background:rgba(4,2,10,.72)}
+.buy-in{--c:#ff4fd8;--cg:rgba(255,79,216,.35);position:relative;width:100%;max-width:460px;margin:0 8px 8px;padding:16px 16px 14px;border-radius:22px;border:1.5px solid var(--c);
+  background:linear-gradient(180deg,#1c1535,#0d0a1c);box-shadow:0 0 26px var(--cg);display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(40px);opacity:0}}
+.buy-in img{width:132px;height:132px}
+.buy-kind{font:400 11px var(--f-arc);letter-spacing:.24em;color:var(--c)}
+.buy-in h3{margin:0;font:500 24px var(--f-disp);color:#fff}
+.buy-in p{margin:0;font-size:13px;line-height:1.6;color:#c4bde0;max-width:34em}
+.buy-in .note{font-size:12px;color:#8f88b0}
+.buy-btns{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;width:100%;margin-top:8px}
+.nbtn{padding:13px 10px;border-radius:14px;font:800 15px var(--f-body);cursor:pointer;border:1.5px solid #4a4268;background:transparent;color:#c4bde0}
+.nbtn.gold{border:0;background:linear-gradient(180deg,#fff0a6,#ffc21f);color:#2a1800;box-shadow:0 4px 0 #a86f00,0 0 16px rgba(255,216,74,.45);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.nbtn.gold:disabled{background:#262040;color:#7d769c;box-shadow:0 4px 0 #120f24;cursor:not-allowed}
+@media (prefers-reduced-motion:reduce){.bulbs::after,.socket.pop,.wallet.spend,.buy-in,.toast{animation:none}}
 .sheet{position:absolute;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:8px;z-index:6;max-width:460px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,0px)}
 .sheet-in{border:1.5px solid var(--line);border-radius:18px;background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -6px 30px rgba(0,0,0,.7)}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -143,6 +225,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
         <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! コインがたくさん出て、タワーが強くなる</span></li>
         <li><span>まもる</span><span>下の受け皿がライフのバー。敵がここまで来ると減っていくよ。5ウェーブ守ればクリア</span></li>
         <li><span>台</span><span>はじめに遊ぶ台をえらぶよ（さいしょは草原と森）。新しい台を買うと、お店に新しいタワーや玉がふえていく</span></li>
+        <li><span>セット</span><span>台で出る玉は5つのセットから。お店で買った玉は「持ち玉」にずっと残って、セットはいつでも無料で入れかえられるよ</span></li>
       </ul>
       <div class="btnrow">
         <button class="btn primary" id="startBtn">あそぶ</button>
@@ -162,24 +245,31 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
     </div>
   </div>
 
-  <div class="overlay" id="boards" hidden>
-    <div class="panel">
-      <h2>台をえらぶ</h2>
-      <p class="purse">お金 <i class="coin"></i><b id="boardsCoins">0</b></p>
-      <div class="boards" id="boardList"></div>
-      <button class="btn" id="boardsShop">お店へ</button>
-    </div>
-  </div>
-
-  <div class="overlay" id="shop" hidden>
-    <div class="panel">
-      <h2>お店</h2>
-      <p class="purse">お金 <i class="coin"></i><b id="shopBalls">0</b></p>
-      <section><h3>特殊な玉をセットに足す</h3><div class="items" id="shopBallList"></div></section>
-      <section><h3>玉をセットから抜く<small>1つ <i class="coin"></i>25・3つまで減らせる</small></h3><div class="chips" id="shopDeck"></div></section>
-      <section><h3>タワーの種類</h3><div class="items" id="shopTowers"></div></section>
-      <section><h3>ギミック<small>どの砲台にも1つつけられる</small></h3><div class="items" id="shopGimmicks"></div></section>
-      <button class="btn primary" id="shopNext">台えらびへもどる</button>
+  <div class="hub" id="hub" hidden>
+    <header class="hub-top">
+      <div class="sign"><small id="hubSub">BOARDS</small><b id="hubTitle">台えらび</b></div>
+      <div class="wallet" id="wallet" role="img" aria-label="お金"><i class="coin"></i><b id="hubCoins">0</b></div>
+    </header>
+    <div class="bulbs" aria-hidden="true"></div>
+    <main class="hub-body" id="hubBody"></main>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="ロビー">
+      <button data-tab="board" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V10a7 7 0 0 1 14 0v11z"/><circle cx="9.5" cy="11" r="1" fill="currentColor"/><circle cx="14.5" cy="11" r="1" fill="currentColor"/><circle cx="12" cy="15" r="1" fill="currentColor"/></svg>台</button>
+      <button data-tab="ball" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="7.5"/><path d="M8.8 9.6a3.6 3.6 0 0 1 3.4-2.3" stroke-linecap="round"/></svg>玉</button>
+      <button data-tab="tower" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="11" cy="14" r="6"/><rect x="8" y="11" width="6" height="6" rx="1.5"/><path d="M14 13l6.5-6.5" stroke-width="2.6" stroke-linecap="round"/></svg>タワー</button>
+      <button data-tab="gimmick" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><circle cx="12" cy="3" r=".9" fill="currentColor"/><circle cx="21" cy="12" r=".9" fill="currentColor"/></svg>ギミック</button>
+      <button data-tab="set" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="4" cy="12" r="2.4"/><circle cx="9.3" cy="12" r="2.4"/><circle cx="14.7" cy="12" r="2.4"/><circle cx="20" cy="12" r="2.4"/><path d="M2 16.5h20" stroke-linecap="round"/></svg>セット</button>
+    </nav>
+    <div class="toast" id="toast" role="status" hidden></div>
+    <div class="buysheet" id="buy" hidden>
+      <div class="buy-back" id="buyBack"></div>
+      <div class="buy-in" id="buyIn" role="dialog" aria-modal="true" aria-labelledby="buyName">
+        <img id="buyIco" alt="">
+        <div class="buy-kind" id="buyKind"></div>
+        <h3 id="buyName"></h3>
+        <p id="buyDesc"></p>
+        <p class="note" id="buyNote"></p>
+        <div class="buy-btns"><button class="nbtn" id="buyNo">やめる</button><button class="nbtn gold" id="buyYes"></button></div>
+      </div>
     </div>
   </div>
 
@@ -195,7 +285,8 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 (()=>{
 const W=360,H=600;
 const $=id=>document.getElementById(id);
-const cv=$('cv'), ctx=cv.getContext('2d');
+const cv=$('cv');
+let ctx=cv.getContext('2d');                  // お店のアイコンを描くときだけ、一時的に別のキャンバスにかえる
 const staticCv=document.createElement('canvas');
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const PINK='#ff4fd8',CYAN='#3ef2ff',GOLD='#ffd84a',INK='#f3eeff';
@@ -292,11 +383,12 @@ const BOARDS=[
 ];
 const START_COINS=150, MIN_COINS=100;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
 const XP_NEED=[0,4,10,18];
-const START_DECK=['normal','normal','normal','normal','fire','ice'];
+const DECK_N=5;                               // セットは5つ固定。あいた所はノーマル玉
+const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,ice:1};
 const SAVE_KEY='kugidama-save-v1';
 const NEW_UNLOCKED=()=>({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false});
 
-const G={fx:[],fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],
+const G={fx:[],fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -1615,7 +1707,7 @@ function setStrength(s){
   $('dialKnob').style.transform=`rotate(${-135+G.strength*270}deg)`;
   $('handle').setAttribute('aria-valuenow',pc);
 }
-function hideOverlays(){for(const id of ['title','result','shop','boards']) $(id).hidden=true}
+function hideOverlays(){for(const id of ['title','result','hub']) $(id).hidden=true}
 function showResult(title,lines,btn,fn,btn2,fn2){
   $('resTitle').textContent=title;
   const ul=$('resLines'); ul.textContent='';
@@ -1634,7 +1726,7 @@ function itemRow(color,name,desc,price,enabled,onBuy,owned){
 
 /* ---------- セーブ（台えらび・お店・台のクリアのときに、この端末へ保存） ---------- */
 // 台の中では保存しない。ゲームオーバーのときは、台に入る前の保存にもどる
-function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.balls,deck:G.deck,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,kills:G.kills}))}catch(_){}}
+function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.balls,deck:G.deck,owned:G.owned,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,kills:G.kills}))}catch(_){}}
 function readSave(){
   try{
     const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
@@ -1642,6 +1734,10 @@ function readSave(){
     const old={bounce:'bb',big:'lead'}; s.deck=s.deck.map(k=>old[k]||k).filter(k=>BALLS[k]); if(!s.deck.length) return null;
     if(s.v!==2) s.cleared=typeof s.cleared==='number'?Array.from({length:s.cleared+1},(_,i)=>i):[];   // 前の形（○面クリア後）からのひきつぎ
     s.cleared=(s.cleared||[]).filter(i=>STAGES[i]);
+    // 前の形（セットに入れた玉＝持っている玉）からのひきつぎ：セットの特殊な玉を持ち玉にして、セットは5つにそろえる
+    if(!s.owned||typeof s.owned!=='object'){s.owned={};for(const k of s.deck) if(k!=='normal') s.owned[k]=(s.owned[k]||0)+1}
+    for(const k of Object.keys(s.owned)) if(!BALLS[k]||k==='normal') delete s.owned[k];
+    s.deck=fitDeck(s.deck,s.owned);
     return s;
   }catch(_){}
   return null;
@@ -1650,6 +1746,7 @@ function loadSave(){
   const s=readSave(); if(!s) return false;
   G.balls=Math.max(0,s.balls|0); G.deck=s.deck.slice(); G.unlocked=Object.assign(NEW_UNLOCKED(),s.unlocked||{});
   G.gimmicks=Object.assign({bumper:false,spinner:false},s.gimmicks||{}); G.cleared=s.cleared.slice(); G.kills=s.kills|0;
+  G.owned={...s.owned}; G.deck=s.deck.slice();
   return true;
 }
 function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(_){}}
@@ -1659,33 +1756,16 @@ function updateContinue(){
   $('startBtn').innerHTML=s?`つづきから（お金 ${COIN}${Math.max(0,s.balls|0)}）`:'あそぶ';
   $('contBtn').hidden=!s; $('contBtn').textContent='はじめから';
 }
-function continueRun(){if(!loadSave()){newRun();return} openBoards()}
+function continueRun(){if(!loadSave()){newRun();return} openHub('board')}
 
-/* ---------- 流れ：タイトル → 台えらび → 台であそぶ → クリアで台えらびへ（お店は台えらびから） ---------- */
+/* ---------- 流れ：タイトル → ロビー（台えらび）→ 台であそぶ → クリアでロビーへ ---------- */
 function newRun(){
-  G.balls=START_COINS; G.deck=START_DECK.slice(); G.unlocked=NEW_UNLOCKED(); G.gimmicks={bumper:false,spinner:false}; G.cleared=[]; G.kills=0;
-  openBoards();
+  G.balls=START_COINS; G.deck=START_DECK.slice(); G.owned={...START_OWNED}; G.unlocked=NEW_UNLOCKED(); G.gimmicks={bumper:false,spinner:false}; G.cleared=[]; G.kills=0;
+  openHub('board');
 }
 const boardName=b=>b.soon?b.name:STAGES[b.stage].name;
-function openBoards(){
-  G.state='boards'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; closeSheet();
-  writeSave(); renderBoards(); hideOverlays(); $('boards').hidden=false;
-}
-function renderBoards(){
-  $('boardsCoins').textContent=G.balls;
-  const L=$('boardList'); L.textContent='';
-  BOARDS.forEach((B,i)=>{
-    const row=document.createElement('div'); row.className='board'+(B.soon?' soon':'');
-    const done=!B.soon&&G.cleared.includes(B.stage);
-    row.innerHTML=`<span class="thumb" style="background:${B.thumb}"></span><div><div class="t">${boardName(B)}の台${done?'<span class="badge">クリア</span>':''}</div><div class="d">${B.desc}</div></div>`;
-    const b=document.createElement('button');
-    if(B.soon){b.className='buy';b.textContent='近日';b.disabled=true}
-    else{b.className='buy go';b.textContent='あそぶ';b.onclick=()=>{ensureAudio();playBoard(i)}}
-    row.append(b); L.append(row);
-  });
-}
 function playBoard(i){
-  G.stage=BOARDS[i].stage; G.boardIdx=i;
+  closeBuy(); G.stage=BOARDS[i].stage; G.boardIdx=i;
   const add=Math.max(0,MIN_COINS-G.balls); G.balls+=add;      // 打てなくならないように、少ないときは足す
   writeSave(); startStage();
   if(add>0) addText(70,40,`コイン +${add}`,GOLD,true);
@@ -1701,46 +1781,207 @@ function stageClear(){
   const S=STAGES[G.stage], first=!G.cleared.includes(G.stage);
   if(first) G.cleared.push(G.stage);
   writeSave();
-  showResult(`${S.name}の台 クリア！`,[`のこりライフ ${G.life}`,`クリアボーナス ${COIN}+${bonus}`,`お金 ${COIN}${G.balls}`,'ここまでセーブしたよ'],'台えらびへ',openBoards,'お店へ',openShop);
+  showResult(`${S.name}の台 クリア！`,[`のこりライフ ${G.life}`,`クリアボーナス ${COIN}+${bonus}`,`お金 ${COIN}${G.balls}`,'ここまでセーブしたよ'],'台えらびへ',()=>openHub('board'),'お店へ',()=>openHub('ball'));
 }
 function gameOver(){
   G.state='over'; closeSheet();
   const S=STAGES[G.stage], i=G.boardIdx??0;
-  showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,'お金と玉のセットは、この台に入る前にもどるよ'],
-    'もう一度この台',()=>{loadSave();playBoard(i)},'台えらびへ',()=>{loadSave();openBoards()});
+  showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,'お金と持ち玉は、この台に入る前にもどるよ'],
+    'もう一度この台',()=>{loadSave();playBoard(i)},'台えらびへ',()=>{loadSave();openHub('board')});
 }
-function openShop(){G.state='shop';renderShop();hideOverlays();$('shop').hidden=false}
-function renderShop(){
-  writeSave();
-  $('shopBalls').textContent=G.balls;
-  const L=$('shopBallList'); L.textContent='';
-  for(const k of ['fire','ice','bolt','poison','lead','bb']){
-    const B=BALLS[k];
-    L.append(itemRow(B.color,B.name,B.desc,B.price,G.balls>=B.price,()=>{G.balls-=B.price;G.deck.push(k);sfx.build();renderShop()}));
-  }
-  const D=$('shopDeck'); D.textContent='';
-  G.deck.forEach((k,i)=>{
-    const b=document.createElement('button'); b.className='chip rm';
-    b.innerHTML=`<span class="dot" style="color:${BALLS[k].color}"></span>${BALLS[k].name}<span class="rmx">抜く</span>`;
-    b.disabled=G.deck.length<=3||G.balls<25;
-    b.onclick=()=>{G.balls-=25;G.deck.splice(i,1);sfx.build();renderShop()};
-    D.append(b);
+
+/* ---------- 持ち玉とセット ---------- */
+// セットはいつも5つ。持っている数より多くは入れられない。あいた所はノーマル玉
+function fitDeck(deck,owned){
+  const use={}, out=[];
+  for(const k of deck){if(out.length>=DECK_N)break;if(k==='normal'||!BALLS[k])continue;if((use[k]||0)<(owned[k]||0)){use[k]=(use[k]||0)+1;out.push(k)}}
+  while(out.length<DECK_N) out.push('normal');
+  return out;
+}
+const inSet=k=>G.deck.filter(x=>x===k).length;
+
+/* ---------- ロビー（夜のゲームセンター）：下のタブで 台・玉・タワー・ギミック・セット ---------- */
+const TABS={board:['BOARDS','台えらび'],ball:['SHOP','お店・玉'],tower:['SHOP','お店・タワー'],gimmick:['SHOP','お店・ギミック'],set:['MY SET','玉のセット']};
+const SHOP_BALLS=['fire','ice','bolt','poison','lead','bb'], SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
+let hubTab='board', toastT=0;
+function openHub(tab){
+  G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; closeSheet(); closeBuy();
+  writeSave(); hideOverlays(); $('hub').hidden=false; showTab(tab||hubTab);
+}
+function showTab(tab){
+  hubTab=tab;
+  for(const b of $('tabs').children){const on=b.dataset.tab===tab;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))}
+  $('hubSub').textContent=TABS[tab][0]; $('hubTitle').textContent=TABS[tab][1];
+  $('toast').hidden=true; renderTab(); $('hubBody').scrollTop=0;
+}
+for(const b of $('tabs').children) b.onclick=()=>{ensureAudio();sfx.tick();showTab(b.dataset.tab)};
+function setCoins(spend){
+  $('hubCoins').textContent=G.balls.toLocaleString(); $('wallet').setAttribute('aria-label','お金 '+G.balls);
+  if(spend){const w=$('wallet');w.classList.remove('spend');void w.offsetWidth;w.classList.add('spend')}
+}
+function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;t.style.animation='none';void t.offsetWidth;t.style.animation='';clearTimeout(toastT);toastT=setTimeout(()=>t.hidden=true,2200)}
+function renderTab(){
+  setCoins();
+  const body=$('hubBody'); body.textContent='';
+  ({board:tabBoard,ball:tabBall,tower:tabTower,gimmick:tabGimmick,set:tabSet})[hubTab](body);
+}
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
+function paint(e,color){e.style.setProperty('--c',color);e.style.setProperty('--cg',hexA(color,.36));e.style.setProperty('--cs',hexA(color,.15))}
+// カード：アイコン・名前・説明・値段（または「持ってる」）。タップで買う前のシート
+function card(o){
+  const c=el('button','card'); paint(c,o.color);
+  c.innerHTML=`<span class="ico"><img alt="" src="${o.icon}"></span>${o.cnt?`<span class="cnt">${o.cnt}</span>`:''}<span class="nm">${o.name}</span><span class="ds">${o.desc}</span>`+
+    (o.own?`<span class="tagown">${o.own}</span>`:o.price!=null?`<span class="price${G.balls<o.price?' short':''}">${COIN}${o.price}</span>`:'');
+  c.onclick=()=>{ensureAudio();o.tap()}; return c;
+}
+// アイコンは台と同じ絵（玉・砲台・ギミック）をキャンバスに描いて使う
+const iconCache=new Map();
+function icon(kind,k){
+  const key=kind+':'+k; if(iconCache.has(key)) return iconCache.get(key);
+  const cvs=document.createElement('canvas'); cvs.width=cvs.height=160;
+  const g=cvs.getContext('2d'), keep=ctx; ctx=g; g.lineCap='round';
+  try{
+    if(kind==='ball'){
+      const B=BALLS[k], r=k==='lead'?40:k==='bb'?27:34;
+      g.setTransform(1,0,0,1,80,78);
+      g.globalCompositeOperation='lighter'; glow(B.color,0,0,74,B.el?.7:.35); g.globalCompositeOperation='source-over';
+      drawBall({x:0,y:0,r,t:k});
+    }else{
+      const p={x:0,y:0,r:11};
+      g.setTransform(kind==='tower'?3.2:3.05,0,0,kind==='tower'?3.2:3.05,80,kind==='tower'?90:80);
+      g.globalCompositeOperation='lighter'; glow(kind==='tower'?TOWERS[k].color:'#bfe6ff',0,0,30,.4); g.globalCompositeOperation='source-over';
+      drawStake(g,0,0,11);
+      if(kind==='gimmick') drawGimmick(p,{gm:k,bump:0,sa:Math.PI/7});
+      drawGun(p,{type:kind==='tower'?k:'basic',ang:kind==='tower'?-Math.PI/4:-Math.PI/2,shot:0},0);
+    }
+  }finally{ctx=keep}
+  const url=cvs.toDataURL(); iconCache.set(key,url); return url;
+}
+
+// 台のタブ：いまのセットと、台のカード
+function setStrip(){
+  const d=el('div','setstrip'); d.append(el('span',null,'いまのセット'));
+  const m=el('div','minis'); for(const k of G.deck){const i=new Image();i.alt=BALLS[k].name;i.src=icon('ball',k);m.append(i)} d.append(m);
+  const b=el('button','linkbtn','へんしゅう'); b.onclick=()=>{ensureAudio();showTab('set')}; d.append(b);
+  return d;
+}
+// 台の絵（台を描いた静止画の上の方を切りぬく）。台ごとに1回だけ作る
+const thumbCache=new Map();
+function boardThumb(B){
+  if(B.soon) return B.thumb;
+  if(thumbCache.has(B.stage)) return thumbCache.get(B.stage);
+  let url=null; const keep=G.stage;
+  try{
+    G.stage=B.stage; setupStage();
+    const k=scale*dpr, sx=(ox+18*scale)*dpr, sy=(oy+95*scale)*dpr, w=324*k, h=108*k;
+    const c=document.createElement('canvas'); c.width=Math.round(w); c.height=Math.round(h);
+    c.getContext('2d').drawImage(staticCv,sx,sy,w,h,0,0,c.width,c.height); url=`url(${c.toDataURL('image/jpeg',.82)})`;
+  }catch(_){}
+  G.stage=keep; setupStage();
+  const v=url||B.thumb; thumbCache.set(B.stage,v); return v;
+}
+function tabBoard(body){
+  body.append(setStrip());
+  BOARDS.forEach((B,i)=>{
+    const done=!B.soon&&G.cleared.includes(B.stage), c=el('div','bcard'+(B.soon?' soon':''));
+    c.innerHTML=`<div class="bthumb" style="background:${boardThumb(B)}">${done?'<span class="stamp">CLEAR</span>':''}${B.soon?'<span class="soonsign">COMING SOON</span>':''}</div>`+
+      `<div class="binfo"><div class="bname">${boardName(B)}の台</div><div class="bdesc">${B.desc}</div></div>`;
+    const b=el('button','play',B.soon?'近日':'あそぶ'); b.disabled=!!B.soon; b.onclick=()=>{ensureAudio();playBoard(i)};
+    c.querySelector('.binfo').append(b); body.append(c);
   });
-  const T=$('shopTowers'); T.textContent='';
-  for(const k of ['fire','ice','bolt','poison','long']){
-    const t=TOWERS[k];
-    if(G.unlocked[k]) T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${COIN}${t.cost}`,'持ってる',false,null,true));
-    else T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${COIN}${t.cost}`,t.unlock,G.balls>=t.unlock,()=>{G.balls-=t.unlock;G.unlocked[k]=true;sfx.lv();renderShop()}));
-  }
-  const M=$('shopGimmicks'); M.textContent='';
-  for(const k of Object.keys(GIMMICKS)){
-    const g=GIMMICKS[k], d=`${g.desc}。つけるのは ${COIN}${g.cost}`;
-    if(G.gimmicks[k]) M.append(itemRow(g.color,g.name,d,'持ってる',false,null,true));
-    else M.append(itemRow(g.color,g.name,d,g.unlock,G.balls>=g.unlock,()=>{G.balls-=g.unlock;G.gimmicks[k]=true;sfx.lv();renderShop()}));
-  }
 }
-$('shopNext').onclick=()=>{ensureAudio();openBoards()};
-$('boardsShop').onclick=()=>{ensureAudio();openShop()};
+// 玉のタブ
+function tabBall(body){
+  body.append(el('p','lead','買った玉は<b>持ち玉</b>にずっと残るよ。セットのあいている所（ノーマル玉）に自動で入って、あとは「セット」でいつでも入れかえ'));
+  const g=el('div','grid');
+  for(const k of SHOP_BALLS){
+    const B=BALLS[k], n=G.owned[k]||0;
+    g.append(card({icon:icon('ball',k),color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,price:B.price,tap:()=>openBuy('ball',k)}));
+  }
+  body.append(g);
+}
+// タワーのタブ
+function tabTower(body){
+  body.append(el('p','lead','ここで買うと、台の杭をタップしたときに建てられるようになるよ（建てるのにもコイン）'));
+  const g=el('div','grid');
+  for(const k of SHOP_TOWERS){
+    const t=TOWERS[k];
+    g.append(card({icon:icon('tower',k),color:t.color,name:t.name,desc:t.desc,own:G.unlocked[k]?(k==='basic'?'さいしょから':'持ってる'):null,price:t.unlock,tap:()=>openBuy('tower',k)}));
+  }
+  body.append(g);
+}
+// ギミックのタブ
+function tabGimmick(body){
+  body.append(el('p','lead','買うと、台で建てた砲台をタップして、どの砲台にも1つつけられるよ（つけるのにもコイン）'));
+  const g=el('div','grid');
+  for(const k of Object.keys(GIMMICKS)){
+    const M=GIMMICKS[k];
+    g.append(card({icon:icon('gimmick',k),color:M.color,name:M.name,desc:M.desc,own:G.gimmicks[k]?'持ってる':null,price:M.unlock,tap:()=>openBuy('gimmick',k)}));
+  }
+  body.append(g);
+}
+// セットのタブ：上に5つの玉の受け皿、下に持ち玉
+function tabSet(body){
+  const tray=el('div','tray'), slots=el('div','slots');
+  G.deck.forEach((k,i)=>{
+    const b=el('button','socket'); b.dataset.i=i; b.setAttribute('aria-label',`${i+1}つ目 ${BALLS[k].name}`+(k==='normal'?'':'（タップで外す）'));
+    b.innerHTML=`<img alt="" src="${icon('ball',k)}">`+(k==='normal'?'':'<span class="x" aria-hidden="true">×</span>');
+    b.onclick=()=>{ensureAudio();
+      if(k==='normal'){toast('下の持ち玉をタップすると、ここに入るよ');return}
+      G.deck[i]='normal'; sfx.tick(); writeSave(); renderTab(); toast(`${BALLS[k].name}を外したよ（持ち玉にのこってる）`);
+    };
+    slots.append(b);
+  });
+  tray.append(slots,el('p','lead','台では、この5つの中から毎回ランダムに出るよ（1つ 20%）。<b>×</b> をタップで外す'));
+  body.append(tray,el('div','sect','MY BALLS'));
+  const g=el('div','grid'), have=SHOP_BALLS.filter(k=>(G.owned[k]||0)>0);
+  g.append(card({icon:icon('ball','normal'),color:BALLS.normal.color,name:BALLS.normal.name,desc:'いくつでも。セットのあいた所はノーマル玉になる',cnt:'∞',tap:()=>toast('ノーマル玉は、外したあいた所に入るよ')}));
+  for(const k of have){
+    const B=BALLS[k], n=G.owned[k], used=inSet(k);
+    g.append(card({icon:icon('ball',k),color:B.color,name:B.name,desc:B.desc,cnt:`${used}/${n}`,own:used>=n?'ぜんぶセット中':null,tap:()=>equip(k)}));
+  }
+  body.append(g);
+  if(!have.length){const e=el('div','empty','特殊な玉を買うと、ここにならぶよ');const b=el('button','linkbtn','お店で玉を見る');b.onclick=()=>showTab('ball');e.append(b);body.append(e)}
+}
+function equip(k){
+  if(inSet(k)>=(G.owned[k]||0)){toast(`持っている${BALLS[k].name}は、ぜんぶセットに入ってるよ`);return}
+  const i=G.deck.indexOf('normal');
+  if(i<0){toast('セットがいっぱい。上の玉の × で外してから入れてね');return}
+  G.deck[i]=k; sfx.build(); writeSave(); renderTab();
+  const s=$('hubBody').querySelector(`.socket[data-i="${i}"]`); if(s) s.classList.add('pop');
+}
+
+// 買う前のシート
+let buyFn=null;
+function openBuy(kind,k){
+  const D=kind==='ball'?BALLS[k]:kind==='tower'?TOWERS[k]:GIMMICKS[k];
+  const own=kind==='tower'?G.unlocked[k]:kind==='gimmick'?G.gimmicks[k]:false, price=kind==='ball'?D.price:D.unlock;
+  paint($('buyIn'),D.color);
+  $('buyIco').src=icon(kind,k); $('buyKind').textContent={ball:'BALL',tower:'TOWER',gimmick:'GIMMICK'}[kind]; $('buyName').textContent=D.name;
+  $('buyDesc').textContent=D.desc;
+  $('buyNote').innerHTML=kind==='ball'?`持ち玉 ${G.owned[k]||0}こ・セットに入っているのは ${inSet(k)}こ`:
+    kind==='tower'?`台で建てるのは ${COIN}${D.cost}・とどく広さ ${D.range}`:`砲台につけるのは ${COIN}${D.cost}・1つの砲台に1つ`;
+  const y=$('buyYes');
+  if(own){y.disabled=true;y.textContent=k==='basic'?'さいしょから持ってる':'持ってる';buyFn=null}
+  else{y.disabled=G.balls<price;y.innerHTML=G.balls<price?'コインがたりない':`${COIN}${price} で買う`;buyFn=()=>buy(kind,k,price)}
+  $('buy').hidden=false; (own?$('buyNo'):y).focus();
+}
+function closeBuy(){$('buy').hidden=true;buyFn=null}
+function buy(kind,k,price){
+  if(G.balls<price) return;
+  G.balls-=price; closeBuy(); setCoins(true);
+  let msg;
+  if(kind==='ball'){
+    G.owned[k]=(G.owned[k]||0)+1; const i=G.deck.indexOf('normal');
+    if(i>=0){G.deck[i]=k;msg=`${BALLS[k].name}をGET！ セットに入れたよ`}else msg=`${BALLS[k].name}をGET！ 持ち玉に入ったよ（セットで入れかえてね）`;
+    sfx.build();
+  }else if(kind==='tower'){G.unlocked[k]=true;msg=`${TOWERS[k].name}をGET！ 杭をタップして建てられるよ`;sfx.lv()}
+  else{G.gimmicks[k]=true;msg=`${GIMMICKS[k].name}をGET！ 台で砲台をタップしてつけてね`;sfx.lv()}
+  writeSave(); renderTab(); toast(msg);
+}
+$('buyYes').onclick=()=>{ensureAudio();if(buyFn)buyFn()};
+$('buyNo').onclick=closeBuy; $('buyBack').onclick=closeBuy;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('buy').hidden)closeBuy()});
 
 /* ---------- 釘をタップ ---------- */
 function openBuild(p){
