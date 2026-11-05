@@ -235,7 +235,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
   <header class="hud">
     <div class="money" id="money" role="img" aria-label="お金 0"><i class="coin"></i><b id="balls">0</b></div>
     <div class="hud-r">
-      <div class="wave" id="wave">WAVE 1/5</div>
+      <div class="wave" id="wave">WAVE 1/10</div>
       <button class="snd" id="mute" aria-pressed="true" aria-label="音"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path fill="currentColor" stroke="none" d="M3 9.5h3.5L11 5.5v13l-4.5-4H3z"/><g class="sw"><path d="M14.5 9a4 4 0 0 1 0 6"/><path d="M17 6.5a7.5 7.5 0 0 1 0 11"/></g><g class="sx"><path d="M15 9.5l5 5M20 9.5l-5 5"/></g></svg></button>
     </div>
   </header>
@@ -255,7 +255,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
         <li><span>ギミック</span><span>お店でバンパーや回転十字を買うと、砲台をタップしてつけられる。玉をはじいて、ピンボールみたいに動かせるよ</span></li>
         <li><span>育てる</span><span>タワーに玉を当てると経験値。火炎弾・氷結弾などを当てると弾に属性がつき、同じ属性が重なると「ばくはつ」などのとくしゅ効果、ちがう属性なら「わざ」が出る。敵の上でも、ちがう属性が出会えば「わざ」。鉛玉は攻撃力、BB弾は連射アップ。属性タワーはお店で</span></li>
         <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! コインがたくさん出て、タワーが強くなる</span></li>
-        <li><span>まもる</span><span>下の受け皿がライフのバー。敵がここまで来ると減っていくよ。5ウェーブ守ればクリア</span></li>
+        <li><span>まもる</span><span>下の受け皿がライフのバー。敵がここまで来ると減っていくよ。10ウェーブ守ればクリア。5ウェーブ目に中ボス、10ウェーブ目にボス（受け皿まで来たらゲームオーバー）</span></li>
         <li><span>台</span><span>はじめに遊ぶ台をえらぶよ（さいしょは草原と森）。新しい台を買うと、お店に新しいタワーや玉がふえていく</span></li>
         <li><span>セット</span><span>台で出る玉は5つのセットから。お店で買った玉は「持ち玉」にずっと残って、セットはいつでも無料で入れかえられるよ</span></li>
       </ul>
@@ -351,6 +351,7 @@ const BALLS={
   bolt:{name:'雷弾',color:'#ffe14f',el:'bolt',e:.5,g:.16,r:5,dmg:1,price:50,desc:'「雷」をつける。近くの敵にもとびうつる'},
   poison:{name:'毒弾',color:'#c08bff',el:'poison',e:.5,g:.16,r:5,dmg:1,price:40,desc:'「毒」をつける。重なって長くつづく'},
   lead:{name:'鉛玉',color:'#8e98a6',e:.28,g:.2,r:6.5,dmg:3,price:50,buff:'pow',desc:'重くて跳ねない。敵に3ダメージ。タワーの攻撃力アップ'},
+  heal:{name:'回復弾',color:'#7dffb0',e:.5,g:.16,r:5,dmg:1,price:45,heal:4,desc:'ヘソに入るとライフが4回復。ほかはノーマル玉と同じ'},
   bb:{name:'BB弾',color:'#f4f1e8',e:.88,g:.12,r:4,dmg:.5,price:35,buff:'rapid',desc:'軽くてよく跳ねる。タワーの連射アップ'},
 };
 // 属性。タワーの上で2つの属性が出会うと「わざ」になる
@@ -400,7 +401,11 @@ const ENEMIES={
   slime:{hp:3,sp:.32,r:11,color:'#e8718b',reward:3},
   fast:{hp:2,sp:.62,r:9,color:'#f1c94e',reward:3},
   tough:{hp:9,sp:.22,r:14,color:'#a084dc',reward:7},
+  // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）
+  mid:{hp:1500,sp:.13,r:24,color:'#ff9a4f',reward:40,boss:1,call:6,calls:['slime','slime']},
+  boss:{hp:4000,sp:.11,r:32,color:'#d65cff',reward:100,boss:2,call:5,calls:['slime','fast','tough']},
 };
+const WAVES=10, WAVE_T=30, SPAWN_T=22, MID_WAVE=5, HP_GROW=.35, WAVE_N=[4,2.4];   // HP_GROW＝ウェーブごとに敵のHPがふえる割合。WAVE_N＝敵の数（a＋b×ウェーブ）   // 1ウェーブ30秒（1ゲーム約5分）。敵は最初の22秒で出る。倒しきると早めに次へ
 // scale＝玉・敵の大きさの倍率、range＝タワーのとどく広さの倍率
 const STAGES=[
   {name:'草原',kind:'',style:'meadow',scale:1.3,range:1.15,accent:FIRE,layout:layoutMeadow},
@@ -867,21 +872,27 @@ const view=()=>({x0:-ox/scale,y0:-oy/scale,x1:(VW-ox)/scale,y1:(VH-oy)/scale});
 
 /* ---------- ウェーブ ---------- */
 function waveList(stage,w){
-  const n=3+w*2+stage*3, list=[];
+  const boss=w===MID_WAVE?'mid':w===WAVES?'boss':null;
+  const n=Math.round((WAVE_N[0]+w*WAVE_N[1]+stage*3)*(boss?.6:1)), list=boss?[boss]:[];
   for(let i=0;i<n;i++){
     const r=Math.random();
     list.push(w>=3&&r<.2?'tough':w>=2&&r<.45?'fast':'slime');
   }
-  if(w===5) list.push('tough','tough');
   return list;
 }
 function startWave(w){
-  G.wave=w; G.spawnQ=waveList(G.stage,w); G.spawnT=2; G.waveDone=false;
+  const q=waveList(G.stage,w); G.wave=w; G.spawnQ=G.spawnQ.concat(q); G.spawnGap=Math.max(.5,SPAWN_T/q.length); G.spawnT=2; G.waveDone=false; G.waveT=WAVE_T;
   banner('WAVE '+w,MOON,1.6,260); sfx.wave();
 }
-function spawn(t){
-  const E=ENEMIES[t], mul=1+.45*G.stage+.08*(G.wave-1), x=56+Math.random()*264;
-  G.en.push({id:G.eid++,t,x,y:CY-Math.sqrt(RO*RO-(x-CX)**2)-8,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r:E.r*G.bscale,ph:Math.random()*6.28,slow:0,flash:0,dead:false});
+function spawn(t,at){
+  const E=ENEMIES[t], mul=E.boss?1+.45*G.stage:1+.45*G.stage+HP_GROW*(G.wave-1);
+  const x=at?Math.max(46,Math.min(330,at.x+(Math.random()-.5)*at.r*2.2)):E.boss?150+Math.random()*76:56+Math.random()*264;
+  const y=at?at.y+at.r*.4:CY-Math.sqrt(RO*RO-(x-CX)**2)-8;
+  G.en.push({id:G.eid++,t,x,y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r:E.r*G.bscale,ph:Math.random()*6.28,slow:0,flash:0,dead:false,callT:E.call||0});
+  if(E.boss){
+    G.shake=.5; burst(x,y+20,E.color,30); sfx.hurt();
+    banner(E.boss===2?'ボス出現！':'中ボス出現！',E.color,2,230);
+  }
 }
 
 /* ---------- 遊びの中身 ---------- */
@@ -1118,7 +1129,9 @@ function ballElOnEnemy(e,el,dmg){
   }else applyEl(e,el,1,dmg);
   if(el==='bolt'&&!e.dead) e.shock=2;                      // 雷弾が当たった敵は、2秒しびれのしるし
 }
-function heso(q){
+function heso(q,b){
+  const hl=b&&BALLS[b.t].heal;
+  if(hl&&G.life<LIFE_MAX){const n=Math.min(hl,LIFE_MAX-G.life);G.life+=n;addText(q.x,q.y-30,'ライフ +'+n,'#7dffb0',true);burst(q.x,q.y,'#7dffb0',22);sfx.lv()}
   if(G.fever>0){G.balls+=10;addText(q.x,q.y-12,'+10',GOLD,true);burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}
   G.fever=8; G.feverPay=60; G.feverPayT=0; G.flash=.6;
   banner('FEVER!!','rainbow',2.2,250); burst(q.x,q.y+6,'rainbow',40); sfx.fever();
@@ -1152,7 +1165,7 @@ function enterPocket(q,b){
   G.stat[q.k]=(G.stat[q.k]||0)+1;G.stat[q.k+q.x]=(G.stat[q.k+q.x]||0)+1;
   if(q.k==='warp'){b.x=128;b.y=311;b.vx=1.3;b.vy=0;addText(q.x,q.y-10,'ワープ',CYAN);sfx.warp();return}
   b.gone=true;
-  if(q.k==='heso'){heso(q);return}
+  if(q.k==='heso'){heso(q,b);return}
   if(q.k==='attacker'){G.balls+=10;addText(b.x,q.y-8,'+10',GOLD,true);burst(b.x,q.y+6,GOLD,8);sfx.pocket();return}
   G.balls+=5; addText(q.x,q.y-8,'+5',CYAN); burst(q.x,q.y+6,CYAN,6); sfx.pocket();
   if(q.k==='tulip'&&G.fever<=0) q.open=!q.open;
@@ -1295,7 +1308,7 @@ function update(dt){
   for(const m of G.mills){m.spin=Math.max(2.2,m.spin-dt*3);m.ang+=m.spin*m.dir*dt}
   G.launchFx=Math.max(0,G.launchFx-dt);
   // 敵が出る
-  if(G.spawnQ.length){G.spawnT-=dt;if(G.spawnT<=0){spawn(G.spawnQ.shift());G.spawnT=Math.max(.55,1.35-.1*G.wave-.15*G.stage)}}
+  if(G.spawnQ.length){G.spawnT-=dt;if(G.spawnT<=0){spawn(G.spawnQ.shift());G.spawnT=G.spawnGap||1}}
   // 敵が進む
   for(const e of G.en){
     if(e.dead) continue;
@@ -1304,10 +1317,13 @@ function update(dt){
     if(e.psnT>0){e.psnT-=dt;hurtEnemy(e,e.psnD*dt,true)}
     if(e.dead) continue;
     e.y+=e.sp*(e.stun>0?0:e.slow>0?(e.slowF||.45):1)*f;
-    e.x=Math.max(42,Math.min(336,e.x+Math.sin(G.time*1.7+e.ph)*.28*f));
-    if(e.y>=578){
-      e.dead=true; G.life--; G.shake=.35; G.trayHurtAt=G.time; G.trayX=e.x;
-      addText(e.x,562,'ライフ -1',BERRY,true); burst(e.x,580,BERRY,10); sfx.hurt();
+    const E=ENEMIES[e.t];
+    e.x=Math.max(42,Math.min(336,e.x+Math.sin(G.time*1.7+e.ph)*(E.boss?.12:.28)*f));
+    if(E.call&&e.stun<=0){e.callT-=dt;if(e.callT<=0){e.callT=E.call;for(const t of E.calls)spawn(t,e);burst(e.x,e.y,E.color,14);sfx.warp()}}
+    if(e.y>=578-(E.boss?e.r*.6:0)){
+      const loss=E.boss===2?G.life:E.boss===1?5:1;
+      e.dead=true; G.life-=loss; G.shake=E.boss?.8:.35; G.trayHurtAt=G.time; G.trayX=e.x;
+      addText(e.x,562,'ライフ -'+loss,BERRY,true); burst(e.x,580,BERRY,E.boss?30:10); sfx.hurt();
     }
   }
   // タワー
@@ -1361,11 +1377,13 @@ function update(dt){
   G.shake=Math.max(0,G.shake-dt); G.flash=Math.max(0,G.flash-dt);
   if(G.life<=0){G.life=0;gameOver();return}
   // ウェーブの区切り
-  if(!G.spawnQ.length&&!G.en.length&&!G.waveDone){
-    if(G.wave<5){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true)}
-    else{stageClear();return}
+  const cleared=!G.spawnQ.length&&!G.en.length;
+  if(G.wave>=WAVES){if(cleared){stageClear();return}}
+  else{
+    G.waveT-=dt;
+    if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true)}
+    if(G.waveDone?(G.waveGap-=dt)<=0:G.waveT<=0) startWave(G.wave+1);
   }
-  if(G.waveDone){G.waveGap-=dt;if(G.waveGap<=0)startWave(G.wave+1)}
 }
 
 function updateFx(dt){
@@ -1405,7 +1423,9 @@ function drawBall(b){
   g.addColorStop(0,'#ffffff'); g.addColorStop(.45,B.color); g.addColorStop(1,shade(B.color,.5));
   ctx.fillStyle='rgba(0,0,0,.3)'; circle(b.x+1.5,b.y+2,r); ctx.fill();
   if(B.el){ctx.globalCompositeOperation='lighter';glow(B.color,b.x,b.y,r*3.2,.55);ctx.globalCompositeOperation='source-over'}
+  if(B.heal){ctx.globalCompositeOperation='lighter';glow(B.color,b.x,b.y,r*2.6,.4);ctx.globalCompositeOperation='source-over'}
   ctx.fillStyle=g; circle(b.x,b.y,r); ctx.fill();
+  if(B.heal){ctx.strokeStyle='#fff';ctx.lineWidth=r*.36;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(b.x-r*.45,b.y);ctx.lineTo(b.x+r*.45,b.y);ctx.moveTo(b.x,b.y-r*.45);ctx.lineTo(b.x,b.y+r*.45);ctx.stroke()}
 }
 // 砲台：どの台のスキンにもなじむように、灰色の本体に種類の色を少しだけ（台座のふち・頭のまん中）。
 // 砲身の形で種類がわかる：ふつう＝1本・ロング＝長い1本・ほのお＝ラッパの口とタンク・こおり＝2本・かみなり＝電極2本・どく＝太い筒とビン
@@ -1562,6 +1582,10 @@ function drawEnemy(e){
   const E=ENEMIES[e.t], col=e.slow>0?'#bfe6ff':E.color, r=e.r;
   ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(e.x+2,e.y+r*.78,r*.9,r*.35,0,0,Math.PI*2); ctx.fill();
   if(e.t==='fast'){ctx.strokeStyle=hexA(E.color,.5);ctx.lineWidth=2;for(const dx of [-r*.45,0,r*.45]){ctx.beginPath();ctx.moveTo(e.x+dx,e.y-r-4);ctx.lineTo(e.x+dx,e.y-r-12);ctx.stroke()}}
+  if(E.boss){
+    ctx.globalCompositeOperation='lighter'; glow(E.color,e.x,e.y,r*2,.28+.1*Math.sin(G.time*4)); ctx.globalCompositeOperation='source-over';
+    if(E.boss===1){ctx.fillStyle=shade(E.color,.55);for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(e.x+s*r*.3,e.y-r*.75);ctx.quadraticCurveTo(e.x+s*r*.95,e.y-r*1.1,e.x+s*r*.82,e.y-r*1.5);ctx.lineTo(e.x+s*r*.72,e.y-r*.55);ctx.closePath();ctx.fill()}}
+  }
   const g=ctx.createRadialGradient(e.x-r*.35,e.y-r*.4,r*.1,e.x,e.y,r);
   g.addColorStop(0,mixW(col,.45)); g.addColorStop(.55,col); g.addColorStop(1,shade(col,.6));
   ctx.fillStyle=g; circle(e.x,e.y,r); ctx.fill();
@@ -1576,10 +1600,21 @@ function drawEnemy(e){
   if(e.slow>0){ctx.fillStyle='rgba(210,240,255,.2)';circle(e.x,e.y,r+2.5);ctx.fill();ctx.strokeStyle='rgba(225,248,255,.55)';ctx.lineWidth=1;ctx.stroke()}
   if(e.stun>0||e.shock>0){ctx.globalCompositeOperation='lighter';glow('#ffe14f',e.x,e.y,r*1.5,.25+.25*Math.random());ctx.globalCompositeOperation='source-over'}
   const fr=Math.max(0,e.hp/e.max);
-  ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=3.5; circle(e.x,e.y,r+3.5); ctx.stroke();
-  ctx.strokeStyle=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a'; ctx.lineWidth=2.2;
-  ctx.beginPath(); ctx.arc(e.x,e.y,r+3.5,-Math.PI/2,-Math.PI/2+fr*Math.PI*2); ctx.stroke();
-  if(e.flash>0){ctx.fillStyle=`rgba(255,255,255,${Math.min(.8,e.flash*6)})`;circle(e.x,e.y,r);ctx.fill()}
+  if(E.boss){
+    if(E.boss===2){   // 王冠
+      const cy=e.y-r*.78, w=r*.62; ctx.fillStyle='#ffd84a'; ctx.strokeStyle='#8a5a00'; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.moveTo(e.x-w,cy); ctx.lineTo(e.x-w,cy-r*.42); ctx.lineTo(e.x-w*.5,cy-r*.2); ctx.lineTo(e.x,cy-r*.5); ctx.lineTo(e.x+w*.5,cy-r*.2); ctx.lineTo(e.x+w,cy-r*.42); ctx.lineTo(e.x+w,cy); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#ff5fd2'; circle(e.x,cy-r*.12,r*.08); ctx.fill();
+    }
+    const bw=r*2.2, by=e.y-r-(E.boss===2?r*.62:r*.62)-8;
+    ctx.fillStyle='rgba(0,0,0,.6)'; rrPath(ctx,e.x-bw/2-1.5,by-1.5,bw+3,8,4); ctx.fill();
+    ctx.fillStyle=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a'; rrPath(ctx,e.x-bw/2,by,bw*fr,5,2.5); ctx.fill();
+  }else{
+    ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=3.5; circle(e.x,e.y,r+3.5); ctx.stroke();
+    ctx.strokeStyle=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a'; ctx.lineWidth=2.2;
+    ctx.beginPath(); ctx.arc(e.x,e.y,r+3.5,-Math.PI/2,-Math.PI/2+fr*Math.PI*2); ctx.stroke();
+  }
+  if(e.flash>0){ctx.fillStyle=`rgba(255,255,255,${Math.min(E.boss?.3:.8,e.flash*6)})`;circle(e.x,e.y,r);ctx.fill()}
 }
 function draw(){
   const k=scale*dpr;
@@ -1729,7 +1764,7 @@ const hc={};
 function hud(){
   const set=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;return true}return false};
   if(set('balls',G.balls)){$('money').classList.toggle('empty',G.balls<=0);$('money').setAttribute('aria-label','お金 '+G.balls)}
-  set('wave',`WAVE ${G.wave}/5`);
+  set('wave',`WAVE ${G.wave}/${WAVES}`);
   if(hc.life!==G.life){hc.life=G.life;cv.setAttribute('aria-label',`くぎだまディフェンスの台。ライフ ${G.life}/${LIFE_MAX}`)}
 }
 function setStrength(s){
@@ -1804,7 +1839,7 @@ function playBoard(i){
 }
 function startStage(){
   setupStage(); hideOverlays(); closeSheet();
-  G.state='play'; startWave(1);
+  G.state='play'; G.spawnQ=[]; startWave(1);
   const S=STAGES[G.stage]; banner(`${S.name}の台`+(S.kind?'・'+S.kind:''),S.accent,2.2,200);
 }
 function stageClear(){
@@ -1816,10 +1851,10 @@ function stageClear(){
   showResult(`${S.name}の台 クリア！`,[`のこりライフ ${G.life}`,`クリアボーナス ${COIN}+${bonus}`,`お金 ${COIN}${G.balls}`,'ここまでセーブしたよ'],'台えらびへ',()=>openHub('board'),'お店へ',()=>openHub('ball'));
 }
 function gameOver(){
-  G.state='over'; closeSheet();
+  G.state='over'; closeSheet(); G.balls+=G.feverPay; G.feverPay=0; G.fever=0; writeSave();
   const S=STAGES[G.stage], i=G.boardIdx??0;
-  showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,'お金と持ち玉は、この台に入る前にもどるよ'],
-    'もう一度この台',()=>{loadSave();playBoard(i)},'台えらびへ',()=>{loadSave();openHub('board')});
+  showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,`お金 ${COIN}${G.balls}`,'かせいだお金はそのまま残るよ。お店で強くなって、もう一度！'],
+    'もう一度この台',()=>playBoard(i),'台えらびへ',()=>openHub('board'));
 }
 
 /* ---------- 持ち玉とセット ---------- */
@@ -1834,7 +1869,7 @@ const inSet=k=>G.deck.filter(x=>x===k).length;
 
 /* ---------- ロビー（夜のゲームセンター）：下のタブで 台・玉・タワー・ギミック・セット ---------- */
 const TABS={board:['BOARDS','台えらび'],ball:['SHOP','お店・玉'],tower:['SHOP','お店・タワー'],gimmick:['SHOP','お店・ギミック'],set:['MY SET','玉のセット']};
-const SHOP_BALLS=['fire','ice','bolt','poison','lead','bb'], SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
+const SHOP_BALLS=['fire','ice','bolt','poison','lead','bb','heal'], SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
 let hubTab='board', toastT=0;
 function openHub(tab){
   G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; closeSheet(); closeBuy();
