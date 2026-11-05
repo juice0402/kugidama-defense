@@ -267,6 +267,8 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .buy-btns{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;width:100%;margin-top:8px}
 .nbtn{padding:13px 10px;border-radius:14px;font:800 15px var(--f-body);cursor:pointer;border:1.5px solid #4a4268;background:transparent;color:#c4bde0}
 .nbtn.gold{border:0;background:linear-gradient(180deg,#fff0a6,#ffc21f);color:#2a1800;box-shadow:0 4px 0 #a86f00,0 0 16px rgba(255,216,74,.45);display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.nbtn.danger{border:0;background:linear-gradient(180deg,#ff9aa8,#ff3b5c);color:#fff;box-shadow:0 4px 0 #9e1730,0 0 16px rgba(255,59,92,.45)}
+.resetbtn{display:block;margin:26px auto 4px;padding:8px 14px;border:0;background:transparent;color:#8e86b3;font:700 12px var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .nbtn.gold:disabled{background:#262040;color:#7d769c;box-shadow:0 4px 0 #120f24;cursor:not-allowed}
 @media (prefers-reduced-motion:reduce){.bulbs::after,.socket.pop,.wallet.spend,.buy-in,.toast{animation:none}}
 .sheet{position:absolute;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:8px;z-index:6;max-width:460px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -9467,6 +9469,8 @@ function tabSet(body){
   }
   body.append(g);
   if(!have.length){const e=el('div','empty','特殊な玉を買うと、ここにならぶよ');const b=el('button','linkbtn','お店で玉を見る');b.onclick=()=>showTab('ball');e.append(b);body.append(e)}
+  // いちばん下に小さく「はじめから」（まちがって押さないよう、確かめのシートを出す）
+  const r=el('button','resetbtn','セーブを消して はじめから'); r.onclick=()=>{ensureAudio();openReset()}; body.append(r);
 }
 function equip(k){
   if(inSet(k)>=(G.owned[k]||0)){toast(`持っている${BALLS[k].name}は、ぜんぶセットに入ってるよ`);return}
@@ -9533,7 +9537,25 @@ function openBoardLock(i){
 }
 // その台が開くと お店にふえる品の名前
 const newItems=st=>[...Object.values(BALLS),...Object.values(TOWERS),...Object.values(GIMMICKS)].filter(D=>D.board===st).map(D=>D.name);
-function closeBuy(){$('buy').hidden=true;buyFn=null}
+function closeBuy(){$('buy').hidden=true;buyFn=null;$('buyYes').className='nbtn gold'}
+// 「はじめから」の確かめ：セーブを消して、コイン・玉・タワー・ギミック・台をぜんぶ最初にもどす
+let resetIco=null;
+function openReset(){
+  if(!resetIco){
+    const c=document.createElement('canvas'); c.width=c.height=160; const g=c.getContext('2d');
+    g.shadowColor='#ff3b5c'; g.shadowBlur=14; g.strokeStyle='#ff8a9a'; g.lineWidth=9; g.lineCap='round'; g.lineJoin='round';
+    g.beginPath(); g.arc(80,82,40,-Math.PI*.42,Math.PI*1.32); g.stroke();
+    g.beginPath(); g.moveTo(84,22); g.lineTo(104,44); g.lineTo(76,52); g.stroke();
+    resetIco=c.toDataURL();
+  }
+  paint($('buyIn'),'#ff3b5c');
+  $('buyIco').src=resetIco; $('buyKind').textContent='RESET'; $('buyName').textContent='セーブを消して はじめから？';
+  $('buyDesc').textContent='コイン・持ち玉・タワー・ギミック・アンロックした台・クリアした台が、ぜんぶ最初にもどるよ。';
+  $('buyNote').textContent='消したセーブは、もとにもどせないよ';
+  const y=$('buyYes'); y.className='nbtn danger'; y.disabled=false; y.textContent='消して はじめから';
+  buyFn=()=>{closeBuy(); try{localStorage.removeItem(SAVE_KEY)}catch(_){} newRun(); sfx.tick(); toast('はじめからにしたよ！')};
+  $('buy').hidden=false; $('buyNo').focus();
+}
 function buy(kind,k,price){
   if(G.balls<price) return;
   G.balls-=price; closeBuy(); setCoins(true);
