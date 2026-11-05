@@ -2097,11 +2097,9 @@ function ghostEmote(e,r,mood){
 function drawGhost(e){
   const E=ENEMIES[e.t], r=e.r, t=G.time, ph=e.ph, k=Math.min(1,(e.flash||0)/.1), ink='#2b2140', mood=ghostMood(e), B=E.boss?.55:1;
   const tint=e.slow>0?'#d6f1ff':mixW(E.color,e.t==='tanuki'?.82:.88);
-  // うごき：ふわふわ浮く・ゆれに合わせて体をかたむける・呼吸・ときどき くるっと一回転（いたずら）。気分でもゆれ方がかわる
+  // うごき：ふわふわ浮く・ゆれに合わせて体をかたむける・呼吸。気分でもゆれ方がかわる（一回転は17回目のあとでやめた）
   const hop=(e.hopY||0)*r*.55, bob=Math.sin(t*2.4+ph)*r*.1*B;
   let rot=Math.cos(t*1.7+ph)*.1*B, sx=1+Math.sin(t*3.1+ph)*.035, sy=1-Math.sin(t*3.1+ph)*.045, jx=0, lift=0;
-  const trick=(t*.13+ph*.37)%1;
-  if(mood==='idle'&&!E.boss&&!e.dying&&trick<.05){const u=trick/.05;rot+=u*Math.PI*2;lift=Math.sin(u*Math.PI)*r*.35}
   if(mood==='ouch') jx=Math.sin(t*70)*r*.08*Math.min(1,e.hurtT/.2);
   if(mood==='dizzy') rot+=Math.sin(t*9)*.2;
   if(mood==='cold') jx+=Math.sin(t*90)*r*.035;
