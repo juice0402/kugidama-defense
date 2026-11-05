@@ -259,7 +259,7 @@ const XP_NEED=[0,4,10,18];
 const START_DECK=['normal','normal','normal','normal','fire','ice'];
 const SAVE_KEY='kugidama-save-v1';
 
-const G={fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,balls:150,deck:START_DECK.slice(),unlocked:{basic:true,fire:false,ice:false,bolt:false,poison:false,long:false},
+const G={fx:[],fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,balls:150,deck:START_DECK.slice(),unlocked:{basic:true,fire:false,ice:false,bolt:false,poison:false,long:false},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -377,7 +377,7 @@ function setupStage(){
   G.mills=L.mills.map(m=>({...m,ang:0,spin:2.2}));
   G.lcd=L.lcd; G.frame=L.frame||null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
-  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];
+  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];
   G.life=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
@@ -732,6 +732,127 @@ function launch(){
 }
 function addText(x,y,s,c,big){G.texts.push({x,y,s,c,big:!!big,t:1})}
 function banner(text,color,dur,y){G.banners.push({text,color,t:0,dur,y:y||250})}
+/* ---------- 属性のエフェクト（文字のかわりに見た目で伝える） ----------
+   火＝ゆらめく炎、氷＝きらきらの結晶と冷気、雷＝バチバチの小さな稲妻、毒＝ぶくぶくのあわ */
+const FX_MAX=reduce?140:340;
+function fxAdd(o){if(G.fx.length<FX_MAX){o.t=0;G.fx.push(o)}}
+// 1秒に rate 個のわりあいで、この1コマに出す数
+const fxN=(rate,dt)=>{const n=rate*dt*(reduce?.4:1);let c=Math.floor(n);if(Math.random()<n-c)c++;return c};
+// 属性の粒をひとつ。x,y のまわり R の中から。c で色を変えられる（わざ用）
+function fxEl(el,x,y,R,big,c){
+  const a=Math.random()*6.28, rr=R*Math.sqrt(Math.random()), px=x+Math.cos(a)*rr, py=y+Math.sin(a)*rr*.8, r=Math.random;
+  if(el==='fire') fxAdd({k:'flame',x:px,y:py,vx:(r()-.5)*.3,vy:-(.45+r()*.6)*(big?1.35:1),max:.4+r()*.35,s:(big?4:2.8)+r()*1.6,c});
+  else if(el==='ice') fxAdd({k:'frost',x:px,y:py,vx:(r()-.5)*.35,vy:.05+r()*.2,max:.7+r()*.5,s:(big?4:3)+r()*1.2,rot:r()*6.28,vr:(r()-.5)*5,c});
+  else if(el==='bolt') fxAdd({k:'spark',x:px,y:py,a:r()*6.28,len:(big?11:7)+r()*5,max:.08+r()*.08,c});
+  else if(el==='poison') fxAdd({k:'bubble',x:px,y:py,vx:0,vy:-(.25+r()*.3),max:.6+r()*.5,s:(big?3:2)+r()*1.4,ph:r()*6.28,c});
+}
+// 冷気・湯気（大きなやわらかい雲）
+function fxMist(x,y,R,c,rise){const r=Math.random;fxAdd({k:'mist',x:x+(r()-.5)*R,y:y+(r()-.5)*R*.6,vx:(r()-.5)*.15,vy:rise?-.4:-.04,max:.9+r()*.6,s:R*.4+r()*R*.3,c})}
+// 小さな稲妻（タワーや敵のまわりでバチッ）
+function fxArc(x,y,R0,R1,c){const a=Math.random()*6.28,d=R0+Math.random()*(R1-R0);G.zaps.push({x1:x+Math.cos(a)*R0*.6,y1:y+Math.sin(a)*R0*.6,x2:x+Math.cos(a)*d,y2:y+Math.sin(a)*d,t:.1,c,thin:true})}
+// 当たった瞬間のはじける粒（名前の文字のかわり）
+function fxBurst(el,x,y,n,c){
+  if(reduce) n=Math.ceil(n/2);
+  for(let i=0;i<n;i++){
+    const a=i/n*6.28+Math.random()*.5, s=1.2+Math.random()*1.6, vx=Math.cos(a)*s, vy=Math.sin(a)*s;
+    if(el==='fire') fxAdd({k:'flame',x,y,vx,vy:vy-.6,max:.45+Math.random()*.3,s:3+Math.random()*2,c});
+    else if(el==='ice') fxAdd({k:'frost',x,y,vx,vy,max:.6+Math.random()*.4,s:3.4+Math.random()*1.4,rot:Math.random()*6.28,vr:(Math.random()-.5)*8,c});
+    else if(el==='bolt'){if(i%2===0)fxArc(x,y,6,26,c);fxAdd({k:'spark',x:x+vx*6,y:y+vy*6,a,len:8+Math.random()*6,max:.12,c})}
+    else if(el==='poison') fxAdd({k:'bubble',x:x+vx*3,y:y+vy*3,vx:vx*.7,vy:vy*.7-.3,max:.6+Math.random()*.4,s:2.4+Math.random()*1.6,ph:Math.random()*6.28,c});
+  }
+}
+const comboEls=k=>k.split('+');
+// わざごとの色（どくの炎はピンクの炎など）。なければ属性の色
+const COMBO_TINT={'fire+poison':{fire:'#ff6fae'},'bolt+poison':{bolt:'#dcff5f',poison:'#b6e05a'},'fire+bolt':{bolt:'#ffb347'},'ice+bolt':{bolt:'#a8fbff'},'ice+poison':{ice:'#c9b8ff'}};
+// 毎コマ：玉・タワー・弾・敵・ゾーンから属性の粒を出す
+function emitFx(dt){
+  for(const b of G.bs){
+    const el=BALLS[b.t].el; if(!el) continue;
+    for(let i=fxN(el==='fire'?42:28,dt);i--;) fxEl(el,b.x,b.y,b.r*(el==='bolt'?1.5:.7),false);
+    if(el==='ice'&&Math.random()<dt*3) fxMist(b.x,b.y,b.r*2.4,'#cfefff',false);
+  }
+  for(const p of G.pegs){
+    const T=p.tower; if(!T) continue; const R=p.r;
+    if(T.comboT>0){
+      const k=T.combo, [a,b]=comboEls(k), tint=COMBO_TINT[k]||{};
+      for(const el of [a,b]) for(let i=fxN(17,dt);i--;) fxEl(el,p.x,p.y,R*1.3,true,tint[el]);
+      if(k==='fire+ice'&&Math.random()<dt*6) fxMist(p.x,p.y-4,R*1.5,'#f4f9ff',true);      // スチーム：白い湯気
+      if((a==='bolt'||b==='bolt')&&Math.random()<dt*5) fxArc(p.x,p.y,R,R+20,tint.bolt);
+    }else if(T.spT>0){
+      const el=T.sp;
+      for(let i=fxN(el==='bolt'?26:30,dt);i--;) fxEl(el,p.x,p.y,el==='poison'?R*1.7:R*1.25,true);
+      if(el==='ice'&&Math.random()<dt*6) fxMist(p.x,p.y,R*1.8,'#dff4ff',false);           // 氷の霧
+      if(el==='bolt'&&Math.random()<dt*7) fxArc(p.x,p.y,R,R+24);                          // いなずま
+    }else{
+      const el=curEl(T); if(!el) continue;
+      for(let i=fxN(T.elT>0?16:6,dt);i--;) fxEl(el,p.x,p.y,R*(T.elT>0?1.1:.9),false);    // 玉でついた属性は多め、タワーそのものの属性は少し
+      if(el==='bolt'&&T.elT>0&&Math.random()<dt*2) fxArc(p.x,p.y,R,R+14);
+    }
+  }
+  for(const u of G.bl){
+    if(!u.fx) continue;
+    const el=u.fx.el||u.fx.sp||comboEls(u.fx.combo)[Math.random()<.5?0:1];
+    for(let i=fxN(30,dt);i--;) fxEl(el,u.x,u.y,2,false,u.fx.combo&&(COMBO_TINT[u.fx.combo]||{})[el]);
+  }
+  for(const e of G.en){
+    if(e.dead) continue;
+    if(e.burn>0) for(let i=fxN(12,dt);i--;) fxEl('fire',e.x,e.y-e.r*.35,e.r*.75,false);
+    if(e.slow>0) for(let i=fxN(5,dt);i--;) fxEl('ice',e.x,e.y,e.r*1.05,false);
+    if(e.psnT>0) for(let i=fxN(7,dt);i--;) fxEl('poison',e.x,e.y-e.r*.2,e.r*.8,false);
+    if(e.stun>0||e.shock>0){for(let i=fxN(14,dt);i--;) fxEl('bolt',e.x,e.y,e.r*1.2,false);if(Math.random()<dt*4)fxArc(e.x,e.y,e.r,e.r+10)}
+  }
+  for(const z of G.zones){
+    if(z.k==='ice'){if(Math.random()<dt*5)fxMist(z.x,z.y,z.R*1.2,'#e3f6ff',false);for(let i=fxN(4,dt);i--;)fxEl('ice',z.x,z.y,z.R*.9,false)}
+  }
+}
+function updateFxParts(dt){
+  const f=dt*60;
+  for(const q of G.fx){
+    q.t+=dt;
+    if(q.k==='flame'){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.94;q.vy=q.vy*.96-.02*f}
+    else if(q.k==='frost'){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.95;q.vy=q.vy*.95+.006*f;q.rot+=q.vr*dt}
+    else if(q.k==='bubble'){q.x+=q.vx*f+Math.sin(G.time*7+q.ph)*.15*f;q.y+=q.vy*f;q.vx*=.92;q.vy=q.vy*.97-.004*f}
+    else if(q.k==='mist'){q.x+=q.vx*f;q.y+=q.vy*f}
+  }
+  G.fx=G.fx.filter(q=>q.t<q.max);
+}
+function drawFx(){
+  if(!G.fx.length) return;
+  // 光（重ねて明るく）
+  ctx.globalCompositeOperation='lighter';
+  for(const q of G.fx){
+    const k=q.t/q.max, a=1-k;
+    if(q.k==='flame') glow(q.c||(k<.3?'#ffe27a':k<.6?'#ff9a3d':'#ff4f2a'),q.x,q.y,q.s*2.6*(1-k*.4),a*.75);
+    else if(q.k==='frost') glow(q.c||'#8fe3ff',q.x,q.y,q.s*2.2,a*.45);
+    else if(q.k==='spark') glow(q.c||'#ffe14f',q.x,q.y,q.len*.9,a*.5);
+    else if(q.k==='mist') glow(q.c||'#e6f6ff',q.x,q.y,q.s*(1+k*.7),.3*a*Math.min(1,k*5));
+  }
+  ctx.globalCompositeOperation='source-over';
+  // かたち
+  for(const q of G.fx){
+    const k=q.t/q.max, a=1-k;
+    if(q.k==='flame'){
+      const s=q.s*(1-k*.55), x=q.x, y=q.y;
+      ctx.globalAlpha=a*.95; ctx.fillStyle=q.c?mixW(q.c,.25):(k<.35?'#fff1b0':'#ffb347');
+      ctx.beginPath(); ctx.moveTo(x,y-s*1.7); ctx.quadraticCurveTo(x+s,y-s*.1,x,y+s*.75); ctx.quadraticCurveTo(x-s,y-s*.1,x,y-s*1.7); ctx.fill();
+    }else if(q.k==='frost'){
+      const s=q.s*(1-k*.3), c=Math.cos(q.rot)*s, d=Math.sin(q.rot)*s;
+      ctx.globalAlpha=a; ctx.strokeStyle=q.c?mixW(q.c,.5):'#e8fbff'; ctx.lineWidth=1.1;
+      ctx.beginPath(); ctx.moveTo(q.x-c,q.y-d); ctx.lineTo(q.x+c,q.y+d); ctx.moveTo(q.x+d,q.y-c); ctx.lineTo(q.x-d,q.y+c);
+      ctx.moveTo(q.x-(c-d)*.45,q.y-(d+c)*.45); ctx.lineTo(q.x+(c-d)*.45,q.y+(d+c)*.45); ctx.stroke();
+    }else if(q.k==='spark'){
+      const x2=q.x+Math.cos(q.a)*q.len, y2=q.y+Math.sin(q.a)*q.len, mx=(q.x+x2)/2+(Math.random()-.5)*5, my=(q.y+y2)/2+(Math.random()-.5)*5;
+      ctx.globalAlpha=Math.min(1,a*1.6); ctx.strokeStyle=q.c?mixW(q.c,.35):'#fff6a8'; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.moveTo(q.x,q.y); ctx.lineTo(mx,my); ctx.lineTo(x2,y2); ctx.stroke();
+    }else if(q.k==='bubble'){
+      const pop=k>.82, s=pop?q.s*(1+(k-.82)*6):q.s;
+      ctx.globalAlpha=pop?a*2.5:Math.min(1,k*6)*.9; ctx.strokeStyle=q.c||'#c08bff'; ctx.lineWidth=pop?.8:1.2;
+      circle(q.x,q.y,s); ctx.stroke();
+      if(!pop){ctx.fillStyle=hexA(q.c||'#c08bff',.25);ctx.fill();ctx.fillStyle='rgba(255,255,255,.75)';circle(q.x-s*.35,q.y-s*.35,Math.max(.6,s*.25));ctx.fill()}
+    }
+  }
+  ctx.globalAlpha=1;
+}
 function burst(x,y,color,n){
   if(reduce) n=Math.ceil(n/3);
   for(let i=0;i<n;i++){const a=Math.random()*6.28,s=1+Math.random()*3;
@@ -758,16 +879,16 @@ function towerHit(p,b){
   }
   if(T.spT>0&&T.sp===E){T.spT=BUFF_T;return}
   const now=curEl(T);
-  if(!now){T.el=E;T.elT=BUFF_T;addText(p.x,p.y-16,ELEM[E].name,ELEM[E].color);return}  // ふつう・ロングは、弾に属性がつくだけ
+  if(!now){T.el=E;T.elT=BUFF_T;fxBurst(E,p.x,p.y,8);return}  // ふつう・ロングは、弾に属性がつくだけ（文字は出さず、はじける粒で見せる）
   if(now===E){
     // 同じ属性が重なると、とくしゅ効果
     const S=SPECIAL[E]; T.sp=E; T.spT=BUFF_T; T.el=E; T.elT=BUFF_T;
-    addText(p.x,p.y-22,S.name+'！',S.color,true); burst(p.x,p.y,S.color,16); G.rings.push({x:p.x,y:p.y,R:30,c:S.color,t:.5}); sfx.lv();
+    fxBurst(E,p.x,p.y,18); burst(p.x,p.y,S.color,10); G.rings.push({x:p.x,y:p.y,R:30,c:S.color,t:.5}); sfx.lv();
   }else{
     // ちがう属性が出会うと、わざ
     const k=comboKey(now,E), C=COMBO[k];
     T.combo=k; T.comboT=BUFF_T; T.elT=0; T.spT=0;
-    addText(p.x,p.y-22,C.name+'！',C.color,true); burst(p.x,p.y,C.color,18); G.rings.push({x:p.x,y:p.y,R:34,c:C.color,t:.5}); sfx.lv();
+    {const [a,b]=comboEls(k),tint=COMBO_TINT[k]||{};fxBurst(a,p.x,p.y,11,tint[a]);fxBurst(b,p.x,p.y,11,tint[b])} burst(p.x,p.y,C.color,10); G.rings.push({x:p.x,y:p.y,R:34,c:C.color,t:.5}); sfx.lv();
   }
 }
 function hurtEnemy(e,d,dot){
@@ -801,6 +922,7 @@ function zapFrom(e,n,dmg,extra){
 // とくしゅ効果（同じ属性が重なったとき）
 function applySpecial(e,el,dmg){
   const S=SPECIAL[el];
+  fxBurst(el,e.x,e.y,el==='fire'?12:6);
   if(el==='fire'){around(e,40,o=>{if(o!==e)hurtEnemy(o,dmg*.8);applyEl(o,'fire',2)});G.rings.push({x:e.x,y:e.y,R:40,c:S.color,t:.4});burst(e.x,e.y,S.color,10);G.shake=Math.max(G.shake,.12)}
   else if(el==='ice'){applyEl(e,'ice',2);G.zones.push({x:e.x,y:e.y,R:34,t:3,max:3,k:'ice'})}
   else if(el==='bolt'){e.stun=Math.max(e.stun||0,.4);zapFrom(e,4,dmg*.7,o=>{o.stun=Math.max(o.stun||0,.4)})}
@@ -808,6 +930,7 @@ function applySpecial(e,el,dmg){
 }
 function applyCombo(e,k,dmg){
   const C=COMBO[k];
+  {const [a,b]=comboEls(k),tint=COMBO_TINT[k]||{};fxBurst(a,e.x,e.y,4,tint[a]);fxBurst(b,e.x,e.y,4,tint[b]);if(k==='fire+ice')for(let i=0;i<3;i++)fxMist(e.x,e.y,30,'#f4f9ff',true)}
   if(k==='fire+ice'){around(e,42,o=>{applyEl(o,'fire',1);applyEl(o,'ice',1)});G.rings.push({x:e.x,y:e.y,R:42,c:C.color,t:.45})}
   else if(k==='fire+bolt'){applyEl(e,'fire',2);zapFrom(e,3,dmg*.6,o=>applyEl(o,'fire',2))}
   else if(k==='fire+poison'){applyEl(e,'fire',2);applyEl(e,'poison',2)}
@@ -827,8 +950,8 @@ function ballElOnEnemy(e,el,dmg){
   if(other){
     const k=comboKey(other,el), C=COMBO[k];
     applyCombo(e,k,Math.max(1,dmg));
-    addText(e.x,e.y-e.r-12,C.name+'！',C.color);
-    burst(e.x,e.y,C.color,10); G.rings.push({x:e.x,y:e.y,R:26,c:C.color,t:.4}); sfx.lv();
+    {const [a,b]=comboEls(k),tint=COMBO_TINT[k]||{};fxBurst(a,e.x,e.y,8,tint[a]);fxBurst(b,e.x,e.y,8,tint[b])}
+    burst(e.x,e.y,C.color,6); G.rings.push({x:e.x,y:e.y,R:26,c:C.color,t:.4}); sfx.lv();
   }else applyEl(e,el,1,dmg);
   if(el==='bolt'&&!e.dead) e.shock=2;                      // 雷弾が当たった敵は、2秒しびれのしるし
 }
@@ -1032,6 +1155,7 @@ function update(dt){
   }
   G.zones=G.zones.filter(z=>z.t>0);
   G.en=G.en.filter(e=>!e.dead);
+  emitFx(dt);
   // フィーバー
   if(G.fever>0){
     G.fever-=dt;
@@ -1058,6 +1182,7 @@ function updateFx(dt){
   for(const b of G.banners) b.t+=dt;
   for(const z of G.zaps) z.t-=dt; G.zaps=G.zaps.filter(z=>z.t>0);
   for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
+  updateFxParts(dt);
   G.banners=G.banners.filter(b=>b.t<b.dur);
 }
 
@@ -1090,6 +1215,13 @@ function drawBall(b){
 function drawTower(p,t){
   const T=p.tower, D=TOWERS[T.type], R=p.r, s=R*.5;
   if(T.pop>0){ctx.strokeStyle=hexA(D.color,Math.min(1,T.pop*2.5));ctx.lineWidth=2;circle(p.x,p.y,R+4+(.3-T.pop)*30);ctx.stroke()}
+  // 毒のとくしゅ効果：杭の下にぶくぶくの毒の沼
+  if(T.spT>0&&T.sp==='poison'){
+    const w=R*2.4+Math.sin(t*3)*1.5;
+    ctx.globalCompositeOperation='lighter'; glow('#b77bff',p.x,p.y+R*.5,w*1.3,.45); ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='rgba(120,60,190,.55)'; ctx.beginPath(); ctx.ellipse(p.x,p.y+R*.55,w,w*.42,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(214,170,255,.6)'; ctx.lineWidth=1; ctx.stroke();
+  }
   drawStake(ctx,p.x,p.y,R);
   ctx.strokeStyle=D.color; ctx.lineWidth=2.6; circle(p.x,p.y,R+1.5); ctx.stroke();
   ctx.fillStyle=D.color; ctx.strokeStyle=D.color; ctx.lineWidth=Math.max(1.4,R*.15);
@@ -1105,15 +1237,17 @@ function drawTower(p,t){
   // 属性・わざ：色の光と、のこり時間の弧
   const el=curEl(T), big=T.comboT>0||T.spT>0, col=T.comboT>0?COMBO[T.combo].color:T.spT>0?SPECIAL[T.sp].color:el?ELEM[el].color:null;
   if(col){
-    ctx.globalCompositeOperation='lighter'; glow(col,p.x,p.y,R*(big?3.4:2.2)+(big?Math.sin(t*8)*3:0),big?.75:.4); ctx.globalCompositeOperation='source-over';
+    ctx.globalCompositeOperation='lighter'; glow(col,p.x,p.y,R*(big?3.2:2.2)+(big?Math.sin(t*8)*3:0),big?.5:.4); ctx.globalCompositeOperation='source-over';
     const left=T.comboT>0?T.comboT/BUFF_T:T.spT>0?T.spT/BUFF_T:T.elT>0?T.elT/BUFF_T:1;
     ctx.strokeStyle=col; ctx.lineWidth=big?3:2;
     ctx.beginPath(); ctx.arc(p.x,p.y,R+13,-Math.PI/2,-Math.PI/2+left*Math.PI*2); ctx.stroke();
     if(big){ctx.setLineDash([2,5]);ctx.lineDashOffset=t*24;circle(p.x,p.y,R+17);ctx.stroke();ctx.setLineDash([]);ctx.lineDashOffset=0}
-    const lbl=T.comboT>0?COMBO[T.combo].name:T.spT>0?SPECIAL[T.sp].name:ELEM[el].name;
-    if(T.comboT>0||T.spT>0||T.elT>0){
-    ctx.font=`800 ${big?10:11}px ${BODYF}`; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.lineJoin='round';
-    ctx.lineWidth=3; ctx.strokeStyle='rgba(8,12,22,.9)'; ctx.strokeText(lbl,p.x,p.y-R-21); ctx.fillStyle=col; ctx.fillText(lbl,p.x,p.y-R-21);
+    // 名前の文字は出さない。わざは2つの属性の光の玉がまわって、組み合わせが見える
+    if(T.comboT>0){
+      const [a,b]=comboEls(T.combo), tint=COMBO_TINT[T.combo]||{};
+      [a,b].forEach((k,i)=>{const ang=t*3.2+i*Math.PI, x=p.x+Math.cos(ang)*(R+12), y=p.y+Math.sin(ang)*(R+12)*.85, c=tint[k]||ELEM[k].color;
+        ctx.globalCompositeOperation='lighter'; glow(c,x,y,9,.9); ctx.globalCompositeOperation='source-over';
+        ctx.fillStyle=mixW(c,.45); circle(x,y,2.6); ctx.fill()});
     }
   }
   // 攻撃UP（鉛玉）：上向きの三角、連射UP（BB弾）：まわる点線
@@ -1164,10 +1298,11 @@ function drawEnemy(e){
   const ex=r*.34, ey=e.y-r*.1;
   ctx.fillStyle='#ffffff'; circle(e.x-ex,ey,r*.2); ctx.fill(); circle(e.x+ex,ey,r*.2); ctx.fill();
   ctx.fillStyle='#1b1424'; circle(e.x-ex,ey+r*.04,r*.1); ctx.fill(); circle(e.x+ex,ey+r*.04,r*.1); ctx.fill();
-  if(e.slow>0){ctx.strokeStyle='rgba(191,230,255,.85)';ctx.lineWidth=1.2;ctx.setLineDash([2,3]);circle(e.x,e.y,r+7);ctx.stroke();ctx.setLineDash([])}
-  // やけど・どく・しびれ：頭の上の小さなしるし
-  const marks=[]; if(e.burn>0)marks.push(ELEM.fire.color); if(e.psnT>0)marks.push(ELEM.poison.color); if(e.stun>0||e.shock>0)marks.push(ELEM.bolt.color);
-  marks.forEach((c,i)=>{const x=e.x+(i-(marks.length-1)/2)*8,y=e.y-r-9+Math.sin(G.time*6+i)*1.5;ctx.globalCompositeOperation='lighter';glow(c,x,y,7,.8);ctx.globalCompositeOperation='source-over';ctx.fillStyle=c;circle(x,y,2.2);ctx.fill()});
+  // やけど・どく・しびれ・おそい：しるしの点ではなく、体の色と、まわりの炎・あわ・火花・結晶（emitFx）で見せる
+  if(e.psnT>0){ctx.fillStyle='rgba(150,80,230,.3)';circle(e.x,e.y,r);ctx.fill()}
+  if(e.burn>0){ctx.globalCompositeOperation='lighter';glow('#ff7a3d',e.x,e.y,r*1.6,.32+.12*Math.sin(G.time*14+e.ph));ctx.globalCompositeOperation='source-over'}
+  if(e.slow>0){ctx.fillStyle='rgba(210,240,255,.2)';circle(e.x,e.y,r+2.5);ctx.fill();ctx.strokeStyle='rgba(225,248,255,.55)';ctx.lineWidth=1;ctx.stroke()}
+  if(e.stun>0||e.shock>0){ctx.globalCompositeOperation='lighter';glow('#ffe14f',e.x,e.y,r*1.5,.25+.25*Math.random());ctx.globalCompositeOperation='source-over'}
   const fr=Math.max(0,e.hp/e.max);
   ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=3.5; circle(e.x,e.y,r+3.5); ctx.stroke();
   ctx.strokeStyle=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a'; ctx.lineWidth=2.2;
@@ -1269,9 +1404,10 @@ function draw(){
   for(const e of G.en) drawEnemy(e);
   // タワーの弾
   for(const u of G.bl){ctx.fillStyle=u.c;circle(u.x,u.y,2.8);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1;ctx.stroke()}
+  drawFx();
   for(const b of G.bs) drawBall(b);
   // 雷のとびうつり・わざの輪
-  if(G.zaps.length){ctx.strokeStyle=ELEM.bolt.color;ctx.lineWidth=2;for(const z of G.zaps){ctx.globalAlpha=Math.min(1,z.t*6);ctx.beginPath();ctx.moveTo(z.x1,z.y1);const n=4;for(let i=1;i<n;i++){const k=i/n;ctx.lineTo(z.x1+(z.x2-z.x1)*k+(Math.random()-.5)*8,z.y1+(z.y2-z.y1)*k+(Math.random()-.5)*8)}ctx.lineTo(z.x2,z.y2);ctx.stroke()}ctx.globalAlpha=1}
+  if(G.zaps.length){for(const z of G.zaps){ctx.strokeStyle=z.c||ELEM.bolt.color;ctx.lineWidth=z.thin?1.3:2;ctx.globalAlpha=Math.min(1,z.t*(z.thin?10:6));ctx.beginPath();ctx.moveTo(z.x1,z.y1);const n=4;for(let i=1;i<n;i++){const k=i/n;ctx.lineTo(z.x1+(z.x2-z.x1)*k+(Math.random()-.5)*8,z.y1+(z.y2-z.y1)*k+(Math.random()-.5)*8)}ctx.lineTo(z.x2,z.y2);ctx.stroke()}ctx.globalAlpha=1}
   for(const r of G.rings){ctx.globalAlpha=Math.min(1,r.t*3);ctx.strokeStyle=r.c;ctx.lineWidth=2.5;circle(r.x,r.y,r.R*(1.15-r.t));ctx.stroke()}ctx.globalAlpha=1;
   // 火花
   if(meadow&&!fev){for(const q of G.parts){ctx.globalAlpha=Math.min(1,q.t*2);ctx.fillStyle=q.c;circle(q.x,q.y,2.2);ctx.fill()}ctx.globalAlpha=1}
