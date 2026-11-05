@@ -1,18 +1,20 @@
 // 自動プレイ（キャンペーン）：草原から順に、クリアするまでくり返す。負けるたび・クリアのたびにお店で買う。
-// opts: {upTo:台の番号, tries:1台の最大回数, st:{台番号:{hp:..}} で数字をためす}
+// opts: {upTo:台の番号, tries:1台の最大回数, st:{台番号:{hp:..}} で数字をためす, obj:{HONEY:{heal:.2}} で mk.py が出した入れものを上書き, log:true でウェーブごとのライフ}
 (opts)=>{
 const T=window.__T,G=T.G;
 if(opts.st) for(const i in opts.st) Object.assign(T.STAGES[i],opts.st[i]);
+if(opts.obj) for(const k in opts.obj) for(const j in opts.obj[k]){const v=opts.obj[k][j],o=T[k][j];if(v&&typeof v==='object'&&o&&typeof o==='object')Object.assign(o,v);else T[k][j]=v}   // obj:{HONEY:{heal:.2},ENEMIES:{kuma:{hp:1200}}} … __T の入れものを上書き
 const upTo=opts.upTo??1, tries=opts.tries??10;
-function build(p,k){const t=T.TOWERS[k];G.balls-=t.cost;p.tower={type:k,lv:1,xp:0,cd:.3,rapid:0,pow:0,el:null,elT:0,sp:null,spT:0,combo:null,comboT:0,pop:.3,shot:0,ang:-Math.PI/2,tg:null,gm:null,bump:0,sa:0,sw:2.4,sdir:p.x<180?-1:1};p.r=Math.max(p.r,7)}
+function build(p,k){const t=T.TOWERS[k];G.balls-=t.cost;p.tower=T.newTower(k,p);p.r=Math.max(p.r,7)}
 function order(){return G.pegs.filter(p=>!p.fixed).slice().sort((a,b)=>Math.hypot(a.x-188,a.y-250)-Math.hypot(b.x-188,b.y-250))}
 const avail=D=>!D.board||T.stageOpen(D.board);
 function runBoard(i){
   const c0=G.balls; T.playBoard(i); G.paused=true; G.banners=[];
   const types=Object.keys(T.TOWERS).filter(k=>G.unlocked[k]&&avail(T.TOWERS[k])&&k!=='long');
   const pick=types.length>1?types.filter(k=>k!=='basic'):types;
-  let n=0,t=0,act=0; const dt=1/60;
+  let n=0,t=0,act=0,lw=0; const dt=1/60, lives=[];
   while(G.state==='play'&&t<900){
+    if(G.wave!==lw){lw=G.wave;lives.push(G.life)}
     T.update(dt); G.time+=dt; t+=dt; act-=dt;
     if(act<=0){act=.5;
       const free=order().filter(p=>!p.tower), k=pick[n%pick.length];
@@ -21,7 +23,7 @@ function runBoard(i){
         if(gk){const p=G.pegs.find(p=>p.tower&&!p.tower.gm),M=T.GIMMICKS[gk];if(p&&G.balls>=M.cost+30){G.balls-=M.cost;p.tower.gm=gk}}}
     }
   }
-  return {c0,clear:G.state==='clear',wave:G.wave,life:G.life};
+  return {c0,clear:G.state==='clear',wave:G.wave,life:G.life,lives};
 }
 function shop(){
   const items=[];
@@ -47,7 +49,7 @@ for(let s=0;s<=upTo;s++){
   const res=[]; out[T.STAGES[s].name]=res;
   for(let w=0;w<20&&!buyBoard(s);w++){const r=runBoard(s-1);res.push('稼ぎ'+(r.clear?'C':r.wave));shop()}
   if(!T.stageOpen(s)){res.push('開かない');break}
-  for(let k=0;k<tries&&!G.cleared.includes(s);k++){const r=runBoard(T.BOARDS.findIndex(b=>b.stage===s));res.push((r.clear?'C'+r.life:'w'+r.wave)+'@'+r.c0);shop()}
+  for(let k=0;k<tries&&!G.cleared.includes(s);k++){const r=runBoard(T.BOARDS.findIndex(b=>b.stage===s));res.push((r.clear?'C'+r.life:'w'+r.wave)+'@'+r.c0+(opts.log?'['+r.lives.join(',')+']':''));shop()}
   if(!G.cleared.includes(s)) break;
   shop();
 }
