@@ -368,12 +368,12 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
 
 /* ==================== コードのしくみ（フック） ====================
    台ごとの中身は「表に行を足す＋小さな関数（フック）」で足す。共通のループ（update・stepBalls・draw・drawGhost…）は if をふやさずにフックを呼ぶ。
-   フックの関数は、表の行に書いても、あとで Object.assign(表.キー,{...}) でつけてもよい（台ごとの区切り「草原（0）」「森（1）」「洋館（2）」「砂漠（3）」を見本に）。
+   フックの関数は、表の行に書いても、あとで Object.assign(表.キー,{...}) でつけてもよい（台ごとの区切り「草原（0）」「森（1）」「洋館（2）」「砂漠（3）」「雪山（4）」を見本に）。
    ・ELEM[k] 属性：name,color,tag（説明の文字）,part（粒の種類 FXK）,skin（体の色 {tint,edge,wash,spr:[色,濃さ]}）,mood（顔 ['hot'] / [名前,1]＝強い顔）,
        fx（粒の多さ {ball,tw,own,sp,cb,bl,en,gm:[1秒の数,広さ,高さ]}。場所の意味は FX_DEF）
        on(e,lv,dmg) 敵につく / has(e) いまついているか / tick(e,dt,rd) 時間を減らす・じわじわダメージ（rd＝ボスは早くとける）/
        speed(e,E) 動きの倍率（0で止まる）/ hold(e) true で止まる（いたずらもできない）/ calm(e) true で いたずらだけお休み（動きはそのまま。o.held になる）/ dmgK(e) 受けるダメージの倍率 /
-       mark(e,r,t,ga) おばけの体の上の絵（おばけの座標）/ onBall(e) 属性弾が直接当たった / more(mode,x,y,R,dt,c) 粒の足し /
+       mark(e,r,t,ga) おばけの体の上の絵（おばけの座標）/ onBall(e) 属性弾が直接当たった / hit(e,d) 玉・砲台の弾など（じわじわ以外）が当たった / more(mode,x,y,R,dt,c) 粒の足し /
        special(e,dmg) SPECIAL[k] がないときのとくしゅ効果
    ・SPECIAL[k]（同じ属性2つ）・COMBO['a+b']（ちがう属性。キーは comboKey(a,b)＝ELEM にならんだ順）：name,color,desc,n（はじける粒）,tint（{属性:粒の色}）,
        fx(e,dmg) 効き目（this＝その行）/ more(x,y,R,dt) 砲台の上の粒の足し / under(p,T,t) 砲台の下の絵
@@ -386,7 +386,8 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        ballHit(e,b,nx,ny) 玉が当たった（true でダメージなし）/ bulletHit(e,u) 砲台の弾（true でよけた）/ dmgK(e) / death(e) / mood(e) 顔の名前 /
        絵（おばけの座標。P={line,lw,tint,ga,ink,mood}）：back(e,r,t,P) 体のうしろ / skin(e,r,ey,t,P) 体の上・顔の前 / front(e,r,ey,t,P) 顔のあと /
        top(e,r,t,P) 頭の上 / mouth(e,r,ey,t) ふだんの口 / eye(e,x,ey,r,s,mood) 目（true で自前）/ pose(e,P) かたむき（P.rot,sx,sy,jx,lift）/ alt(e,r,t,P) 体ごと別の絵（true で自前）
-       おばけの共通の状態：stun しびれ・sleep ねむり・push 押しもどし・vx 横・hopY はねる高さ・ghost すけすけ（ねらえない）・fake にせもの（玉1発で消える）・trail 残像
+       おばけの共通の状態：stun しびれ・sleep ねむり・push 押しもどし・vx 横・hopY はねる高さ・ghost すけすけ（ねらえない）・fake にせもの（玉1発で消える）・trail 残像・
+       hide 雪にまぎれる（その近さの砲台からしか ねらえない）・cover かばわれている（G.time より大きい間 ねらえない）。砲台のねらいは aimAt(p,R)
        中ボス・ボスは止まりにくい（update の共通のしくみ。BOSS_HOLD）：止まっている時間 holdT がたまると guard（がまん）の間は stun・sleep・root・freeze を0に、EL_HOLD と speed の0を使わない。新しい「止める」効き目も hold か speed の0で作れば自動でこれが効く
    ・TOWERS[k] 砲台：name,color,range,rate,dmg,cost,el,unlock,board,muz（砲身の先）,bullet（弾の種類）,aoe（はんい）,tag（お店のタグの文字）
        shoot(p,T,D,R) 撃ち方（true なら自前で撃った）/ gun(T,R,kick) 砲身の絵（砲台の向きの座標）/ over(p,T,t) 頭の上の絵 / tick(p,T,dt) 手助け
@@ -425,6 +426,9 @@ const BALLS={
   // 砂漠の台が開くと お店にならぶ
   sand:{name:'すな弾',color:'#f2b866',el:'sand',e:.5,g:.16,r:5,dmg:1,price:250,board:3,desc:'「すな」をつける。すなをかぶった敵は いたずらできなくなって、少しおそくなる'},
   wind:{name:'かぜ弾',color:'#7dffd0',el:'wind',e:.5,g:.16,r:5,dmg:1,price:250,board:3,desc:'「かぜ」をつける。敵を台のまん中の方へ ふきとばして、ついている属性を近くの敵にうつす'},
+  // 雪山の台が開くと お店にならぶ
+  snow:{name:'ゆき弾',color:'#eef4ff',el:'snow',e:.5,g:.16,r:5,dmg:1,price:275,board:4,desc:'「ゆき」をつける。雪が3つ つもると 雪だるまになって しばらく止まる'},
+  crystal:{name:'けっしょう弾',color:'#a8b0ff',el:'crystal',e:.5,g:.16,r:5,dmg:1,price:275,board:4,desc:'「けっしょう」をつける。結晶がついた敵に もう一度 玉や弾が当たると、割れて大ダメージ'},
 };
 // 属性。タワーの上で2つの属性が出会うと「わざ」。敵の状態：火 burn/burnD・氷 slow/slowF/freeze・雷 shock（と stun）・毒 psnT/psnD・水 wet（push）・つる vineT/root/rootCD/thorn
 const ELEM={
@@ -512,9 +516,23 @@ const ELEM={
     has:e=>e.windT>0,
     tick(e,dt,rd){if(e.windT>0)e.windT=Math.max(0,e.windT-rd);if(e.windCD>0)e.windCD=Math.max(0,e.windCD-dt)},
     mark(e,r,t,ga){if(e.windT>0)drawWindMark(e,r,t,ga)}},
+  // 雪山のゆき・けっしょう（フックの中身は雪山の区切り。雪だるま・割れるのは つづけてかからないように CD つき）
+  snow:{name:'ゆき',color:'#eef4ff',tag:'ゆき',part:'flake',mood:['cold'],skin:{tint:'#f4f7ff',edge:'#c4d0ff'},fx:{en:[4,1,-.7]},
+    on(e,lv){snowOn(e,lv)},                                              // 雪がつもる（3つで雪だるま＝しばらく止まる）
+    has:e=>e.snowN>0||e.snowman>0,
+    tick(e,dt,rd){snowTick(e,dt,rd)},
+    speed:(e,E)=>snowSpeed(e,E),
+    hold:e=>e.snowman>0,
+    mark(e,r,t,ga){if(e.snowN>0||e.snowman>0)drawSnowMark(e,r,t,ga)}},
+  crystal:{name:'けっしょう',color:'#a8b0ff',tag:'けっしょう',part:'shard',mood:['wow'],fx:{en:[3,1,-.4]},
+    on(e,lv,dmg){crystOn(e,lv,dmg)},                                     // 結晶がつく（つぎに 玉・弾が当たると 割れて大ダメージ）
+    has:e=>e.cryst>0,
+    tick(e,dt,rd){if(e.cryst>0)e.cryst=Math.max(0,e.cryst-rd);if(e.crArm>0)e.crArm=Math.max(0,e.crArm-dt);if(e.crCD>0)e.crCD=Math.max(0,e.crCD-dt)},
+    hit(e,d){if(e.cryst>0&&!(e.crArm>0))shatter(e,d)},
+    mark(e,r,t,ga){if(e.cryst>0)drawCrystMark(e,r,t,ga)}},
 };
 const EL_ORDER=[];                                   // ELEM にならんだ順（finishHooks で入る）。わざのキーはこの順
-const EL_TICK=[], EL_SPEED=[], EL_HOLD=[], EL_DMG=[], EL_MARK=[], EL_SKIN=[], EL_MOOD=[], EL_CALM=[];   // そのフックを持つ属性（finishHooks で入る）
+const EL_TICK=[], EL_SPEED=[], EL_HOLD=[], EL_DMG=[], EL_MARK=[], EL_SKIN=[], EL_MOOD=[], EL_CALM=[], EL_HIT=[];   // そのフックを持つ属性（finishHooks で入る）
 const comboKey=(a,b)=>EL_ORDER.indexOf(a)<EL_ORDER.indexOf(b)?a+'+'+b:b+'+'+a;
 const comboEls=k=>k.split('+');
 // 同じ属性が重なると「とくしゅ効果」（属性タワーなら、その属性弾が1つ当たるだけで出る）
@@ -547,6 +565,11 @@ const SPECIAL={
     fx(e){applyEl(e,'sand',2);zone('sand',e.x,e.y,34,3.5)}},
   wind:{name:'つむじかぜ',color:'#a8ffe0',n:10,desc:'弾が当たると つむじかぜ。まわりの敵を まとめて上へ押しもどす',
     fx(e){whirlUp(e,56,20)}},
+  // 雪山のゆき・けっしょう
+  snow:{name:'ふぶき',color:'#f0f6ff',n:12,desc:'弾が当たると ふぶき。まわりの敵みんなに 雪がつもって、しばらく雪がふりつづく',
+    fx(e){around(e,56,o=>applyEl(o,'snow',1));zone('blizzard',e.x,e.y,44,3);ringAt(e,56,this.color)}},
+  crystal:{name:'けっしょうのはな',color:'#c8c0ff',n:12,desc:'弾が当たると 結晶の花がさく。まわりの敵みんなに 結晶（もう結晶がついている敵は 割れる）',
+    fx(e,dmg){around(e,52,o=>{if(o.cryst>0&&!(o.crArm>0))shatter(o,dmg);else crystOn(o,2,dmg)});G.obs.push({k:'crFlower',x:e.x,y:e.y,t:0,max:.8,R:52});ringAt(e,52,this.color)}},
 };
 // ちがう属性が出会うと「わざ」。tint＝わざのときの粒の色（どくの炎はピンクの炎など。なければ属性の色）
 const COMBO={
@@ -646,6 +669,50 @@ const COMBO={
     fx(e){around(e,48,o=>{applyEl(o,'shadow',1);blowSide(o,1.2)});ringAt(e,48,this.color)}},
   'sand+wind':{name:'すなあらし',color:'#ffd8a0',tint:{wind:'#ffe0b0'},desc:'すなあらし。広い範囲の敵みんな すなかぶり（いたずらできない）＋おそい',
     fx(e){around(e,62,o=>applyEl(o,'sand',2));ringAt(e,62,this.color);for(let i=0;i<4;i++)fxMist(e.x,e.y,50,'#ffe0b0',false)}},
+  // 雪山のゆき（×前の台の属性）。ゆき＝つもって 雪だるまに へんしん
+  'fire+snow':{name:'ゆきどけ',color:'#ffc4b0',tint:{snow:'#ffe2d6'},desc:'あたたかい火で 雪がとけて びしょびしょ。やけど＋ぬれて押しもどされる。つもった雪が多いほど 大きなダメージ',
+    fx(e,dmg){const n=e.snowN||0;e.snowN=0;applyEl(e,'fire',2);e.wet=5;pushBack(e,10);hurtEnemy(e,dmg*(.4+.35*n),true);for(let i=0;i<2;i++)fxMist(e.x,e.y,26,'#fff0ea',true)}},
+  'ice+snow':{name:'こおりだるま',color:'#d8f0ff',tint:{snow:'#ffffff'},desc:'いっきに雪が3つ。カチコチの雪だるまにして止めて、そのあとも おそい',
+    fx(e){applyEl(e,'snow',3);applyEl(e,'ice',2)}},
+  'bolt+snow':{name:'ゆきおこし',color:'#f6f2b8',tint:{bolt:'#fff6c8'},desc:'冬のかみなり。4体にとびうつって、とびうつった敵にも 雪がつもる',
+    fx(e,dmg){applyEl(e,'snow',1);zapFrom(e,4,dmg*.6,o=>applyEl(o,'snow',1))}},
+  'poison+snow':{name:'むらさきゆき',color:'#dcc4ff',tint:{snow:'#e4d0ff'},desc:'どくの雪が ふる。まわりの敵みんなに どく＋雪',
+    fx(e){around(e,44,o=>{applyEl(o,'poison',1);applyEl(o,'snow',1)});ringAt(e,44,this.color)}},
+  'water+snow':{name:'みぞれ',color:'#c4e2ff',tint:{water:'#b8d8ff'},desc:'つめたい みぞれ。まわりの敵を ぬらして押しもどして、雪もつもる',
+    fx(e){around(e,44,o=>{o.wet=5;pushBack(o,10);applyEl(o,'snow',1)});ringAt(e,44,this.color);fxBurst('water',e.x,e.y,6)}},
+  'vine+snow':{name:'ゆきつばき',color:'#ff9ab8',tint:{vine:'#ff8fb0'},desc:'雪の中のつばき。つるが からんで少し止めて、雪が2つ',
+    fx(e){if(!(e.rootCD>0))tangle(e,.9);applyEl(e,'snow',2)}},
+  'sound+snow':{name:'やまびこ',color:'#ecdcff',tint:{sound:'#f2d4ff'},desc:'やっほー！ 声が こだまする。まわりの敵が ひるんで雪、少しあとに もう一度ひびく',
+    fx(e,dmg){around(e,50,o=>{flinch(o,.3);o.noteT=3;applyEl(o,'snow',1)});ringAt(e,50,this.color);G.obs.push({k:'echo',x:e.x,y:e.y,R:50,t:.5,d:dmg*.35,c:this.color})}},
+  'shadow+snow':{name:'まっしろけ',color:'#d0d6ff',tint:{shadow:'#b8c0ff'},desc:'ふぶきで まっしろ。まわりの敵が こんらん＋雪',
+    fx(e){around(e,44,o=>{applyEl(o,'shadow',1);applyEl(o,'snow',1)});ringAt(e,44,this.color);for(let i=0;i<3;i++)fxMist(e.x,e.y,36,'#f0f4ff',false)}},
+  'sand+snow':{name:'ざらめゆき',color:'#fff0d8',tint:{sand:'#fff4e0'},desc:'ざらざらの雪。いたずらできない＋雪が2つ',
+    fx(e){applyEl(e,'sand',1);applyEl(e,'snow',2)}},
+  'wind+snow':{name:'ゆきけむり',color:'#e0fff6',tint:{wind:'#e8fffa'},desc:'雪けむりが まう。まわりの敵を まん中へ ふきよせて、雪をつもらせる',
+    fx(e){around(e,52,o=>{applyEl(o,'snow',1);blowSide(o,1.1)});ringAt(e,52,this.color)}},
+  // 雪山のけっしょう（×前の台の属性・ゆき）。けっしょう＝くだける。わざは 結晶に属性を とじこめて、割れると まわりに ひろがる
+  'fire+crystal':{name:'あかいほうせき',color:'#ff8a9e',tint:{crystal:'#ff9aac'},desc:'火をとじこめた 赤い ほうせき。やけど＋結晶。割れると まわりも やけど',
+    fx(e,dmg){applyEl(e,'fire',2);crystOn(e,1,dmg,'fire')}},
+  'ice+crystal':{name:'こおりのつぶて',color:'#c4e2ff',tint:{crystal:'#cce8ff'},desc:'とがった氷のかけらが とびちる。まわりの敵に 結晶＋おそい',
+    fx(e,dmg){around(e,42,o=>{crystOn(o,1,dmg);applyEl(o,'ice',1)});ringAt(e,42,this.color);fxBurst('crystal',e.x,e.y,8)}},
+  'bolt+crystal':{name:'ぴかぴかいし',color:'#e4e0ff',tint:{bolt:'#ece4ff'},desc:'結晶が 電気を通す。4体にとびうつって、とびうつった敵に 結晶（ついていれば 割れる）',
+    fx(e,dmg){crystOn(e,1,dmg);zapFrom(e,4,dmg*.6,o=>crystOn(o,1,dmg))}},
+  'poison+crystal':{name:'どくすいしょう',color:'#c890ff',tint:{crystal:'#d0a0ff'},desc:'どくをとじこめた すいしょう。どく2倍＋結晶。割れると まわりにも どく',
+    fx(e,dmg){applyEl(e,'poison',2);crystOn(e,1,dmg,'poison')}},
+  'water+crystal':{name:'しんじゅ',color:'#f0eaff',tint:{water:'#e6e0ff'},desc:'まるい しんじゅに とじこめる。少し止めて 押しもどす＋結晶。割れると まわりも ぬれる',
+    fx(e,dmg){e.wet=5;pushBack(e,12);if(!(e.flinchCD>0)){e.stun=Math.max(e.stun||0,.45);e.flinchCD=1.5}crystOn(e,1,dmg,'water')}},
+  'vine+crystal':{name:'こはく',color:'#ffc860',tint:{crystal:'#ffc860',vine:'#d8a040'},desc:'こはくに とじこめて しばらく止める＋結晶。割れると まわりも からまる',
+    fx(e,dmg){if(!(e.rootCD>0))tangle(e,1.2);crystOn(e,1,dmg,'vine')}},
+  'sound+crystal':{name:'ぱりんのうた',color:'#f2ccff',tint:{sound:'#f8d4ff'},desc:'すきとおった高い声。まわりの結晶が みんな割れる。結晶がない敵は ひるんで結晶がつく',
+    fx(e,dmg){around(e,60,o=>{if(o.cryst>0)shatter(o,dmg);else{flinch(o,.3);o.noteT=3;crystOn(o,1,dmg)}});ringAt(e,60,this.color);ringAt(e,34,'#ffffff',.3)}},
+  'shadow+crystal':{name:'くろすいしょう',color:'#9a90ff',tint:{crystal:'#9a8cff'},desc:'まっくろな すいしょう。こんらん＋結晶。割れると まわりも こんらん',
+    fx(e,dmg){applyEl(e,'shadow',1);crystOn(e,1,dmg,'shadow')}},
+  'sand+crystal':{name:'ほしのすな',color:'#ffe0f0',tint:{sand:'#ffe8c8',crystal:'#ffd0f0'},desc:'きらきらの ほしのすな。まわりの敵が すなかぶり＋結晶',
+    fx(e,dmg){around(e,40,o=>{applyEl(o,'sand',1);crystOn(o,1,dmg)});ringAt(e,40,this.color)}},
+  'wind+crystal':{name:'きらきらかぜ',color:'#c8fff0',tint:{wind:'#d8fff4',crystal:'#d0d8ff'},desc:'結晶のかけらが 風にのる。まわりの敵を まん中へ ふきよせて、結晶をつける',
+    fx(e,dmg){around(e,52,o=>{crystOn(o,1,dmg);blowSide(o,1.1)});ringAt(e,52,this.color)}},
+  'snow+crystal':{name:'ゆきのはな',color:'#e8eeff',tint:{snow:'#ffffff',crystal:'#e0e4ff'},desc:'雪の結晶が さく。雪が2つ＋結晶。割れると まわりに 雪がちる',
+    fx(e,dmg){applyEl(e,'snow',2);crystOn(e,1,dmg,'snow')}},
 };
 // 地面に残るもの（とくしゅ効果・わざが置く）。中の敵に tick、粒は fx、絵は draw
 const ZONES={
@@ -669,6 +736,9 @@ const ZONES={
     draw(z,t,a){drawSandZone(z,t,a)}},
   cactus:{color:'#5fe8a0',tick(z,e){e.thorn=Math.max(e.thorn||0,.25);e.vineT=Math.max(e.vineT||0,.5)},   // サボテン（いばらと同じ：とてもおそく・少しダメージ）
     draw(z,t,a){drawCactusZone(z,t,a)}},
+  blizzard:{color:'#eef4ff',tick(z,e){if(!(e.bzT>0)){e.bzT=1;snowOn(e,1)}if(e.snowN>0)e.snowT=Math.max(e.snowT||0,1)},   // ふぶき（中の敵は 1秒ごとに 雪がつもる）
+    fx(z,dt){for(let i=fxN(7,dt);i--;)fxEl('snow',z.x,z.y,z.R*.9,false)},
+    draw(z,t,a){drawBlizzard(z,t,a)}},
 };
 const zone=(k,x,y,R,t)=>G.zones.push({k,x,y,R,t,max:t});
 function zoneRing(z,c,a){ctx.globalAlpha=a;ctx.strokeStyle=hexA(c,.6);ctx.lineWidth=1.2;ctx.setLineDash([3,4]);circle(z.x,z.y,z.R);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1}
@@ -690,6 +760,9 @@ const TOWERS={
   // 砂漠の台が開くと お店にならぶ。たつまきタワーの弾は ゆっくり進んで、通り道のおばけみんなに当たる（BULLETK.tornado は砂漠の区切り）。tag＝お店のタグ
   sand:{name:'すなタワー',color:'#f2b866',range:74,rate:1,dmg:2.3,cost:55,el:'sand',unlock:500,board:3,muz:1.7,desc:'弾で すなかぶり（いたずらできない・少しおそい）。すな弾が当たると「すなじごく」'},
   tornado:{name:'たつまきタワー',color:'#7dffd0',range:80,rate:1.6,dmg:2.5,cost:60,unlock:500,board:3,muz:1.55,bullet:'tornado',tag:'つらぬく',desc:'ゆっくり進む たつまきを撃つ。通り道のおばけ みんなに当たる'},
+  // 雪山の台が開くと お店にならぶ。さんだんタワーは 3方向に撃つ（shoot と BULLETK.sandan は雪山の区切り）
+  snow:{name:'ゆきタワー',color:'#eef4ff',range:76,rate:.95,dmg:2.8,cost:60,el:'snow',unlock:550,board:4,muz:1.7,desc:'弾で 雪がつもる（3つで 雪だるま＝しばらく止まる）。ゆき弾が当たると「ふぶき」'},
+  sandan:{name:'さんだんタワー',color:'#ff9fc0',range:78,rate:1.05,dmg:2.4,cost:65,unlock:550,board:4,muz:1.6,tag:'3ほうこう',desc:'弾を3方向に撃つ。まん中は ねらった敵へ、左右の弾は まっすぐとんで 当たった敵に'},
 };
 const SOUND_FX=2;                             // サウンドタワー：玉でついた とくしゅ効果・わざが出る敵の数（属性は波の中の敵みんなに）
 // ギミック：どの砲台にも1つつけられる（お店で解放 → 台の上で砲台をタップして、コインでつける）。属性のある砲台につけると、ギミックにも属性が宿る
@@ -700,11 +773,15 @@ const WARP={pad:3, max:1, y:66, w:110};        // ワープとびら：玉が入
 const MIRROR={n:3, R:80, k:.8, fx:2};          // かがみタワー：当たる数・つぎのおばけへ はね返る広さ・はね返るたびのダメージの倍率・とくしゅ効果・わざが出る数（属性は3体みんな）
 const ARI={R:34, swirl:.1, pull:.06, lift:.8, drag:.03, T:2, cd:.6, ringR:44};   // ありじごく：うずの広さ（杭のふちから）・まわす力・中へ引く力・重さを消す割合・速さがへる割合（1コマ）・1つの玉がうずにいられる秒・宿った技のつぎまで（秒）・宿った技の広さ
 const TORNADO={sp:2, R:11, life:1.15, turn:.05, kick:.8, fx:2};    // たつまきタワーの弾：進む速さ・当たる広さ・つづく秒・ねらいへ曲がる強さ・横にふきとばす強さ・とくしゅ効果・わざが出る数（属性はみんなに）
+const JUMP={top:.35, up:5.4, side:1.8, max:3, xp:1, float:4, lift:.86, drag:.03, cd:.6, ringR:44};    // ジャンプ台：はね上げる玉の向き（上から乗った玉）・はね上げる強さ・横の強さ（左か右）・1つの玉が はね上がる回数・ふわっと落ちる秒・そのとき重さを消す割合・速さがへる割合（1コマ）・宿った雪けむりの つぎまで（秒）・雪けむりの広さ
+const SANDAN={a:.4, sp:6, fx:2};                                   // さんだんタワー：左右の弾の向き（ラジアン）・左右の弾の速さ・とくしゅ効果・わざが出る数（属性は3つの弾みんな）
+// ならび：お店・砲台のシートの順。自動プレイ（dev/sim）は いちばん下の持っているギミックを全部の砲台につけるので、雪山のジャンプ台は ありじごくの上に置いた（ありじごくの方が強い。記録の雪山）
 const GIMMICKS={
   bumper:{name:'バンパー',color:'#e8f4ff',unlock:300,cost:20,pad:BUMP_R,ring:2.5,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい。属性のある砲台なら、はね返すたびに属性の輪がはじける'},
   spinner:{name:'回転十字',color:'#cfd6e0',unlock:350,cost:25,desc:'まわりで十字がまわって、当たった玉をはじきとばす。十字に当たっても砲台に当たったことになる。属性のある砲台なら、うでが属性をまとう'},
   ivy:{name:'引きよせツタ',color:'#7ee36a',unlock:350,cost:25,board:1,desc:'近くを通る玉をツタが引きよせる。この砲台に玉が集まって育ちやすい。属性のある砲台なら、引きよせた玉に属性が宿って、つぎに当たった砲台・おばけに運ぶ'},
   warp:{name:'ワープとびら',color:'#d58bff',unlock:400,cost:30,board:2,pad:WARP.pad,ring:2,desc:'玉がとびらに入ると、台の上の方へワープ（砲台に当たったことになる）。属性のある砲台なら、ワープした玉に効き目が宿って、つぎに当たった砲台・おばけに運ぶ'},
+  jump:{name:'ジャンプ台',color:'#9fe8ff',unlock:500,cost:40,board:4,pad:1.5,ring:2,desc:'杭の上に ばねのジャンプ台。上から乗った玉を ぴょーんと はね上げて、ふわっと落とす（もう一度 杭に当たれる・砲台の経験値も少し多め）。属性のある砲台なら、はね上げた玉に効き目が宿って、まいあがる 雪けむりで まわりのおばけにも'},
   ari:{name:'ありじごく',color:'#f2b866',unlock:450,cost:35,board:3,ring:2,desc:'砲台のまわりに すなのうず。近くを通る玉は うずを巻いて ゆっくり落ちる（この砲台に何度も当たりやすい）。属性のある砲台なら、玉がうずにいる間、まわりのおばけに その効き目'},
 };
 // おばけ（イタズラ好きの白いおばけに動物の特ちょう。gh＝おばけの絵）。台ごとの顔ぶれは STAGES の foes（ふつう・はやい・かたい・中ボス・ボス）
@@ -735,6 +812,12 @@ const ENEMIES={
   rakuda:{gh:1,hp:8.5,sp:.22,r:14,color:'#e8b878',reward:10},                    // らくだおばけ（かたい）：HPが減ると こぶの水で1回回復（玉が当たると こぶの水がこぼれる）
   sasori:{gh:1,hp:900,sp:.13,r:24,color:'#ff7a5a',reward:60,boss:1,call:6,calls:['mia','mia'],tintK:.82,ey:.16},   // 中ボス：しっぽで砲台を刺して しばらく撃てなくする（ふりあげている間に玉が当たると止まる・刺された砲台は玉でなおる）
   sphinx:{gh:1,hp:1700,sp:.15,r:32,color:'#ffd24a',reward:150,boss:2,call:5,calls:['mia','tokage','rakuda'],ey:.16},   // ボス：すなのたてで 砲台の弾などを少しふせぐ（玉が当たると たてがくずれる）
+  // 雪山のおばけ
+  okojo:{gh:1,hp:2.4,sp:.32,r:11,color:'#dff0ff',reward:4},                     // オコジョおばけ（ふつう）：白くて雪にまぎれる。遠くの砲台からは ねらわれない（玉が当たると しばらく見つかる）
+  penguin:{gh:1,hp:2,sp:.46,r:9,color:'#5fb8ff',reward:5},                      // ペンギンおばけ（はやい）：ときどき おなかで すべって速くなる（すべっている間に玉が当たると ころんで止まる）
+  tonakai:{gh:1,hp:8.5,sp:.22,r:14,color:'#ff9a7a',reward:10},                  // トナカイおばけ（かたい）：氷のよろいで 砲台の弾などが へる（玉が当たると ひび・3つで割れる。やけどで とける）
+  seiuchi:{gh:1,hp:900,sp:.13,r:24,color:'#a8b8ff',reward:60,boss:1,call:6,calls:['okojo','okojo'],tintK:.82,ey:.16},   // 中ボス：ときどき ねそべって、うしろのおばけを かばう（砲台に ねらわれない。玉が当たると起きる）
+  mammoth:{gh:1,hp:1700,sp:.2,r:32,color:'#d49cff',reward:150,boss:2,call:5,calls:['okojo','penguin','tonakai'],ey:.2},  // ボス：鼻で雪玉をつくって 砲台に なげる（こおって撃てない。玉が当たると 雪玉を落とす。砲台は玉で とける）
 };
 // Canvaで作ったおばけの絵（11/5 ためし：わたげ・正面向き）。h＝おばけの半径に対する絵の高さ、by＝絵の下はしの位置（半径に対して）。絵がない種類はコードの絵
 const SPRITE_SRC={wata:{h:3.0,by:1.05,src:'data:image/png;base64,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'}};
@@ -778,6 +861,16 @@ const SPHINX={first:5, every:10, dur:5, k:.45};                        // スフ
 const SAND={slow:.8, sink:.15, blind:.8, cd:2};                        // すな：すなかぶりの速さ・すなじごくの速さ・いたずらできない秒（＋lv×0.4。ボスは半分）・つぎにかかるまで
 // 砂漠のステージギミック：たつまき。台の中を左右にゆっくり動く。玉が入ると上にまき上げる（1つの玉は max 回まで・つぎまで cd 秒）、おばけが入ると少し押しもどす（同じおばけは pushCd 秒に1回）
 const TWISTER={y:404, x0:66, x1:310, sp:.42, w:13, top:80, up:5.6, max:2, cd:.8, push:12, pushCd:2.5};
+// 雪山のおばけのいたずら
+const OKOJO={see:76, found:4};                                          // オコジョ：ふだん ねらえる砲台の近さ（これより遠い砲台からは ねらわれない）・玉が当たって見つかっている秒
+const PENGUIN={first:2, every:4.5, slide:1.3, k:2.3, fall:1.1};         // ペンギン：はじめに すべるまで・つぎまで・すべる秒・すべる速さの倍率・ころんで止まる秒（すべっている間に玉が当たる）
+const TONAKAI={k:.45, crack:3, melt:1.2};                               // トナカイ：氷のよろいの間に 砲台の弾などが効く割合（ひび1つで +0.12）・よろいが割れる ひびの数（玉）・やけどで とけるまでの秒
+const SEIUCHI={first:6, every:10, lie:3, back:90, side:1.9};             // セイウチ：はじめに ねそべるまで・つぎまで・ねそべる秒（玉が当たると起きる）・かばう広さ（うしろの長さ・横は半径の倍率）
+const MAMMOTH={first:4, make:3, every:7, aim:1, R:160, n:2, lock:4};  // マンモス：はじめに雪玉をつくるまで・雪玉をつくる秒・なげたあと つぎまで・ふりかぶる秒・とどく広さ・なげる砲台の数・こおって撃てない秒（玉が当たると とける）
+const SNOW={n:3, man:1.8, boss:.8, cd:2.5, t:4, slow:.72};                 // ゆき：雪だるまになる数・雪だるまの秒（止まる）・中ボス・ボスの雪だるまの長さの倍率・つぎに雪だるまになれるまで・つもった雪がとける秒・1つつもるごとの速さ
+const CRYST={t:5, arm:.15, k:3, base:5, cd:1.2, R:40, flinch:.35};   // けっしょう：結晶がつく秒・割れるようになるまで・割れたダメージ（当たったダメージ×k＋base×lv）・つぎにつくまで・とじこめた属性が とびちる広さ・割れて ひるむ秒
+// 雪山のステージギミック：つらら。台の上のふち（雪のひさし）に下がっている。玉が当たると落ちて、下のおばけにダメージ＋少しこおらせる（まわり R にも少し）。grow 秒で また生える
+const ICICLE={at:[112,150,222,262], len:20, r:3.4, e:.4, g:.2, grow:7, dmg:4, freeze:.7, R:22};
 const WAVES=10, WAVE_T=30, SPAWN_T=22, MID_WAVE=5, HP_GROW=.35, WAVE_N=[4,2.4];   // HP_GROW＝ウェーブごとに敵のHPがふえる割合。WAVE_N＝敵の数（a＋b×ウェーブ）   // 1ウェーブ30秒（1ゲーム約5分）。敵は最初の22秒で出る。倒しきると早めに次へ
 // scale＝玉・敵の大きさの倍率、range＝タワーのとどく広さの倍率
 const STAGES=[
@@ -785,6 +878,7 @@ const STAGES=[
   {name:'森',style:'forest',scale:1.3,range:1.15,accent:'#7ef0b0',layout:layoutForest,foes:['kinoko','kitsune','hari','kuma','taiboku'],hp:1.95,grow:2,bossHp:.8,fly:'#8dffcf',flies:28,grassH:10},
   {name:'洋館',style:'mansion',scale:1.3,range:1.15,accent:'#ff5fd2',layout:layoutMansion,foes:['neko','koumori','yoroi','fukurou','ookami'],hp:5,grow:5,bossHp:.7,fly:'#ff9be6',flies:16,grass:false},
   {name:'砂漠',style:'desert',scale:1.3,range:1.15,accent:'#ffc94f',layout:layoutDesert,foes:['mia','tokage','rakuda','sasori','sphinx'],hp:4.5,grow:5,bossHp:1.1,fly:'#ffd27a',flies:18,stars:18,grass:false},
+  {name:'雪山',style:'snow',scale:1.3,range:1.15,accent:'#a8e4ff',layout:layoutSnow,foes:['okojo','penguin','tonakai','seiuchi','mammoth'],hp:4.5,grow:9.2,bossHp:1,fly:'#cfe4ff',flies:12,stars:22,grass:false},
 ];
 // 台えらび。stage＝STAGES の番号。need＝この台をクリアすると開く（price があれば、そのあとコインで買う）。soon＝まだ作っていない台（担当が作ったら soon を消す）
 const SOON_THUMB='repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)', SOON_DESC='買うと、お店に新しいタワーや玉がふえる';
@@ -793,7 +887,7 @@ const BOARDS=[
   {stage:1,price:0,need:0,desc:'ネオンな夜の森。まん中に大きな切り株',thumb:'linear-gradient(#04120f 0 40%,#0b2f2a 41% 70%,#081a14 71%)'},
   {stage:2,price:1500,need:1,desc:'ネオンな夜の洋館。シャンデリアの杭と、火のつくろうそく',thumb:'radial-gradient(circle at 74% 24%,#f6e9c8 0 4%,transparent 5%),linear-gradient(#0d0618 0 46%,#2a0f33 47% 74%,#5a1238 75%)'},
   {stage:3,price:2000,need:2,desc:'ネオンな夜の砂漠。ピラミッドの杭と、うごく たつまき',thumb:'radial-gradient(circle at 26% 20%,#ffe7a8 0 5%,transparent 6%),linear-gradient(#0b0a26 0 50%,#3a1a3c 51% 64%,#8a5a2c 65% 80%,#4a2e16 81%)'},
-  {stage:4,price:2500,need:3,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 雪山
+  {stage:4,price:2500,need:3,desc:'ネオンな夜の雪山。雪の結晶の杭と、落ちてくる つらら',thumb:'radial-gradient(circle at 50% 48%,#dfe8ff 0 3%,transparent 4%),linear-gradient(#050818 0 20%,#1d5a5a 21% 26%,#1c1650 27% 54%,#cdd6ff 55% 58%,#24204e 59% 72%,#3a4680 73%)'},
   {stage:5,price:3000,need:4,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 火山
   {stage:6,price:3500,need:5,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 魔王城
   {stage:7,price:4000,need:6,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 宇宙
@@ -908,6 +1002,23 @@ const sfx={
   whirl(){const n=performance.now();if(n-(sfx._wh||0)<140)return;sfx._wh=n;tone(300,.35,'sine',.025,3)},       // たつまきが玉を まき上げる・つむじかぜ
   fuu(){const n=performance.now();if(n-(sfx._fu||0)<120)return;sfx._fu=n;tone(500,.25,'sine',.014,.55)},       // たつまきタワー
   zaa(){const n=performance.now();if(n-(sfx._za||0)<160)return;sfx._za=n;tone(1300,.18,'triangle',.008,.4)},    // ありじごくの うず
+  // 雪山
+  icicle(){tone(2600,.08,'triangle',.02,.8);setTimeout(()=>tone(900,.28,'sine',.02,.4),60)},                          // つららが ぽろっと落ちる
+  shatter(){const n=performance.now();if(n-(sfx._sh||0)<70)return;sfx._sh=n;tone(3200,.06,'square',.012,.6);tone(2100,.14,'triangle',.018,.5)},   // つらら・結晶が パリン
+  snowpuff(){const n=performance.now();if(n-(sfx._sp||0)<90)return;sfx._sp=n;tone(420,.18,'sine',.025,.5)},          // 雪が ぽふっ
+  snowman(){seq([784,988,1175],80,.1,.025)},                                                                         // 雪だるまに なった
+  kirin(){const n=performance.now();if(n-(sfx._ki||0)<80)return;sfx._ki=n;tone(2400,.09,'sine',.014,1.5)},           // 結晶が つく・つららが 生える（キラン）
+  boing(){const n=performance.now();if(n-(sfx._bo||0)<80)return;sfx._bo=n;tone(180,.22,'sine',.05,3.2)},             // ジャンプ台で ぴょーん
+  slide(){tone(700,.35,'sine',.016,.55)},                                                                             // ペンギンが すべる
+  tumble(){seq([520,360,260],70,.08,.03)},                                                                            // ペンギンが ころぶ
+  crack(){const n=performance.now();if(n-(sfx._cr||0)<70)return;sfx._cr=n;tone(1800,.08,'square',.016,.5);setTimeout(()=>tone(1200,.1,'triangle',.014,.6),40)},   // 氷のよろいに ひび
+  melt(){tone(1400,.4,'sawtooth',.008,.3)},                                                                           // 氷が じゅわっと とける
+  flop(){tone(140,.3,'triangle',.05,.6)},                                                                             // セイウチが どてっと ねそべる
+  paoon(){tone(330,.5,'sawtooth',.03,1.5);setTimeout(()=>tone(500,.4,'sawtooth',.02,.8),300)},                      // マンモスが ぱおーん（雪玉を ふりかぶる）
+  toss2(){tone(620,.2,'sine',.025,.5)},                                                                               // 雪玉を なげる
+  splat(){const n=performance.now();if(n-(sfx._sl||0)<90)return;sfx._sl=n;tone(240,.2,'triangle',.04,.5)},           // 雪玉が べちゃっ
+  san(){const n=performance.now();if(n-(sfx._sa||0)<90)return;sfx._sa=n;seq([1500,1750,2000],28,.04,.008)},          // さんだんタワー
+  peek(){seq([1300,1700],70,.07,.02)},                                                                                // オコジョが 見つかった
 };
 
 /* ---------- 杭の配置 ---------- */
@@ -932,6 +1043,13 @@ function layoutMansion(){
 function layoutDesert(){
   const P=[]; for(let k=0;k<4;k++) for(let i=0;i<=k;i++) P.push([188+(i*2-k)*38,150+k*62]);
   P.push([100,436],[276,436]);
+  return {P,pegR:11,heso:{x:188,y:480}};
+}
+// 5面：夜の雪山。雪の結晶（六つの角の星）の形に杭12本：外の角6本（半径118）と、内の角6本（半径68）。つららは台の上のふち（雪のひさし）に4本（ICICLE.at）
+const FLAKE={x:188, y:288, R:118, r:68};
+function layoutSnow(){
+  const P=[]; for(let i=0;i<6;i++){const a=rad(i*60);P.push([Math.round(FLAKE.x+Math.cos(a)*FLAKE.R),Math.round(FLAKE.y-Math.sin(a)*FLAKE.R)])}
+  for(let i=0;i<6;i++){const a=rad(30+i*60);P.push([Math.round(FLAKE.x+Math.cos(a)*FLAKE.r),Math.round(FLAKE.y-Math.sin(a)*FLAKE.r)])}
   return {P,pegR:11,heso:{x:188,y:480}};
 }
 
@@ -1850,6 +1968,7 @@ function hurtEnemy(e,d,dot){
       for(let i=0;i<(E.boss?5:2);i++) fxAdd({k:'wisp',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*.3,vx:(Math.random()-.5)*.4,vy:-(.6+Math.random()*.5),max:1.1+Math.random()*.5,s:e.r*(.22+Math.random()*.12),ph:Math.random()*6.28,c:'#ffffff'})}   // たましいが ふわっと上へ
     if(E.death) E.death(e);                                  // おばけごと（わたげが分かれる・きのこの胞子 など）
   }
+  if(!dot&&!e.dead) for(const k of EL_HIT) ELEM[k].hit(e,d);   // 玉・砲台の弾などが当たった（けっしょうが割れる）
 }
 // 受けるダメージの倍率（おばけの dmgK と、ついている属性の dmgK）
 function dmgMul(e){let k=1;const E=ENEMIES[e.t];if(E.dmgK)k*=E.dmgK(e);for(const el of EL_DMG)k*=ELEM[el].dmgK(e);return k}
@@ -2149,8 +2268,7 @@ function update(dt){
     // 砲身は、ねらっている敵の方へくるっと向く
     if(T.tg&&!T.tg.dead){let da=Math.atan2(T.tg.y-p.y,T.tg.x-p.x)-T.ang;da=Math.atan2(Math.sin(da),Math.cos(da));T.ang+=Math.max(-9*dt,Math.min(9*dt,da))}
     if(T.cd<=0){
-      const R=D.range*(1+.08*(T.lv-1))*G.rscale; let best=null,by=-1;
-      for(const e of G.en){if(e.dead||e.ghost>0)continue;const dx=e.x-p.x,dy=e.y-p.y;if(dx*dx+dy*dy<=R*R&&e.y>by){best=e;by=e.y}}   // すけすけの敵はねらえない
+      const best=aimAt(p,D.range*(1+.08*(T.lv-1))*G.rscale);
       if(best) fireBullet(p,T,best); else T.cd=.12;
     }
   }
@@ -2182,6 +2300,12 @@ function update(dt){
     if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true);cheerRun(GOLD)}
     if(G.waveDone?(G.waveGap-=dt)<=0:G.waveT<=0) startWave(G.wave+1);
   }
+}
+// 砲台がねらう敵：とどく中で いちばん受け皿に近い敵。すけすけ（ghost）・かばわれている（cover＞いまの時間）・雪にまぎれている（hide＝その近さの砲台からしか ねらえない）敵は ねらえない
+function aimAt(p,R){
+  let best=null,by=-1;
+  for(const e of G.en){if(e.dead||e.ghost>0||e.cover>G.time)continue;const dx=e.x-p.x,dy=e.y-p.y,d2=dx*dx+dy*dy;if(d2<=R*R&&e.y>by&&!(e.hide>0&&d2>e.hide*e.hide)){best=e;by=e.y}}
+  return best;
 }
 // ふつうの弾を撃つ（新しい砲台でも使える）。o で弾の中身を上書き（k＝BULLETK の種類）
 function fireBullet(p,T,tg,o){
@@ -4384,6 +4508,668 @@ Object.assign(ENEMIES.sphinx,{
   },
   pose(e,P){if(e.shUp>0&&!e.dying){P.sy*=1.05;P.lift=e.r*.06}},
 });
+/* ---------- 雪山（4）：雪の結晶の杭・つらら・ゆき/けっしょう・ゆきタワー/さんだんタワー・ジャンプ台・おばけのいたずら ---------- */
+// ---- ゆき・けっしょう（ELEM のフックの中身） ----
+// ゆき：雪がつもる（snowN）。SNOW.n こ つもると 雪だるま（snowman 秒 止まる＝ELEM の hold。つぎまで manCD）。つもった雪は snowT 秒で とける。lv2＝2つ・lv3＝3つ いっきに
+function snowOn(e,lv){
+  if(e.dead||e.snowman>0) return;
+  e.snowT=SNOW.t;
+  const n=(e.snowN||0)+Math.min(3,lv||1);
+  if(n>=SNOW.n&&!(e.manCD>0)) makeSnowman(e);
+  else e.snowN=Math.min(SNOW.n-1,n);
+}
+function makeSnowman(e){
+  const B=ENEMIES[e.t].boss;
+  e.snowN=0; e.snowman=e.manMax=SNOW.man*(B?SNOW.boss:1); e.manCD=e.snowman+SNOW.cd;
+  snowPuff(e.x,e.y,e.r,10); G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:'rgba(238,244,255,.9)',t:.35}); sfx.snowman();
+}
+function snowPuff(x,y,R,n){   // 雪が ぽふっと とぶ
+  for(let i=0;i<(reduce?Math.ceil(n/3):n);i++){const a=Math.random()*6.28,s=.8+Math.random()*1.6;fxAdd({k:'flake',x:x+Math.cos(a)*R*.6,y:y+Math.sin(a)*R*.6,vx:Math.cos(a)*s,vy:Math.sin(a)*s-.8,max:.6+Math.random()*.4,s:1.8+Math.random(),ph:Math.random()*6.28,star:i%4===0,c:null})}
+}
+function snowTick(e,dt,rd){
+  if(e.snowT>0){e.snowT=Math.max(0,e.snowT-rd);if(e.snowT===0)e.snowN=0}
+  if(e.manCD>0) e.manCD=Math.max(0,e.manCD-dt);
+  if(e.bzT>0) e.bzT=Math.max(0,e.bzT-dt);
+  if(e.snowman>0){
+    if(e.guard>0) e.snowman=0;                                   // 中ボス・ボスの「がまん」で 雪だるまが くずれる
+    else e.snowman=Math.max(0,e.snowman-rd);
+    if(e.snowman===0){e.snowN=1;e.snowT=SNOW.t;snowPuff(e.x,e.y,e.r,8);sfx.snowpuff()}   // とけても 雪が1つ のこる
+  }
+}
+function snowSpeed(e,E){if(!(e.snowN>0))return 1;const k=Math.pow(SNOW.slow,e.snowN);return E.boss?1-(1-k)*(1-BOSS_RES):k}   // つもった雪で 少しおそい
+// けっしょう：結晶がつく（cryst）。CRYST.arm 秒たつと、つぎに 玉・砲台の弾などが当たったとき 割れて大ダメージ（ELEM の hit）。割れたら CRYST.cd 秒は つかない
+// わざで とじこめた属性（crEl）は、割れると まわり CRYST.R の敵にうつる
+function crystOn(e,lv,dmg,el){
+  if(e.dead||e.crCD>0) return;
+  const was=e.cryst>0;
+  e.cryst=CRYST.t; e.crLv=Math.max(was?e.crLv||1:0,lv||1); e.crD=Math.max(was?e.crD||0:0,dmg||1);
+  if(el) e.crEl=el; else if(!was) e.crEl=null;
+  if(!was){e.crArm=CRYST.arm;sfx.kirin()}
+}
+function shatter(e,d){
+  const el=e.crEl, dmg=CRYST.k*Math.max(d||1,e.crD||1)+CRYST.base*(e.crLv||1);
+  e.cryst=0; e.crArm=0; e.crCD=CRYST.cd; e.crEl=null; e.crD=0; e.crLv=0;
+  e.flash=.1; e.hurtT=.35; hurtEnemy(e,dmg,true); flinch(e,CRYST.flinch);   // 割れた いきおいで 少しひるむ
+  fxBurst('crystal',e.x,e.y-e.r*.3,10); G.rings.push({x:e.x,y:e.y,R:e.r*1.9,c:'rgba(200,196,255,.95)',t:.3}); sfx.shatter();
+  if(el&&ELEM[el]){around(e,CRYST.R,o=>{if(o!==e)applyEl(o,el,1,d)});ringAt(e,CRYST.R,hexA(ELEM[el].color,.8),.35)}   // とじこめた属性が とびちる
+}
+const hot=e=>e.burn>0||!!(ELEM.magma&&ELEM.magma.has&&ELEM.magma.has(e));   // 火・ようがんで あつい（トナカイの氷のよろいが とける）
+function drawSnowMark(e,r,t,ga){
+  const ey=-r*(ENEMIES[e.t].ey||.2);
+  if(e.snowman>0){   // 雪だるま：体の下に大きな雪玉・木の枝のうで・マフラー・にんじんの鼻・バケツのぼうし
+    const k=Math.max(.2,Math.min(1,(e.manMax-e.snowman)*6+.3,e.snowman*5));
+    ctx.globalAlpha=ga; ctx.lineCap='round'; ctx.strokeStyle='#6a4426'; ctx.lineWidth=Math.max(1.2,r*.08);
+    for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*r*.75,r*.3);ctx.lineTo(s*r*(.75+.7*k),r*.02);ctx.moveTo(s*r*(.75+.48*k),r*.12);ctx.lineTo(s*r*(.75+.6*k),-r*.14);ctx.stroke()}
+    const g=ctx.createRadialGradient(-r*.3,r*.3,r*.1,0,r*.62,r*1.05); g.addColorStop(0,'#ffffff'); g.addColorStop(.75,'#eef2ff'); g.addColorStop(1,'#b8c4f0');
+    ctx.fillStyle=g; circle(0,r*.62,r*k); ctx.fill(); ctx.strokeStyle='rgba(150,165,230,.95)'; ctx.lineWidth=Math.max(1,r*.06); ctx.stroke();
+    ctx.fillStyle='#2b2140'; for(const y of [.45,.8]){circle(0,y*r,r*.07*k);ctx.fill()}
+    ctx.fillStyle='#b48cff'; rrPath(ctx,-r*.72,-r*.04,r*1.44,r*.2,r*.08); ctx.fill(); ctx.fillRect(r*.28,r*.08,r*.18,r*.36);
+    ctx.fillStyle='#ff9a3d'; ctx.beginPath(); ctx.moveTo(-r*.03,ey+r*.1); ctx.lineTo(r*.34,ey+r*.17); ctx.lineTo(-r*.03,ey+r*.24); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#5a6ea8'; ctx.beginPath(); ctx.moveTo(-r*.42,-r*.92); ctx.lineTo(r*.42,-r*.92); ctx.lineTo(r*.32,-r*1.4); ctx.lineTo(-r*.32,-r*1.4); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='#2b2140'; ctx.lineWidth=Math.max(.8,r*.04); ctx.stroke(); ctx.fillStyle='#8fa4e0'; ctx.fillRect(-r*.48,-r*.97,r*.96,r*.1);
+  }else if(e.snowN>0){   // 頭に 雪がつもる（2つで 肩にも）
+    const n=e.snowN, h=r*(.14+.13*n);
+    ctx.globalAlpha=ga*Math.min(1,e.snowT*2); ctx.fillStyle='#ffffff'; ctx.strokeStyle='rgba(170,185,240,.9)'; ctx.lineWidth=Math.max(.7,r*.045);
+    ctx.beginPath(); ctx.moveTo(-r*.66,-r*.8); ctx.quadraticCurveTo(-r*.52,-r*1.0-h,-r*.1,-r*.98-h*.95); ctx.quadraticCurveTo(r*.3,-r*1.02-h,r*.64,-r*.82); ctx.quadraticCurveTo(0,-r*.98,-r*.66,-r*.8); ctx.fill(); ctx.stroke();
+    if(n>=2) for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.82,-r*.36,r*.2,r*.12,s*.7,0,Math.PI*2);ctx.fill();ctx.stroke()}
+  }
+  ctx.globalAlpha=ga;
+}
+function drawCrystMark(e,r,t,ga){   // 結晶：体の右上に とがった結晶が3つ（割れるようになると きらっ）。とじこめた属性があると 中がその色に光る
+  const k=Math.min(1,e.cryst*2), c=e.crEl&&ELEM[e.crEl]?ELEM[e.crEl].color:'#a8b0ff';
+  if(e.crEl){ctx.globalCompositeOperation='lighter';glow(c,r*.52,-r*.6,r*.7,.5*ga*k);ctx.globalCompositeOperation='source-over'}
+  ctx.globalAlpha=ga*k;
+  for(const [x,y,a,s] of [[.52,-.64,-.5,1],[.76,-.3,.4,.75],[.24,-.86,-.95,.7]]){
+    ctx.save(); ctx.translate(x*r,y*r); ctx.rotate(a); const h=r*.42*s, w=r*.14*s;
+    ctx.fillStyle=mixW(c,.35); ctx.beginPath(); ctx.moveTo(0,-h); ctx.lineTo(w,-h*.55); ctx.lineTo(w,h*.25); ctx.lineTo(0,h*.4); ctx.lineTo(-w,h*.25); ctx.lineTo(-w,-h*.55); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle='rgba(60,60,140,.8)'; ctx.lineWidth=Math.max(.6,r*.035); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.85)'; ctx.beginPath(); ctx.moveTo(0,-h); ctx.lineTo(w,-h*.55); ctx.lineTo(0,-h*.25); ctx.closePath(); ctx.fill();
+    ctx.restore();
+  }
+  if(!(e.crArm>0)){const tw=Math.sin(t*6+e.ph);if(tw>.5)star(r*.64,-r*1.02,r*.2*(tw-.3),'#ffffff')}
+  ctx.globalAlpha=ga;
+}
+function drawBlizzard(z,t,a){   // ふぶき：白いうずと まう雪
+  ctx.globalAlpha=a*.3; ctx.fillStyle='#dfe8ff'; circle(z.x,z.y,z.R*.95); ctx.fill();
+  ctx.globalAlpha=a; ctx.strokeStyle='rgba(255,255,255,.8)'; ctx.lineWidth=1.2;
+  for(let k=0;k<2;k++){const a0=t*(2+k)+k*2;ctx.beginPath();ctx.ellipse(z.x,z.y,z.R*(.55+k*.3),z.R*(.55+k*.3)*.85,0,a0,a0+2.2);ctx.stroke()}
+  ctx.fillStyle='#ffffff'; for(let i=0;i<9;i++){const q=(t*.9+i/9)%1, an=i*2.3+t*1.5, rr=z.R*(.2+.75*q);ctx.globalAlpha=a*(1-q);circle(z.x+Math.cos(an)*rr,z.y+Math.sin(an)*rr*.8,1.3);ctx.fill()}
+  zoneRing(z,'#eef4ff',a);
+}
+// 粒：ゆき＝ふわふわ落ちる まるい雪（ときどき 6本の雪の結晶）、けっしょう＝きらっと光る ひし形のかけら（氷の 線の星とは 形も色もちがう）
+Object.assign(FXK,{
+  flake:{
+    spawn(x,y,big,c){const r=Math.random;fxAdd({k:'flake',x,y,vx:(r()-.5)*.3,vy:.15+r()*.25,max:.8+r()*.6,s:(big?2.2:1.6)+r()*.9,ph:r()*6.28,star:r()<.25,c})},
+    pop(x,y,vx,vy,a,i,c){fxAdd({k:'flake',x,y,vx:vx*.8,vy:vy*.8-.3,max:.6+Math.random()*.5,s:1.8+Math.random()*1.2,ph:Math.random()*6.28,star:i%3===0,c})},
+    upd(q,f){q.x+=q.vx*f+Math.sin(G.time*2.5+q.ph)*.12*f;q.y+=q.vy*f;q.vx*=.95;q.vy=q.vy*.97+.01*f},
+    glow(q,k,a){glow(q.c||'#eef4ff',q.x,q.y,q.s*2.6,a*.35)},
+    draw(q,k,a){ctx.globalAlpha=a;const c=q.c?mixW(q.c,.5):'#ffffff';
+      if(q.star){const s=q.s*1.6;ctx.strokeStyle=c;ctx.lineWidth=.9;ctx.beginPath();for(let i=0;i<3;i++){const an=q.ph+i*Math.PI/3;ctx.moveTo(q.x-Math.cos(an)*s,q.y-Math.sin(an)*s);ctx.lineTo(q.x+Math.cos(an)*s,q.y+Math.sin(an)*s)}ctx.stroke()}
+      else{ctx.fillStyle=c;circle(q.x,q.y,q.s*(1-k*.3));ctx.fill()}}},
+  shard:{
+    spawn(x,y,big,c){const r=Math.random;fxAdd({k:'shard',x,y,vx:(r()-.5)*.4,vy:-(.1+r()*.3),max:.6+r()*.4,s:(big?3.4:2.6)+r(),rot:r()*6.28,vr:(r()-.5)*6,c})},
+    pop(x,y,vx,vy,a,i,c){fxAdd({k:'shard',x,y,vx:vx*1.3,vy:vy*1.3-.4,max:.5+Math.random()*.35,s:3+Math.random()*1.6,rot:a,vr:(Math.random()-.5)*10,c})},
+    upd(q,f,dt){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.95;q.vy=q.vy*.95+.03*f;q.rot+=q.vr*dt},
+    glow(q,k,a){glow(q.c||'#a8b0ff',q.x,q.y,q.s*2.4,a*.5)},
+    draw(q,k,a){const s=q.s*(1-k*.25);ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.rot);ctx.globalAlpha=a;
+      ctx.fillStyle=q.c?mixW(q.c,.3):'#c8ccff';ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.45,0);ctx.lineTo(0,s);ctx.lineTo(-s*.45,0);ctx.closePath();ctx.fill();
+      ctx.fillStyle='rgba(255,255,255,.85)';ctx.beginPath();ctx.moveTo(0,-s);ctx.lineTo(s*.45,0);ctx.lineTo(0,-s*.1);ctx.closePath();ctx.fill();ctx.restore()}},
+});
+
+// ---- つらら（ステージギミック） ----
+// 台の上のふち（雪のひさし）に下がっている。玉が当たると落ちて、下にいるおばけにダメージ＋少しこおらせる（まわりにも少し）。ICICLE.grow 秒で また生える
+function icicleSetup(){G.sx.ic=ICICLE.at.map((x,i)=>({x,y:CY-Math.sqrt(RO*RO-(x-CX)**2)+5,len:ICICLE.len*[1,.85,1.12,.92][i%4],g:1,st:'hang',fy:0,vy:0,bop:0}))}
+function icicleBall(b){
+  for(const c of G.sx.ic||[]){
+    if(c.st!=='hang') continue;
+    const py=Math.max(c.y+2,Math.min(c.y+c.len*.85,b.y)), dx=b.x-c.x, dy=b.y-py, rr=b.r+ICICLE.r;
+    if(dx*dx+dy*dy>=rr*rr) continue;
+    dotHit(b,c.x,py,ICICLE.r,ICICLE.e);
+    c.st='fall'; c.fy=c.y; c.vy=.6; sfx.icicle();
+    for(let i=0;i<(reduce?2:5);i++) fxAdd({k:'flake',x:c.x+(Math.random()-.5)*10,y:c.y+2,vx:(Math.random()-.5)*.8,vy:.2,max:.6,s:1.6,ph:Math.random()*6.28,star:false,c:null});
+  }
+}
+function spotOkojo(e){   // オコジョが見つかる（玉・つらら）
+  if(e.t!=='okojo'||e.dead) return;
+  if(!(e.found>0)){e.oops=.6;G.rings.push({x:e.x,y:e.y,R:e.r*1.7,c:'rgba(255,143,200,.9)',t:.35});sfx.peek()}
+  e.found=OKOJO.found; e.hide=0;
+}
+function icicleHit(c,e){
+  if(e.fake){vanishFake(e);return}
+  if(e.ghost>0){e.ghost=0;e.oops=.8}
+  spotOkojo(e);
+  const dmg=ICICLE.dmg*(1+HP_GROW*(G.wave-1));
+  hurtEnemy(e,dmg);
+  if(!e.dead){e.freeze=Math.max(e.freeze||0,ICICLE.freeze);e.stun=Math.max(e.stun||0,ICICLE.freeze);applyEl(e,'ice',1)}
+  around(e,ICICLE.R,o=>{if(o!==e)hurtEnemy(o,dmg*.4)});
+}
+function icicleBreak(c,x,y){   // つららが割れて、また生えはじめる
+  for(let i=0;i<(reduce?4:10);i++){const a=Math.PI+Math.random()*Math.PI,s=1+Math.random()*2;FXK.shard.pop(x,y,Math.cos(a)*s,Math.sin(a)*s,a,i,'#dff4ff')}
+  G.rings.push({x,y,R:ICICLE.R,c:'rgba(220,240,255,.85)',t:.3}); sfx.shatter();
+  c.st='grow'; c.g=0;
+}
+function stepIcicles(dt,f){
+  for(const c of G.sx.ic||[]){
+    c.bop=Math.max(0,c.bop-dt);
+    if(c.st==='grow'){c.g=Math.min(1,c.g+dt/ICICLE.grow);if(c.g>=1){c.st='hang';c.bop=.3;sfx.kirin()}continue}
+    if(c.st!=='fall') continue;
+    c.vy+=ICICLE.g*f; c.fy+=c.vy*f;
+    const tip=c.fy+c.len; let hit=null;
+    for(const e of G.en){if(e.dead)continue;const dx=e.x-c.x,dy=e.y-(tip-4);if(dx*dx+dy*dy<(e.r+4)**2){hit=e;break}}
+    if(hit){icicleHit(c,hit);icicleBreak(c,c.x,tip);continue}
+    if(tip>548) icicleBreak(c,c.x,548);
+  }
+}
+function drawIcicle(x,y,len,a,k){   // 上が太く、下がとがった つらら（すきとおった水色・すみれ色のふち）
+  const w=Math.max(1.6,len*.22);
+  ctx.globalCompositeOperation='lighter'; glow('#bfe8ff',x,y+len*.55,len*.9+4,(.16+k*.45)*a); ctx.globalCompositeOperation='source-over';
+  ctx.globalAlpha=a; ctx.beginPath(); ctx.moveTo(x-w,y); ctx.quadraticCurveTo(x-w*.6,y+len*.5,x,y+len); ctx.quadraticCurveTo(x+w*.6,y+len*.5,x+w,y); ctx.closePath();
+  const g=ctx.createLinearGradient(x-w,0,x+w,0); g.addColorStop(0,'#9fc4ff'); g.addColorStop(.4,'#f4faff'); g.addColorStop(1,'#8f9cff');
+  ctx.fillStyle=g; ctx.fill(); ctx.strokeStyle='rgba(196,170,255,.95)'; ctx.lineWidth=.9; ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.9)'; ctx.lineWidth=.8; ctx.beginPath(); ctx.moveTo(x-w*.35,y+2); ctx.lineTo(x-w*.08,y+len*.7); ctx.stroke();
+  ctx.globalAlpha=1;
+}
+function drawIcicles(t){
+  for(const c of G.sx.ic||[]){
+    if(c.st==='fall') continue;
+    const gr=c.st==='grow', len=c.len*(gr?.15+.85*c.g:1), k=c.bop>0?c.bop/.3:0;
+    drawIcicle(c.x,c.y,len,gr?.5+.4*c.g:1,k+(gr?0:.2+.12*Math.sin(t*3+c.x)));
+    if(!gr){const u=(t*.7+c.x*.013)%1;ctx.globalAlpha=Math.sin(u*Math.PI)*.85;ctx.fillStyle='#e8f6ff';circle(c.x,c.y+len+1.5+u*5,1.1);ctx.fill();ctx.globalAlpha=1}   // しずく
+  }
+}
+function drawFallingIcicles(t){
+  for(const c of G.sx.ic||[]){
+    if(c.st!=='fall') continue;
+    ctx.strokeStyle='rgba(220,240,255,.35)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(c.x,c.fy-c.vy*5); ctx.lineTo(c.x,c.fy+c.len*.4); ctx.stroke();   // 落ちる すじ
+    drawIcicle(c.x,c.fy,c.len,1,.6);
+  }
+}
+// ふる雪（台の中だけ。時間で位置がきまる）
+function drawSnowfall(t){
+  ctx.save(); fieldPath(ctx,RO,H-6); ctx.clip(); ctx.fillStyle='#ffffff';
+  const n=reduce?14:34;
+  for(let i=0;i<n;i++){const sp=10+(i*7)%13, x=20+((i*73.3)%330)+Math.sin(t*.8+i)*8, y=((i*131.7)+t*sp)%600;ctx.globalAlpha=.22+((i*17)%10)/28;circle(x,y,.8+(i%3)*.45);ctx.fill()}
+  ctx.restore(); ctx.globalAlpha=1;
+}
+// セイウチに かばわれているおばけ：小さな たてのしるし。ねそべったセイウチの うしろに たての まく
+function drawCover(t){
+  for(const e of G.en){
+    if(e.dead) continue;
+    if(e.t==='seiuchi'&&e.lie>0){
+      const a=Math.min(1,e.lie*2,(SEIUCHI.lie-e.lie)*4+.2), R=e.r*SEIUCHI.side;
+      ctx.globalAlpha=a*.85; ctx.strokeStyle='rgba(190,200,255,.85)'; ctx.lineWidth=2; ctx.setLineDash([5,4]); ctx.lineDashOffset=-t*12;
+      ctx.beginPath(); ctx.ellipse(e.x,e.y-e.r*.2,R,SEIUCHI.back*.62,0,Math.PI*1.08,Math.PI*1.92); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset=0;
+      ctx.globalCompositeOperation='lighter'; glow('#a8b8ff',e.x,e.y-e.r*.9,R*.9,.18*a); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=1;
+    }
+    if(e.cover>G.time&&!ENEMIES[e.t].boss){
+      const x=e.x+e.r*.85, y=e.y-e.r*1.15;
+      ctx.fillStyle='rgba(168,184,255,.95)'; ctx.strokeStyle='#2b2140'; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.moveTo(x-4,y-4); ctx.lineTo(x+4,y-4); ctx.lineTo(x+4,y); ctx.quadraticCurveTo(x+3.5,y+3.5,x,y+5); ctx.quadraticCurveTo(x-3.5,y+3.5,x-4,y); ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle='#ffffff'; ctx.lineWidth=.8; ctx.beginPath(); ctx.moveTo(x,y-2.5); ctx.lineTo(x,y+3); ctx.moveTo(x-2.5,y); ctx.lineTo(x+2.5,y); ctx.stroke();
+    }
+  }
+}
+Object.assign(STAGES[4],{
+  build:buildSnow,
+  setup(){icicleSetup()},
+  tick(dt,f){stepIcicles(dt,f)},
+  ball(b){icicleBall(b)},
+  drawBack:drawIcicles,
+  drawFront(t){drawFallingIcicles(t);drawCover(t);drawSnowfall(t)},
+});
+
+// ---- 雪山の台の絵 ----
+// 氷のブロックのフレーム（ふちに雪がこんもり・色とりどりの電球）→ 夜空と星・オーロラ → 遠くの雪山 → 近くの雪山 → 雪のつもった もみの木 → 山小屋 → 雪の野原 → 雪の結晶（杭をつなぐ星の線・まん中の結晶）→ 雪のひさし（つららが下がる）→ レール → ヘソ → 杭
+const SNOWC={aqua:'#6ff0ff',violet:'#b48cff',pink:'#ff8fd8',white:'#eef4ff',gold:'#ffe08a'};
+function iceBricks(c,V){   // 外：氷のブロック（上のふちが光る・霜のきらきら）
+  const w=V.x1-V.x0, h=V.y1-V.y0, rnd=seeded(4242), bw=28, bh=14;
+  const g=c.createLinearGradient(V.x0,0,V.x1,0); g.addColorStop(0,'#081028'); g.addColorStop(.5,'#111d42'); g.addColorStop(1,'#081028');
+  c.fillStyle=g; c.fillRect(V.x0,V.y0,w,h);
+  for(let y=Math.floor(V.y0/bh)*bh;y<V.y1;y+=bh){const off=(Math.round(y/bh)&1)?bw/2:0;
+    for(let x=Math.floor(V.x0/bw)*bw-off;x<V.x1+bw;x+=bw){
+      c.fillStyle=`rgba(170,200,255,${.04+rnd()*.05})`; c.fillRect(x+1,y+1,bw-2,bh-2);
+      c.fillStyle='rgba(220,235,255,.1)'; c.fillRect(x+1,y+1,bw-2,1.2);
+      if(rnd()<.07){c.fillStyle='rgba(255,255,255,.4)';c.beginPath();c.arc(x+4+rnd()*(bw-8),y+3+rnd()*(bh-6),.9,0,Math.PI*2);c.fill()}
+    }}
+}
+function snowRim(c){   // 台のふち：氷のふちに すみれ色と水色のネオン、上のアーチには 雪がこんもり
+  const edge=r=>{c.beginPath();c.moveTo(CX-r,H-6+(r-RO));c.lineTo(CX-r,CY);c.arc(CX,CY,r,Math.PI,Math.PI*2);c.lineTo(CX+r,H-6+(r-RO))};
+  c.lineCap='round';
+  c.strokeStyle='rgba(0,0,0,.55)'; c.lineWidth=11; edge(RO+6); c.stroke();
+  c.strokeStyle='#1c2a58'; c.lineWidth=8; edge(RO+5); c.stroke();
+  c.globalCompositeOperation='lighter';
+  c.strokeStyle=hexA(SNOWC.violet,.18); c.lineWidth=7; edge(RO+5); c.stroke();
+  c.strokeStyle=hexA(SNOWC.violet,.85); c.lineWidth=1.2; edge(RO+8.4); c.stroke();
+  c.strokeStyle=hexA(SNOWC.aqua,.7); c.lineWidth=1; edge(RO+1.8); c.stroke();
+  c.globalCompositeOperation='source-over';
+  const rnd=seeded(515);
+  for(let d=174;d>=6;d-=4.5){const a=rad(d), rr=RO+9, x=CX+rr*Math.cos(a), y=CY-rr*Math.sin(a), s=2.8+rnd()*2.4, rot=Math.atan2(-Math.cos(a),-Math.sin(a));
+    c.fillStyle='rgba(150,170,235,.7)'; c.beginPath(); c.ellipse(x+.6,y+1.2,s*1.6,s,rot,0,Math.PI*2); c.fill();
+    c.fillStyle='#eef4ff'; c.beginPath(); c.ellipse(x,y,s*1.6,s,rot,0,Math.PI*2); c.fill()}
+  c.strokeStyle='#1c2a58'; c.lineWidth=8; c.beginPath(); c.moveTo(CX-RO-5,H-1); c.lineTo(CX+RO+5,H-1); c.stroke();
+  c.strokeStyle=SNOWC.violet; c.lineWidth=1.2; c.beginPath(); c.moveTo(CX-RO-3,H+3.4); c.lineTo(CX+RO+3,H+3.4); c.stroke();
+}
+function stringLights(c){   // ふちの電球（山小屋のイルミネーション。光のゆらぎは G.fruits）
+  const cols=[SNOWC.pink,SNOWC.aqua,SNOWC.gold,SNOWC.violet], pts=[];
+  for(let d=166,i=0;d>=14;d-=12.6,i++){const a=rad(d);pts.push([CX+(RO+4)*Math.cos(a),CY-(RO+4)*Math.sin(a),cols[i%4],a])}
+  for(const [y,i] of [[250,1],[330,2],[410,3],[490,0]]){pts.push([CX-RO-4,y,cols[i],Math.PI]);pts.push([CX+RO+4,y,cols[(i+2)%4],0])}
+  for(const [x,y,col,a] of pts){
+    const ix=-Math.cos(a), iy=Math.sin(a), bx=x+ix*3.2, by=y+iy*3.2;   // 台の中の方へ 下がる
+    c.fillStyle='#22284a'; c.beginPath(); c.arc(x,y,1.6,0,Math.PI*2); c.fill();
+    c.globalCompositeOperation='lighter'; sglow(c,col,bx,by,8,.45); c.globalCompositeOperation='source-over';
+    c.fillStyle=mixW(col,.35); c.beginPath(); c.ellipse(bx,by,2,2.8,Math.atan2(iy,ix)-Math.PI/2,0,Math.PI*2); c.fill();
+    G.fruits.push({x:bx,y:by,r:1.6,c:col,ph:(x*3+y)%6.28});
+  }
+}
+function snowSky(c,rnd){
+  const g=c.createLinearGradient(0,0,0,420);
+  g.addColorStop(0,'#040616'); g.addColorStop(.35,'#0b1236'); g.addColorStop(.7,'#1c1650'); g.addColorStop(1,'#2e2266');
+  c.fillStyle=g; c.fillRect(0,0,W,420);
+  c.fillStyle='#f4f8ff'; for(let i=0;i<80;i++){const x=20+rnd()*330,y=14+rnd()*240;c.globalAlpha=(.2+rnd()*.6)*(1-y/300);c.beginPath();c.arc(x,y,rnd()<.1?1.2:.6,0,Math.PI*2);c.fill()} c.globalAlpha=1;
+  // オーロラ（みどり→水色→すみれ色の カーテン。まるい月は敵とまぎらわしいので なし）
+  c.globalCompositeOperation='lighter';
+  for(const [y0,amp,ph,c1,c2,hg] of [[104,14,0,'80,255,190','150,120,255',74],[138,10,2.1,'90,220,255','210,120,255',54]]){
+    for(let x=10;x<=352;x+=3){
+      const y=y0+Math.sin(x*.022+ph)*amp+Math.sin(x*.05+ph*2)*amp*.35, hh=hg*(.65+.35*Math.sin(x*.13+ph));
+      const gg=c.createLinearGradient(0,y-hh,0,y); gg.addColorStop(0,`rgba(${c2},0)`); gg.addColorStop(.6,`rgba(${c2},.07)`); gg.addColorStop(1,`rgba(${c1},.2)`);
+      c.fillStyle=gg; c.fillRect(x,y-hh,3,hh);
+    }
+  }
+  c.globalCompositeOperation='source-over';
+  c.strokeStyle='rgba(230,240,255,.45)'; c.lineWidth=1; c.beginPath(); c.moveTo(250,60); c.lineTo(288,46); c.stroke();   // 流れ星
+}
+function snowPeaks(c,pts,fill,rim,cap,a){   // 山なみ（pts＝稜線）。とがった頂上に 雪のぼうし、ふちは ネオン
+  c.beginPath(); c.moveTo(pts[0][0],H); for(const [x,y] of pts) c.lineTo(x,y); c.lineTo(pts[pts.length-1][0],H); c.closePath(); c.fillStyle=fill; c.fill();
+  for(let i=1;i<pts.length-1;i++){
+    const [px,py]=pts[i], [lx,ly]=pts[i-1], [rx,ry]=pts[i+1]; if(!(py<ly&&py<ry)) continue;
+    const q=.32, L=[px+(lx-px)*q,py+(ly-py)*q], R=[px+(rx-px)*q,py+(ry-py)*q];
+    c.beginPath(); c.moveTo(L[0],L[1]); c.lineTo(px,py); c.lineTo(R[0],R[1]);
+    for(let k=1;k<=4;k++){const u=k/5, x=R[0]+(L[0]-R[0])*u, y=R[1]+(L[1]-R[1])*u+(k%2?5:-1);c.lineTo(x,y)}
+    c.closePath(); c.fillStyle=cap; c.fill();
+  }
+  c.globalCompositeOperation='lighter'; c.beginPath(); pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));
+  c.strokeStyle=hexA(rim,a*.25); c.lineWidth=5; c.stroke(); c.strokeStyle=hexA(rim,a); c.lineWidth=1.2; c.stroke(); c.globalCompositeOperation='source-over';
+}
+function pine(c,x,y,s){   // 雪のつもった もみの木（こい青みどりに 水色のネオン、白い雪）
+  c.save(); c.translate(x,y); c.scale(s,s);
+  c.fillStyle='#2a1e2a'; c.fillRect(-2.5,-5,5,9);
+  for(let i=0;i<3;i++){const w=17-i*4.5, ty=-5-i*11, h=17;
+    c.beginPath(); c.moveTo(-w,ty); c.lineTo(0,ty-h); c.lineTo(w,ty); c.closePath(); c.fillStyle='#0e3640'; c.fill();
+    c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(SNOWC.aqua,.4); c.lineWidth=1; c.stroke(); c.globalCompositeOperation='source-over';
+    c.fillStyle='#eef4ff'; c.beginPath(); c.moveTo(-w*.72,ty-h*.28); c.lineTo(0,ty-h); c.lineTo(w*.72,ty-h*.28); c.quadraticCurveTo(w*.35,ty-h*.46,0,ty-h*.3); c.quadraticCurveTo(-w*.35,ty-h*.46,-w*.72,ty-h*.28); c.fill();
+    c.fillStyle='rgba(238,244,255,.85)'; c.beginPath(); c.ellipse(-w*.55,ty-1,w*.32,2,0,0,Math.PI*2); c.ellipse(w*.5,ty-1,w*.28,1.8,0,0,Math.PI*2); c.fill();
+  }
+  c.restore();
+}
+function hut(c,x,y){   // 山小屋（あたたかい まどの明かり・えんとつ・屋根の雪・ピンクのネオン）
+  c.fillStyle='rgba(0,0,0,.3)'; c.beginPath(); c.ellipse(x+3,y+2,30,4,0,0,Math.PI*2); c.fill();
+  c.fillStyle='#3a2632'; c.fillRect(x-22,y-24,44,24);
+  c.strokeStyle='rgba(0,0,0,.35)'; c.lineWidth=1; for(let yy=y-19;yy<y;yy+=5){c.beginPath();c.moveTo(x-22,yy);c.lineTo(x+22,yy);c.stroke()}
+  c.globalCompositeOperation='lighter'; sglow(c,'#ffc86a',x-9,y-12,22,.5); sglow(c,'#ffc86a',x+11,y-9,16,.35); c.globalCompositeOperation='source-over';
+  c.fillStyle='#ffd88a'; c.fillRect(x-14,y-17,10,9); c.fillStyle='#3a2632'; c.fillRect(x-9.6,y-17,1.2,9); c.fillRect(x-14,y-13,10,1.2);
+  c.fillStyle='#ffb85a'; c.fillRect(x+6,y-17,9,17); c.fillStyle='#3a2632'; c.beginPath(); c.arc(x+13,y-8,.9,0,Math.PI*2); c.fill();
+  c.fillStyle='#2a1c2a'; c.beginPath(); c.moveTo(x-28,y-22); c.lineTo(x,y-42); c.lineTo(x+28,y-22); c.closePath(); c.fill();
+  c.fillStyle='#4a2c2c'; c.fillRect(x+12,y-44,6,12);
+  c.strokeStyle='#eef4ff'; c.lineWidth=4; c.lineJoin='round'; c.beginPath(); c.moveTo(x-29,y-21); c.lineTo(x,y-43); c.lineTo(x+29,y-21); c.stroke(); c.fillStyle='#eef4ff'; c.fillRect(x+11,y-47,8,3.4);
+  c.fillStyle='rgba(210,210,245,.12)'; for(let i=0;i<4;i++){c.beginPath();c.arc(x+16+i*3,y-54-i*8,3+i*1.5,0,Math.PI*2);c.fill()}   // けむり
+  c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(SNOWC.pink,.65); c.lineWidth=1; c.beginPath(); c.moveTo(x-30,y-19); c.lineTo(x,y-41); c.lineTo(x+30,y-19); c.stroke(); c.globalCompositeOperation='source-over';
+  G.fruits.push({x:x-9,y:y-12,r:3,c:'#ffc86a',ph:2.2});
+}
+function bigFlake(c){   // 雪の結晶：杭をつなぐ 六つの角の星の線と、まん中の大きな結晶
+  const P=layoutSnow().P, cx=FLAKE.x, cy=FLAKE.y;
+  c.globalCompositeOperation='lighter';
+  sglow(c,SNOWC.aqua,cx,cy,140,.07);
+  c.beginPath(); for(let i=0;i<6;i++){const o=P[i], n=P[6+i]; i?c.lineTo(o[0],o[1]):c.moveTo(o[0],o[1]); c.lineTo(n[0],n[1])} c.closePath();
+  c.strokeStyle=hexA(SNOWC.aqua,.12); c.lineWidth=6; c.stroke(); c.strokeStyle=hexA(SNOWC.aqua,.5); c.lineWidth=1.1; c.stroke();
+  c.beginPath(); for(let i=0;i<6;i++){const n=P[6+i]; i?c.lineTo(n[0],n[1]):c.moveTo(n[0],n[1])} c.closePath();
+  c.strokeStyle=hexA(SNOWC.violet,.35); c.lineWidth=1; c.stroke();
+  for(let i=0;i<6;i++){const a=rad(90+i*60), ux=Math.cos(a), uy=-Math.sin(a), L=40;
+    c.beginPath(); c.moveTo(cx+ux*6,cy+uy*6); c.lineTo(cx+ux*L,cy+uy*L);
+    for(const q of [.45,.75]){const bx=cx+ux*L*q, by=cy+uy*L*q, bl=L*(q<.5?.3:.2);for(const s of [-1,1]){const b=a+s*rad(55);c.moveTo(bx,by);c.lineTo(bx+Math.cos(b)*bl,by-Math.sin(b)*bl)}}
+    c.strokeStyle=hexA(SNOWC.white,.16); c.lineWidth=4; c.stroke(); c.strokeStyle=hexA('#d8e4ff',.6); c.lineWidth=1.2; c.stroke()}
+  c.beginPath(); for(let i=0;i<6;i++){const a=rad(90+i*60);c.lineTo(cx+Math.cos(a)*7,cy-Math.sin(a)*7)} c.closePath(); c.strokeStyle=hexA(SNOWC.violet,.7); c.lineWidth=1.2; c.stroke();
+  c.globalCompositeOperation='source-over';
+  G.fruits.push({x:cx,y:cy,r:3,c:'#cfe4ff',ph:.7});
+}
+function cornice(c){   // 雪のひさし：台の上のふちに つもった雪（つららは ここから下がる）
+  c.beginPath();
+  for(let d=164;d>=16;d-=2){const a=rad(d), wob=3+Math.sin(d*.7)*1.6+Math.sin(d*.23)*1.4, rr=RO-3-wob;const x=CX+rr*Math.cos(a), y=CY-rr*Math.sin(a);d===164?c.moveTo(x,y):c.lineTo(x,y)}
+  for(let d=16;d<=164;d+=4){const a=rad(d);c.lineTo(CX+(RO+3)*Math.cos(a),CY-(RO+3)*Math.sin(a))}
+  c.closePath();
+  const g=c.createLinearGradient(0,10,0,70); g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#c8d2f4'); c.fillStyle=g; c.fill();
+  c.globalCompositeOperation='lighter'; c.beginPath(); for(let d=164;d>=16;d-=2){const a=rad(d), wob=3+Math.sin(d*.7)*1.6+Math.sin(d*.23)*1.4, rr=RO-3-wob;const x=CX+rr*Math.cos(a), y=CY-rr*Math.sin(a);d===164?c.moveTo(x,y):c.lineTo(x,y)}
+  c.strokeStyle=hexA(SNOWC.violet,.5); c.lineWidth=1; c.stroke(); c.globalCompositeOperation='source-over';
+}
+function buildSnow(c,V){
+  const rnd=seeded(5151);
+  G.fruits=[]; c.lineCap='round';
+  iceBricks(c,V);
+  c.save(); fieldPath(c,RO,H-6); c.clip();
+  snowSky(c,rnd);
+  snowPeaks(c,[[0,300],[38,252],[78,282],[128,206],[172,256],[212,234],[262,178],[312,250],[360,212]],'#141a46',SNOWC.aqua,'rgba(205,214,255,.85)',.45);
+  snowPeaks(c,[[0,356],[48,306],[98,342],[152,296],[204,338],[254,304],[304,340],[360,300]],'#1c1844',SNOWC.violet,'rgba(226,232,255,.9)',.55);
+  pine(c,30,380,1.05); pine(c,334,372,1.15); pine(c,312,392,.8); pine(c,54,396,.75);
+  let g=c.createLinearGradient(0,420,0,H); g.addColorStop(0,'#3a4680'); g.addColorStop(1,'#1a2048');
+  const Y=dune(c,430,6,.02,.8,g,SNOWC.violet,.6);
+  c.fillStyle='rgba(255,255,255,.5)'; for(let i=0;i<46;i++){const x=20+rnd()*320, y=Y(x)+6+rnd()*150;c.globalAlpha=.25+rnd()*.5;c.beginPath();c.arc(x,y,rnd()<.15?1.1:.6,0,Math.PI*2);c.fill()} c.globalAlpha=1;   // 雪のきらきら
+  c.strokeStyle='rgba(190,200,255,.08)'; c.lineWidth=1; for(let i=0;i<8;i++){const x0=20+rnd()*300, y0=Y(x0)+20+rnd()*130;c.beginPath();c.moveTo(x0,y0);c.quadraticCurveTo(x0+22,y0-4,x0+44,y0);c.stroke()}
+  hut(c,62,470); pine(c,318,478,.9); pine(c,300,500,.7);
+  bigFlake(c);
+  cornice(c);
+  c.restore();
+  rails(c);
+  snowRim(c);
+  stringLights(c);
+  if(V.y1>H+8){   // 画面の下のはし：雪
+    c.fillStyle='#1a2048'; c.fillRect(V.x0,H+7,V.x1-V.x0,V.y1-H-7);
+    c.fillStyle='rgba(255,255,255,.3)'; const r2=seeded(77); for(let i=0;i<60;i++){c.beginPath();c.arc(V.x0+r2()*(V.x1-V.x0),H+10+r2()*(V.y1-H-10),.7,0,Math.PI*2);c.fill()}
+  }
+  hesoCup(c,SNOWC.violet);
+  for(const p of G.pegs) if(!p.tower) drawStake(c,p.x,p.y,p.r);
+}
+
+// ---- ゆきタワー・さんだんタワー ----
+Object.assign(TOWERS.snow,{
+  gun(T,R){   // うしろに 雪の結晶のマークの まるいタンク、口が まるく ひろがる太い筒（雪玉を ぽふっと撃つ）
+    ctx.fillStyle='#dfe6ff'; circle(-R*.8,0,R*.42); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();
+    ctx.strokeStyle='#8f8cff'; ctx.lineWidth=R*.06; ctx.beginPath(); for(let i=0;i<3;i++){const a=i*Math.PI/3;ctx.moveTo(-R*.8-Math.cos(a)*R*.28,-Math.sin(a)*R*.28);ctx.lineTo(-R*.8+Math.cos(a)*R*.28,Math.sin(a)*R*.28)} ctx.stroke();
+    barrel(R*.3,R*1.0,R*.36,0);
+    ctx.fillStyle='#f4f8ff'; ctx.beginPath(); ctx.ellipse(R*1.38,0,R*.16,R*.36,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();
+  },
+  over(p,T,t){if(Math.random()<.04){const m=p.r*1.7;fxAdd({k:'flake',x:p.x+Math.cos(T.ang)*m,y:p.y+Math.sin(T.ang)*m,vx:0,vy:.25,max:.5,s:1.3,ph:Math.random()*6.28,star:false,c:null})}},   // 口から 雪が ちらちら
+});
+Object.assign(TOWERS.sandan,{
+  // さんだんタワー：まん中の弾は ねらった敵へ（ふつうの弾）、左右の弾は まっすぐとんで 当たった敵に。属性は3つみんな、とくしゅ効果・わざは まん中と 左右のはじめの1つ（SANDAN.fx）
+  shoot(p,T,D,R){
+    const tg=aimAt(p,R); if(!tg){T.cd=.12;return true}
+    fireBullet(p,T,tg);
+    const f=curEff(T), m=p.r*(D.muz||1.6), life=R/(SANDAN.sp*60), vol={n:0}, dmg=towerDmg(T,D), c=f?effColor(f):D.color;
+    for(const s of [-1,1]){const a=T.ang+s*SANDAN.a;G.bl.push({k:'sandan',x:p.x+Math.cos(a)*m,y:p.y+Math.sin(a)*m,a,life,dmg,c,fx:f,f0:f,vol,gone:false})}
+    sfx.san(); return true;
+  },
+  gun(T,R){const D=TOWERS.sandan;   // 3本の砲身（左右は ななめ）、うしろに ピンクの弾倉
+    for(const s of [-1,1]){ctx.save();ctx.rotate(s*SANDAN.a*.8);barrel(R*.25,R*1.05,R*.22,0);ctx.restore()}
+    barrel(R*.3,R*1.25,R*.26,0);
+    ctx.fillStyle=mixW(D.color,.15); ctx.beginPath(); ctx.ellipse(-R*.66,0,R*.2,R*.42,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();
+    ctx.fillStyle='#ffffff'; for(const y of [-.22,0,.22]){circle(-R*.66,y*R,R*.05);ctx.fill()}
+  },
+});
+BULLETK.sandan={
+  step(u,f){
+    u.x+=Math.cos(u.a)*SANDAN.sp*f; u.y+=Math.sin(u.a)*SANDAN.sp*f; u.life-=f/60;
+    for(const e of G.en){
+      if(e.dead||e.ghost>0) continue;
+      const dx=e.x-u.x, dy=e.y-u.y, rr=e.r+2.5; if(dx*dx+dy*dy>rr*rr) continue;
+      u.fx=u.f0&&(u.f0.el||u.vol.n<SANDAN.fx-1)?u.f0:null;
+      if(hitBullet(u,e)&&u.fx&&!u.fx.el) u.vol.n++;
+      u.gone=true; return;
+    }
+    if(u.life<=0||u.y<10||u.y>H||u.x<16||u.x>352) u.gone=true;
+  },
+  draw(u){ctx.globalCompositeOperation='lighter';glow(u.c,u.x,u.y,6,.6);ctx.globalCompositeOperation='source-over';ctx.fillStyle=mixW(u.c,.45);circle(u.x,u.y,2.4);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=.8;ctx.stroke()},
+};
+
+// ---- ジャンプ台（ギミック） ----
+// 杭の上に ばねのジャンプ台。上から乗った玉を 左か右へ ななめに はね上げる（1つの玉は JUMP.max 回まで・同じ台では1回）。はね上げた玉は JUMP.float 秒 雪けむりにのって ふわっと落ちる（台に長くいる）。宿ったジャンプ台は、はね上げた玉に効き目を宿す（ツタと同じ b.inf）＋ 玉が近くにいる間、ばねが まいあげる 雪けむりで まわりのおばけに 効き目（JUMP.cd 秒に1回。属性はみんな、とくしゅ効果・わざは受け皿に近い2体）
+Object.assign(GIMMICKS.jump,{
+  hit(p,T,b,nx,ny){
+    b.jpNow=null;
+    if(ny>-JUMP.top||(b.jp||0)>=JUMP.max||(b.jpp&&b.jpp[p.id])) return;   // 1つの玉は JUMP.max 回まで、同じジャンプ台では1回
+    b.jp=(b.jp||0)+1; b.jpNow=p.id; (b.jpp||(b.jpp={}))[p.id]=1;
+    const s=Math.random()<.5?-1:1;                                         // 左か右へ ななめに はね上げて、ほかの杭に当たりやすく（台に ひろがる）
+    b.vy=-JUMP.up*(.92+Math.random()*.16); b.vx=s*JUMP.side*(.8+Math.random()*.5); b.fwp=p.id; b.fuwa=JUMP.float;
+    T.jump=.35; T.xp+=JUMP.xp; sfx.boing();   // はね上げると 砲台の経験値が もう少し たまる
+    for(let i=0;i<(reduce?2:5);i++) fxAdd({k:'flake',x:p.x+(Math.random()-.5)*p.r*2,y:p.y-p.r-4,vx:(Math.random()-.5)*1.4,vy:-.4-Math.random()*.6,max:.5,s:1.5,ph:Math.random()*6.28,star:false,c:null});
+  },
+  charged(p,T,f,b){if(b.jpNow===p.id){b.jpNow=null;b.inf=f;b.infT=GM.infT;b.infFrom=p.id}},   // はね上げた玉に宿る
+  aura(p,T,f){   // 玉が近くにいる間（T.near）、ばねが 雪けむりを まいあげて JUMP.cd 秒ごとに まわりのおばけに 効き目
+    if(T.gcd>0||!(T.near>0)) return; T.gcd=JUMP.cd;
+    const R=JUMP.ringR, hit=G.en.filter(e=>!e.dead&&!(e.ghost>0)&&(e.x-p.x)**2+(e.y-p.y)**2<=(R+e.r*.5)**2).sort((a,b)=>b.y-a.y);
+    if(!hit.length) return;
+    const c=effColor(f), dmg=towerDmg(T,TOWERS[T.type])*GM.k;
+    G.rings.push({x:p.x,y:p.y,R,c,t:.4}); effFx(f,p.x,p.y,4); snowPuff(p.x,p.y,p.r+6,3);
+    hit.forEach((e,i)=>{if(f.el||i<SOUND_FX)applyEff(e,f,dmg)});
+  },
+  step(b,p,T,h){
+    const dx=b.x-p.x,dy=b.y-p.y,R=p.r+34; if(dx*dx+dy*dy<R*R) T.near=.25;
+    if(b.fwp===p.id&&b.fuwa>0&&b.vy>0){b.vy-=BALLS[b.t].g*JUMP.lift*h;b.vy*=Math.pow(1-JUMP.drag,h);b.fuwa-=h/60}   // はね上げた玉は 雪けむりに のって ふわっと落ちる
+  },
+  tick(p,T,dt){T.jump=Math.max(0,(T.jump||0)-dt);T.near=Math.max(0,(T.near||0)-dt)},
+  draw(p,T,t,c){const R=p.r, x=p.x, y=p.y, k=(T.jump||0)/.35, col=c||GIMMICKS.jump.color, up=Math.sin(k*Math.PI)*3.5, top=y-R-4.5-up;   // 左右の ばねと、弓なりの台（はね上げると ぼよん）
+    ctx.globalCompositeOperation='lighter'; glow(col,x,top,R+9,.14+.5*k+(c?.14:0)); ctx.globalCompositeOperation='source-over';
+    ctx.lineCap='round'; ctx.lineJoin='round';
+    for(const s of [-1,1]){const x0=x+s*R*.62, y0=y-R*.6, y1=top+1.5, n=4;
+      ctx.beginPath(); for(let i=0;i<=n;i++){const yy=y0+(y1-y0)*i/n, xx=x0+(i>0&&i<n?(i%2?2.2:-2.2):0);i?ctx.lineTo(xx,yy):ctx.moveTo(xx,yy)}
+      ctx.strokeStyle='#33405e'; ctx.lineWidth=2.4; ctx.stroke(); ctx.strokeStyle=mixW(col,.4); ctx.lineWidth=1; ctx.stroke()}
+    ctx.beginPath(); ctx.moveTo(x-R-4,top+1.5); ctx.quadraticCurveTo(x,top-2.5-up*.3,x+R+4,top+1.5);
+    ctx.strokeStyle='#1e2a44'; ctx.lineWidth=4.6; ctx.stroke(); ctx.strokeStyle=k>0?'#ffffff':mixW(col,.35); ctx.lineWidth=2; ctx.stroke();
+    if(k>0){ctx.globalAlpha=k;ctx.strokeStyle=hexA(col,.85);ctx.lineWidth=1.2;for(const s of [-1,0,1]){ctx.beginPath();ctx.moveTo(x+s*5,top-4);ctx.lineTo(x+s*7,top-9-6*(1-k));ctx.stroke()}ctx.globalAlpha=1}
+  },
+});
+
+// ---- 台の上の小物（マンモスの雪玉・やまびこ・結晶の花） ----
+Object.assign(OBJK,{
+  sbFly:{step(o,dt){o.t+=dt;if(o.t<o.dur)return true;const T=o.p.tower;if(T&&!(T.snowed>0)){T.snowed=MAMMOTH.lock;snowPuff(o.p.x,o.p.y,o.p.r,10);sfx.splat()}return false},   // 雪玉が とんで 砲台に べちゃっ
+    top(o){const u=Math.min(1,o.t/o.dur), x=o.x0+(o.p.x-o.x0)*u, y=o.y0+(o.p.y-o.y0)*u-44*Math.sin(u*Math.PI), s=5.5;
+      ctx.strokeStyle='rgba(230,236,255,.4)'; ctx.lineWidth=2; ctx.setLineDash([3,4]); ctx.beginPath(); ctx.moveTo(o.x0,o.y0); ctx.quadraticCurveTo((o.x0+x)/2,Math.min(o.y0,y)-26,x,y); ctx.stroke(); ctx.setLineDash([]);
+      ctx.globalCompositeOperation='lighter'; glow('#dfe8ff',x,y,s*2.2,.5); ctx.globalCompositeOperation='source-over';
+      const g=ctx.createRadialGradient(x-s*.35,y-s*.4,s*.1,x,y,s); g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#b8c4f0'); ctx.fillStyle=g; circle(x,y,s); ctx.fill(); ctx.strokeStyle='rgba(120,130,210,.8)'; ctx.lineWidth=.9; ctx.stroke()}},
+  sbDrop:{step(o,dt){o.t+=dt;if(o.t<o.dur)return true;snowPuff(o.x,o.y1,10,10);sfx.splat();return false},   // 玉が当たって 雪玉を落とす
+    top(o){const u=o.t/o.dur, y=o.y0+(o.y1-o.y0)*u*u, s=o.s;
+      const g=ctx.createRadialGradient(o.x-s*.35,y-s*.4,s*.1,o.x,y,s); g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#b8c4f0'); ctx.fillStyle=g; circle(o.x,y,s); ctx.fill(); ctx.strokeStyle='rgba(120,130,210,.8)'; ctx.lineWidth=.9; ctx.stroke()}},
+  echo:{step(o,dt){o.t-=dt;if(o.t>0)return true;around(o,o.R,q=>{hurtEnemy(q,o.d,true);flinch(q,.25)});ringAt(o,o.R,o.c,.35);ringAt(o,o.R*.6,o.c,.25);sfx.boom();return false}},   // やまびこ：少しあとに もう一度ひびく
+  crFlower:{step(o,dt){o.t+=dt;return o.t<o.max},   // 結晶の花：6まいの 結晶の花びらが ひらいて きえる
+    draw(o){const u=o.t/o.max, a=1-u, L=o.R*(.35+.5*Math.min(1,u*3));
+      ctx.globalCompositeOperation='lighter'; glow('#c8c0ff',o.x,o.y,o.R,.45*a); ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=a;
+      for(let i=0;i<6;i++){const an=i*Math.PI/3+u*.6;ctx.save();ctx.translate(o.x,o.y);ctx.rotate(an);
+        ctx.fillStyle='#d8d4ff';ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(L*.18,-L*.55);ctx.lineTo(0,-L);ctx.lineTo(-L*.18,-L*.55);ctx.closePath();ctx.fill();
+        ctx.strokeStyle='rgba(120,110,230,.85)';ctx.lineWidth=.9;ctx.stroke();ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.moveTo(0,-L);ctx.lineTo(L*.18,-L*.55);ctx.lineTo(0,-L*.45);ctx.closePath();ctx.fill();ctx.restore()}
+      ctx.globalAlpha=1}},
+});
+// マンモスの雪玉で こおった砲台：雪のやまと つらら（玉が当たると とける）
+function drawSnowed(p,T,t){
+  const R=p.r, x=p.x+(T.snowed<1?Math.sin(t*30)*.6:0), y=p.y;
+  ctx.globalCompositeOperation='lighter'; glow('#dfe8ff',x,y,R*2.2,.25); ctx.globalCompositeOperation='source-over';
+  const g=ctx.createRadialGradient(x-R*.3,y-R*.5,R*.1,x,y,R*1.3); g.addColorStop(0,'#ffffff'); g.addColorStop(.7,'#e8eeff'); g.addColorStop(1,'#a8b8f0');
+  ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(x-R*1.2,y+R*.55); ctx.quadraticCurveTo(x-R*1.3,y-R*.55,x-R*.5,y-R*.95); ctx.quadraticCurveTo(x,y-R*1.4,x+R*.55,y-R*.95); ctx.quadraticCurveTo(x+R*1.3,y-R*.5,x+R*1.2,y+R*.55); ctx.quadraticCurveTo(x,y+R*.85,x-R*1.2,y+R*.55); ctx.fill();
+  ctx.strokeStyle='rgba(150,165,230,.95)'; ctx.lineWidth=1; ctx.stroke();
+  ctx.fillStyle='#d8e8ff'; for(const k of [-.6,-.15,.35,.75]){const bx=x+k*R, by=y+R*.62+Math.abs(k)*-.1*R;ctx.beginPath();ctx.moveTo(bx-2,by);ctx.lineTo(bx,by+4+Math.abs(k*3));ctx.lineTo(bx+2,by);ctx.closePath();ctx.fill()}   // 小さな つらら
+  ctx.strokeStyle='#8f8cff'; ctx.lineWidth=.9; ctx.beginPath(); for(let i=0;i<3;i++){const a=i*Math.PI/3;ctx.moveTo(x-Math.cos(a)*R*.3,y-R*.35-Math.sin(a)*R*.3);ctx.lineTo(x+Math.cos(a)*R*.3,y-R*.35+Math.sin(a)*R*.3)} ctx.stroke();
+  ctx.strokeStyle='rgba(212,156,255,.85)'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.arc(p.x,p.y,p.r+7,-Math.PI/2,-Math.PI/2+T.snowed/MAMMOTH.lock*Math.PI*2); ctx.stroke();
+}
+TLOCK.snowed={draw:(p,T,t)=>drawSnowed(p,T,t),free(p,hit){p.tower.snowed=0;snowPuff(p.x,p.y,p.r,8);if(hit)sfx.snowpuff()}};   // マンモスの雪玉
+
+// ---- 雪山のおばけのいたずら ----
+Object.assign(ENEMIES.okojo,{   // オコジョ：白くて雪にまぎれる（hide＝その近さの砲台からしか ねらわれない）。玉・つららが当たると しばらく見つかる
+  init(e){e.found=0;e.hide=OKOJO.see},
+  tick(e,dt,o){
+    e.found=Math.max(0,(e.found||0)-dt); e.hide=e.found>0?0:OKOJO.see; o.wob=Math.sin(e.born*2.6+e.ph)*.3;
+    if(!(e.found>0)&&Math.random()<dt*3) fxAdd({k:'flake',x:e.x+(Math.random()-.5)*e.r*2,y:e.y-e.r*.4+(Math.random()-.5)*e.r,vx:0,vy:.15,max:.6,s:1.2,ph:Math.random()*6.28,star:true,c:null});   // 雪にまぎれて きらきら
+  },
+  ballHit(e){spotOkojo(e);return false},
+});
+Object.assign(ENEMIES.penguin,{   // ペンギン：ときどき おなかで すべって速くなる（すべっている間に玉が当たると ころんで止まる）
+  init(e){e.pp='walk';e.pt=PENGUIN.first*(.6+Math.random()*.8);e.sd=Math.random()<.5?-1:1},
+  tick(e,dt,o){
+    if(e.pp==='walk'){o.wob=Math.sin(e.born*9+e.ph)*.35;if(!o.held&&!o.stop){e.pt-=dt;if(e.pt<=0&&e.y>70){e.pp='slide';e.pt=PENGUIN.slide;e.sd=e.x<188?1:-1;sfx.slide()}}}
+    else if(e.pp==='slide'){
+      o.mv*=PENGUIN.k; o.wob=0; e.pt-=dt;
+      if(Math.random()<dt*14) fxAdd({k:'flake',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*.2,vx:(Math.random()-.5)*1.2,vy:-.6-Math.random()*.5,max:.45,s:1.4,ph:Math.random()*6.28,star:false,c:null});   // 雪しぶき
+      e.trailT=(e.trailT||0)-dt; if(e.trailT<=0){e.trailT=.07;e.trail.push({x:e.x,y:e.y,a:.35})}
+      if(e.pt<=0||o.held){e.pp='walk';e.pt=PENGUIN.every*(.8+Math.random()*.4)}
+    }
+    else{o.mv=0;o.wob=0;e.pt-=dt;if(e.pt<=0){e.pp='walk';e.pt=PENGUIN.every}}   // ころんでいる
+  },
+  ballHit(e){if(e.pp==='slide'){e.pp='fall';e.pt=PENGUIN.fall;e.oops=.6;snowPuff(e.x,e.y+e.r*.5,e.r,8);sfx.tumble()}else if(e.pp==='walk')e.pt=Math.max(e.pt,1.2);return false},
+  mood:e=>e.dying?null:e.pp==='slide'?'laugh':e.pp==='fall'?'dizzy':null,
+});
+// トナカイ：氷のよろいが なくなる（ひびで割れる・やけどで とける）
+function armorOff(e,melt){
+  e.armor=0; e.crkHit=0; e.oops=.8;
+  if(melt){for(let i=0;i<3;i++)fxMist(e.x,e.y,e.r*1.6,'#f0f6ff',true);sfx.melt()}
+  else{for(let i=0;i<(reduce?4:12);i++){const a=Math.random()*6.28,s=1+Math.random()*2;FXK.shard.pop(e.x,e.y,Math.cos(a)*s,Math.sin(a)*s,a,i,'#cfe0ff')}sfx.shatter()}
+  G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:'rgba(200,220,255,.9)',t:.35});
+}
+Object.assign(ENEMIES.tonakai,{   // トナカイ：氷のよろいで 砲台の弾・じわじわが へる。玉が当たると ひび（TONAKAI.crack こで割れる）、やけどで とける
+  init(e){e.armor=1;e.crk=0;e.melt=0;e.crkHit=0},
+  tick(e,dt){
+    e.crkHit=Math.max(0,(e.crkHit||0)-dt);
+    if(e.armor>0&&hot(e)){e.melt+=dt;if(Math.random()<dt*8)fxAdd({k:'drop',x:e.x+(Math.random()-.5)*e.r*1.4,y:e.y+e.r*.2,vx:0,vy:.5,max:.45,s:1.6,c:'#bfe0ff'});if(e.melt>=TONAKAI.melt)armorOff(e,true)}
+  },
+  dmgK:e=>e.armor>0&&!(e.crkHit>0)?TONAKAI.k+.12*e.crk:1,
+  ballHit(e){
+    if(e.armor>0){e.crk++;e.crkHit=.1;e.oops=.4;for(let i=0;i<(reduce?2:5);i++){const a=Math.random()*6.28;FXK.shard.pop(e.x,e.y,Math.cos(a)*1.5,Math.sin(a)*1.5,a,i,'#cfe0ff')}sfx.crack();if(e.crk>=TONAKAI.crack)armorOff(e,false)}
+    return false},
+});
+Object.assign(ENEMIES.seiuchi,{   // セイウチ（中ボス）：ときどき ねそべって、うしろ（上）のおばけを かばう（cover＝砲台に ねらわれない）。玉が当たると 起きる
+  init(e){e.lieT=SEIUCHI.first;e.lie=0},
+  tick(e,dt,o){if(e.fake)return;
+    if(e.lie>0){
+      o.mv=0; o.wob=0; e.lie-=dt;
+      for(const q of G.en){if(q===e||q.dead||ENEMIES[q.t].boss)continue;const dy=e.y-q.y;if(dy>-e.r*.3&&dy<SEIUCHI.back&&Math.abs(q.x-e.x)<e.r*SEIUCHI.side)q.cover=G.time+.1}
+      if(e.lie<=0){e.lie=0;e.lieT=SEIUCHI.every;e.laughT=.6}
+    }else if(!o.held){e.lieT-=dt;if(e.lieT<=0){e.lie=SEIUCHI.lie;sfx.flop();G.rings.push({x:e.x,y:e.y,R:e.r*2.2,c:'rgba(168,184,255,.8)',t:.45})}}},
+  ballHit(e){if(e.lie>0){e.lie=0;e.lieT=SEIUCHI.every*.6;stopMischief(e)}return false},
+  mood:e=>e.lie>0&&!(e.stun>0)&&!e.dying?'sleep':null,
+});
+// マンモス（ボス）：鼻で雪玉をつくって ふりかぶり、近くの砲台に なげる（こおって撃てない＝TLOCK.snowed）
+function throwSnow(e){
+  const list=G.pegs.filter(p=>p.tower&&!(p.tower.snowed>0)&&!G.obs.some(o=>o.k==='sbFly'&&o.p===p)).map(p=>({p,d:(p.x-e.x)**2+(p.y-e.y)**2}))
+    .filter(o=>o.d<MAMMOTH.R*MAMMOTH.R).sort((a,b)=>a.d-b.d).slice(0,MAMMOTH.n);
+  e.sb=0; e.mk=MAMMOTH.every; e.toss=.45; if(!list.length) return;
+  for(const {p} of list) G.obs.push({k:'sbFly',p,x0:e.x+e.r*.3,y0:e.y-e.r*1.5,t:0,dur:.6});
+  e.laughT=1; sfx.toss2();
+}
+function dropSnow(e){   // 玉が当たって 雪玉を落とす（足もとで べちゃっ）
+  const was=e.aim>0;
+  G.obs.push({k:'sbDrop',x:e.x+e.r*.3,y0:e.y-e.r*(was?1.5:-.1),y1:e.y+e.r*.75,t:0,dur:.35,s:e.r*(.12+.2*Math.max(.4,e.sb))});
+  e.sb=0; e.aim=0; e.mk=MAMMOTH.every*.6;
+  if(was) stopMischief(e); else{e.oops=.6;sfx.oops()}
+}
+Object.assign(ENEMIES.mammoth,{
+  init(e){e.sb=0;e.mk=MAMMOTH.first;e.aim=0;e.toss=0},
+  tick(e,dt,o){e.toss=Math.max(0,(e.toss||0)-dt);if(e.fake)return;
+    if(e.aim>0){o.mv=0;e.aim-=dt;if(e.aim<=0){e.aim=0;throwSnow(e)}return}
+    if(o.held) return;
+    if(e.sb<1){if(e.mk>0)e.mk-=dt;else{e.sb=Math.min(1,e.sb+dt/MAMMOTH.make);if(Math.random()<dt*5)snowPuff(e.x+e.r*.3,e.y+e.r*.6,4,1)}}   // 鼻で 雪をあつめて 雪玉に
+    else{e.aim=MAMMOTH.aim;sfx.paoon();G.rings.push({x:e.x,y:e.y,R:MAMMOTH.R,c:'rgba(212,156,255,.4)',t:.5})}},
+  ballHit(e){if(e.sb>.25||e.aim>0)dropSnow(e);return false},
+  mood:e=>e.aim>0&&!(e.stun>0)&&!e.dying?'dash':null,
+});
+/* ---------- おばけごとの絵（雪山） ---------- */
+Object.assign(ENEMIES.okojo,{
+  back(e,r,t,P){const {line,lw}=P;
+    ctx.save(); ctx.translate(r*.62,r*.4); ctx.rotate(-.55+Math.sin(t*3.2+e.ph)*.22);   // 長い しっぽ（先だけ黒い）
+    ctx.lineCap='round'; ctx.strokeStyle=line; ctx.lineWidth=r*.22+lw; ctx.beginPath(); ctx.moveTo(0,0); ctx.quadraticCurveTo(r*.55,r*.08,r*.72,-r*.5); ctx.stroke();
+    ctx.strokeStyle='#ffffff'; ctx.lineWidth=r*.22; ctx.stroke();
+    ctx.strokeStyle='#2b2140'; ctx.beginPath(); ctx.moveTo(r*.69,-r*.34); ctx.lineTo(r*.73,-r*.55); ctx.stroke(); ctx.restore();
+    for(const s of [-1,1]){ctx.fillStyle='#ffffff';ctx.strokeStyle=line;ctx.lineWidth=lw;circle(s*r*.62,-r*.8,r*.19);ctx.fill();ctx.stroke();ctx.fillStyle='#ffc8dc';circle(s*r*.62,-r*.8,r*.09);ctx.fill()}   // 小さな まるい耳
+  },
+  skin(e,r,ey,t){if(e.found>0||e.dying)return;   // 雪にまぎれている：体に うすく雪の白と 雪のつぶ
+    ctx.save(); ghostPath(ctx,r,t,e.ph); ctx.clip(); ctx.fillStyle='rgba(236,244,255,.55)'; ctx.fillRect(-r*1.3,-r*1.3,r*2.6,r*2.6);
+    ctx.fillStyle='rgba(190,205,255,.4)'; for(const [x,y] of [[-.55,.15],[.45,-.42],[.15,.4],[-.25,-.62],[.6,.2]]){circle(x*r,y*r,r*.08);ctx.fill()} ctx.restore()},
+  mouth:mouthW,
+  front(e,r,ey,t,P){
+    ctx.fillStyle='#ff8fb8'; ctx.beginPath(); ctx.moveTo(-r*.065,ey+r*.1); ctx.lineTo(r*.065,ey+r*.1); ctx.lineTo(0,ey+r*.17); ctx.closePath(); ctx.fill();   // ピンクの鼻
+    ctx.strokeStyle='rgba(43,33,64,.5)'; ctx.lineWidth=Math.max(.6,r*.03);
+    for(const s of [-1,1])for(const k of [-1,1]){ctx.beginPath();ctx.moveTo(s*r*.2,ey+r*.2+k*r*.03);ctx.lineTo(s*r*.5,ey+r*.17+k*r*.08);ctx.stroke()}   // ひげ
+    if(e.found>0&&!e.dying){ctx.save();ctx.rotate(t*2.4);ctx.setLineDash([r*.32,r*.22]);ctx.strokeStyle=hexA('#ff8fc8',Math.min(1,e.found*2)*.9);ctx.lineWidth=Math.max(1,r*.08);circle(0,-r*.1,r*1.34);ctx.stroke();ctx.restore()}   // 見つかった：ピンクの まる
+  },
+});
+Object.assign(ENEMIES.penguin,{
+  back(e,r,t,P){const {line,lw}=P, sl=e.pp==='slide';
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.86,r*.02);ctx.rotate(s*(sl?-1.1:.3+Math.sin(t*10+e.ph+s)*.3));   // ひれ（ぱたぱた。すべると うしろへ）
+      ctx.fillStyle='#24365e';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.ellipse(0,r*.3,r*.15,r*.36,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore()}
+    for(const s of [-1,1]){ctx.fillStyle='#ffab3d';ctx.strokeStyle='#a85a10';ctx.lineWidth=Math.max(.6,r*.04);ctx.beginPath();ctx.ellipse(s*r*.3,r*1.02,r*.2,r*.09,s*.2,0,Math.PI*2);ctx.fill();ctx.stroke()}   // オレンジの足
+  },
+  skin(e,r,ey){   // こん色の ずきん（目のまわりと おなかは白）
+    ctx.fillStyle='#2a3e6a'; ctx.beginPath(); ctx.arc(0,-r*.14,r*.94,Math.PI+.12,Math.PI*2-.12);
+    ctx.quadraticCurveTo(r*.68,ey-r*.06,r*.42,ey-r*.24); ctx.quadraticCurveTo(r*.16,ey-r*.38,0,ey-r*.22); ctx.quadraticCurveTo(-r*.16,ey-r*.38,-r*.42,ey-r*.24); ctx.quadraticCurveTo(-r*.68,ey-r*.06,-r*.93,-r*.25);
+    ctx.closePath(); ctx.fill(); ctx.strokeStyle='rgba(120,170,255,.55)'; ctx.lineWidth=Math.max(.7,r*.04); ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.ellipse(-r*.3,-r*.78,r*.18,r*.07,-.4,0,Math.PI*2); ctx.fill();
+  },
+  front(e,r,ey,t,P){   // オレンジの くちばし
+    ctx.fillStyle='#ffab3d'; ctx.strokeStyle='#a85a10'; ctx.lineWidth=Math.max(.6,r*.04);
+    ctx.beginPath(); ctx.moveTo(-r*.14,ey+r*.1); ctx.quadraticCurveTo(0,ey+r*.03,r*.14,ey+r*.1); ctx.lineTo(0,ey+r*.28); ctx.closePath(); ctx.fill(); ctx.stroke();
+  },
+  mouth(){},
+  pose(e,P){if(e.dying)return;if(e.pp==='slide'){P.rot+=1.2*e.sd;P.sy*=.84;P.sx*=1.06;P.lift=-e.r*.3}else if(e.pp==='fall'){P.rot+=e.sd*(PENGUIN.fall-e.pt)*9}},
+});
+function antler(s,r,ice){   // トナカイの つの（枝わかれ。氷のよろいの間は 氷がついて 水色）
+  ctx.save(); ctx.scale(s,1);
+  const path=()=>{ctx.beginPath();ctx.moveTo(r*.3,-r*.8);ctx.quadraticCurveTo(r*.45,-r*1.25,r*.85,-r*1.5);ctx.moveTo(r*.42,-r*1.1);ctx.lineTo(r*.18,-r*1.36);ctx.moveTo(r*.62,-r*1.33);ctx.lineTo(r*.6,-r*1.66);ctx.moveTo(r*.72,-r*1.42);ctx.lineTo(r*1.04,-r*1.3)};
+  ctx.lineCap='round'; path(); ctx.strokeStyle='#4a2c18'; ctx.lineWidth=r*.17; ctx.stroke(); path(); ctx.strokeStyle=ice?'#d4e6ff':'#b8875a'; ctx.lineWidth=r*.1; ctx.stroke();
+  ctx.restore();
+}
+function drawIceArmor(e,r,ey,t,P){   // 氷のよろい：むねの いたと おでこの かぶと（すきとおった水色・ひび・とけると しずく）
+  const m=e.melt>0?Math.min(1,e.melt/TONAKAI.melt):0;
+  ctx.globalAlpha=P.ga*(1-m*.5);
+  const g=ctx.createLinearGradient(-r,0,r,0); g.addColorStop(0,'rgba(170,196,255,.78)'); g.addColorStop(.45,'rgba(242,248,255,.88)'); g.addColorStop(1,'rgba(150,166,255,.78)');
+  ctx.fillStyle=g; ctx.strokeStyle='rgba(120,128,230,.95)'; ctx.lineWidth=Math.max(.9,r*.05);
+  ctx.beginPath(); ctx.moveTo(-r*.72,r*.12); ctx.lineTo(r*.72,r*.12); ctx.lineTo(r*.6,r*.62); ctx.lineTo(0,r*.78); ctx.lineTo(-r*.6,r*.62); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(-r*.68,ey-r*.24); ctx.quadraticCurveTo(0,-r*1.14,r*.68,ey-r*.24); ctx.quadraticCurveTo(0,ey-r*.4,-r*.68,ey-r*.24); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle='rgba(255,255,255,.95)'; ctx.lineWidth=Math.max(.7,r*.04); ctx.beginPath(); ctx.moveTo(-r*.5,r*.2); ctx.lineTo(-r*.32,r*.5); ctx.moveTo(-r*.36,ey-r*.42); ctx.lineTo(-r*.1,ey-r*.55); ctx.stroke();
+  if(e.crk>0){ctx.strokeStyle='#33307a';ctx.lineWidth=Math.max(.7,r*.045);const C=[[[.08,.14],[0,.34],[.14,.5],[.04,.7]],[[-.42,.18],[-.26,.38],[-.44,.55]],[[.46,.16],[.3,.36],[.5,.5]]];
+    for(let i=0;i<Math.min(e.crk,3);i++){ctx.beginPath();C[i].forEach(([x,y],j)=>j?ctx.lineTo(x*r,y*r):ctx.moveTo(x*r,y*r));ctx.stroke()}}   // ひび
+  if(m>0){ctx.fillStyle='rgba(190,225,255,.9)';for(let i=0;i<3;i++){const u=(t*1.5+i/3)%1;circle((-.4+i*.4)*r,r*.72+u*r*.4,r*.05);ctx.fill()}}   // とけて しずく
+  ctx.globalAlpha=P.ga;
+}
+Object.assign(ENEMIES.tonakai,{
+  back(e,r,t,P){const {line,lw}=P;
+    antler(-1,r,e.armor>0); antler(1,r,e.armor>0);
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.84,-r*.5);ctx.rotate(s*(1.15+Math.sin(t*2.4+e.ph)*.1));ctx.fillStyle='#e8c8a8';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.ellipse(0,0,r*.12,r*.24,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore()}   // 横の耳
+  },
+  skin(e,r,ey){ctx.fillStyle='rgba(200,150,110,.4)';ctx.beginPath();ctx.ellipse(0,ey+r*.3,r*.32,r*.2,0,0,Math.PI*2);ctx.fill()},   // はなづら
+  front(e,r,ey,t,P){
+    ctx.globalCompositeOperation='lighter'; glow('#ff5f6f',0,ey+r*.2,r*.34,(.45+.2*Math.sin(t*4+e.ph))*P.ga); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=P.ga;   // 赤い鼻（ぴかっ）
+    ctx.fillStyle='#ff4f63'; circle(0,ey+r*.2,r*.12); ctx.fill(); ctx.fillStyle='rgba(255,255,255,.8)'; circle(-r*.04,ey+r*.16,r*.04); ctx.fill();
+    if(e.armor>0&&!e.dying) drawIceArmor(e,r,ey,t,P);
+  },
+  mouth(e,r,ey){ctx.beginPath();ctx.moveTo(-r*.1,ey+r*.38);ctx.quadraticCurveTo(0,ey+r*.45,r*.1,ey+r*.38);ctx.stroke()},
+});
+Object.assign(ENEMIES.seiuchi,{
+  back(e,r,t,P){const {line,lw}=P;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.86,r*.25);ctx.rotate(s*(.5+Math.sin(t*2+e.ph+s)*.15));ctx.fillStyle='#9a88c0';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.ellipse(0,r*.2,r*.16,r*.32,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore()}   // ひれ
+  },
+  skin(e,r,ey){ctx.strokeStyle='rgba(150,130,200,.35)';ctx.lineWidth=Math.max(.8,r*.04);for(const y of [-.82,-.68]){ctx.beginPath();ctx.arc(0,y*r+r*.5,r*.5,Math.PI*1.25,Math.PI*1.75);ctx.stroke()}},   // おでこの しわ
+  front(e,r,ey,t,P){
+    for(const s of [-1,1]){ctx.fillStyle='#fffaf0';ctx.strokeStyle=P.line;ctx.lineWidth=P.lw*.8;   // 長い きば
+      ctx.beginPath();ctx.moveTo(s*r*.05,ey+r*.34);ctx.quadraticCurveTo(s*r*.06,ey+r*.76,s*r*.18,ey+r*1.0);ctx.quadraticCurveTo(s*r*.22,ey+r*.7,s*r*.17,ey+r*.34);ctx.closePath();ctx.fill();ctx.stroke()}
+    for(const s of [-1,1]){ctx.fillStyle='#ece0f4';ctx.strokeStyle=P.line;ctx.lineWidth=P.lw*.7;ctx.beginPath();ctx.ellipse(s*r*.16,ey+r*.3,r*.2,r*.15,0,0,Math.PI*2);ctx.fill();ctx.stroke();   // ふくらんだ口もと
+      ctx.fillStyle='rgba(43,33,64,.6)';for(const [x,y] of [[.1,.27],[.19,.3],[.12,.35],[.22,.36]]){circle(s*x*r,ey+y*r,r*.022);ctx.fill()}}
+    ctx.fillStyle=P.ink; ctx.beginPath(); ctx.ellipse(0,ey+r*.15,r*.07,r*.045,0,0,Math.PI*2); ctx.fill();   // 鼻
+  },
+  mouth(){},
+  pose(e,P){if(e.lie>0&&!e.dying){P.sy*=.72;P.sx*=1.22;P.lift=-e.r*.3;P.rot*=.3}},
+});
+Object.assign(ENEMIES.mammoth,{
+  back(e,r,t,P){const {line,lw}=P;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.8,-r*.18);ctx.rotate(s*(.25+Math.sin(t*1.6+e.ph+s)*.1));   // 大きな耳（ぱたぱた）
+      ctx.fillStyle='#b98a6a';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.ellipse(s*r*.12,0,r*.36,r*.48,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='rgba(255,190,214,.5)';ctx.beginPath();ctx.ellipse(s*r*.12,r*.03,r*.22,r*.32,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+  },
+  skin(e,r,ey){ctx.strokeStyle='rgba(150,100,70,.45)';ctx.lineWidth=Math.max(.8,r*.035);for(const x of [-.3,-.1,.1,.3]){ctx.beginPath();ctx.moveTo(x*r,-r*.95);ctx.quadraticCurveTo(x*r+r*.05,-r*.75,x*r,-r*.6);ctx.stroke()}},   // おでこの毛
+  front(e,r,ey,t,P){
+    for(const s of [-1,1]){ctx.fillStyle='#fff6e6';ctx.strokeStyle=P.line;ctx.lineWidth=P.lw*.8;   // くるっと上へ まがる きば
+      ctx.beginPath();ctx.moveTo(s*r*.16,ey+r*.3);ctx.quadraticCurveTo(s*r*.34,ey+r*.9,s*r*.8,ey+r*.6);ctx.quadraticCurveTo(s*r*.4,ey+r*.68,s*r*.3,ey+r*.26);ctx.closePath();ctx.fill();ctx.stroke()}
+    const up=e.aim>0?Math.min(1,(MAMMOTH.aim-e.aim)*4):e.toss>0?e.toss/.45:0;   // 長い鼻（ふりかぶると 頭の上へ）。先に 雪玉
+    const x0=0, y0=ey+r*.12, tx=r*(.22+.18*up)+Math.sin(t*1.8+e.ph)*r*.05*(1-up), ty=ey+r*(.95-2.2*up), cx=r*(.04+.62*up), cy=ey+r*(.7-.55*up);
+    ctx.lineCap='round'; ctx.strokeStyle=P.line; ctx.lineWidth=r*.26+P.lw; ctx.beginPath(); ctx.moveTo(x0,y0); ctx.quadraticCurveTo(cx,cy,tx,ty); ctx.stroke();
+    ctx.strokeStyle='#dcc8d2'; ctx.lineWidth=r*.26; ctx.stroke();
+    ctx.strokeStyle='rgba(140,110,125,.6)'; ctx.lineWidth=Math.max(.7,r*.03);
+    for(const q of [.35,.55,.75]){const x=(1-q)**2*x0+2*(1-q)*q*cx+q*q*tx, y=(1-q)**2*y0+2*(1-q)*q*cy+q*q*ty, dx=2*(1-q)*(cx-x0)+2*q*(tx-cx), dy=2*(1-q)*(cy-y0)+2*q*(ty-cy), d=Math.hypot(dx,dy)||1;
+      ctx.beginPath();ctx.moveTo(x-dy/d*r*.11,y+dx/d*r*.11);ctx.lineTo(x+dy/d*r*.11,y-dx/d*r*.11);ctx.stroke()}   // しわ
+    if(e.sb>0&&!e.dying){const s=r*(.1+.2*e.sb), bx=tx+(up>.5?0:r*.06), by=ty+(up>.5?-s*.7:s*.6);
+      ctx.globalCompositeOperation='lighter'; glow('#dfe8ff',bx,by,s*2,.4*P.ga); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=P.ga;
+      const g=ctx.createRadialGradient(bx-s*.35,by-s*.4,s*.1,bx,by,s); g.addColorStop(0,'#ffffff'); g.addColorStop(1,'#b8c4f0'); ctx.fillStyle=g; circle(bx,by,s); ctx.fill(); ctx.strokeStyle='rgba(120,130,210,.85)'; ctx.lineWidth=Math.max(.8,r*.03); ctx.stroke()}
+  },
+  top(e,r,t,P){ctx.strokeStyle='#8a5a3a';ctx.lineWidth=Math.max(1,r*.05);ctx.lineCap='round';   // 頭の上の もじゃもじゃの毛
+    for(let i=-2;i<=2;i++){const x=i*r*.12, w=Math.sin(t*2+i+e.ph)*r*.04;ctx.beginPath();ctx.moveTo(x,-r*1.02);ctx.quadraticCurveTo(x+w+r*.06,-r*1.2,x+w-r*.02,-r*1.3);ctx.stroke()}},
+  mouth(){},
+  pose(e,P){if(e.aim>0&&!e.dying){P.sy*=1.04;P.rot-=.06}},
+});
+
 function draw(){
   const k=scale*dpr;
   ctx.setTransform(1,0,0,1,0,0); ctx.clearRect(0,0,cv.width,cv.height);
@@ -4944,7 +5730,7 @@ function finishHooks(){
   EL_ORDER.push(...Object.keys(ELEM));
   for(const k of EL_ORDER){const D=ELEM[k];
     if(D.tick)EL_TICK.push(k); if(D.speed)EL_SPEED.push(k); if(D.hold)EL_HOLD.push(k); if(D.dmgK)EL_DMG.push(k); if(D.mark)EL_MARK.push(k);
-    if(D.skin&&D.has)EL_SKIN.push(k); if(D.mood&&D.has)EL_MOOD.push(k); if(D.calm)EL_CALM.push(k)}
+    if(D.skin&&D.has)EL_SKIN.push(k); if(D.mood&&D.has)EL_MOOD.push(k); if(D.calm)EL_CALM.push(k); if(D.hit)EL_HIT.push(k)}
   SHOP_BALLS.push('lead','bb','heal',...Object.keys(BALLS).filter(k=>BALLS[k].el));
   SHOP_TOWERS.push(...Object.keys(TOWERS));
 }
