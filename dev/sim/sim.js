@@ -1,5 +1,5 @@
 // 自動プレイ（キャンペーン）：草原から順に、クリアするまでくり返す。負けるたび・クリアのたびにお店で買う。
-// opts: {upTo:台の番号, tries:1台の最大回数, st:{台番号:{hp:..}} で数字をためす, obj:{HONEY:{heal:.2}} で mk.py が出した入れものを上書き, log:true でウェーブごとのライフ, bt:true でボスが出てから決着までの秒（ゲーム内。終わらなければ +）, boss:true で負けたときのボスののこりHP, from:台の番号（下の説明）, deck:true で台に入るときのセットも出す}
+// opts: {upTo:台の番号, tries:1台の最大回数, gm:'ari' で つけるギミックを えらぶ, shop0:true で from の台の1回目の前に お店で買う（'none'＝つけない。ギミックは全部 持っている形にして、お店で買わない。ギミックごとに分けて強さを測る）, st:{台番号:{hp:..}} で数字をためす, obj:{HONEY:{heal:.2}} で mk.py が出した入れものを上書き, log:true でウェーブごとのライフ, bt:true でボスが出てから決着までの秒（ゲーム内。終わらなければ +）, boss:true で負けたときのボスののこりHP, from:台の番号（下の説明）, deck:true で台に入るときのセットも出す}
 (opts)=>{
 const T=window.__T,G=T.G;
 if(opts.st) for(const i in opts.st) Object.assign(T.STAGES[i],opts.st[i]);
@@ -20,7 +20,7 @@ function runBoard(i){
     if(act<=0){act=.5;
       const free=order().filter(p=>!p.tower), k=pick[n%pick.length];
       if(free.length&&G.balls>=T.TOWERS[k].cost+10){build(free[0],k);n++}
-      else if(!free.length){const gk=Object.keys(T.GIMMICKS).reverse().find(g=>G.gimmicks[g]&&avail(T.GIMMICKS[g]));
+      else if(!free.length){const gk=opts.gm?(opts.gm==='none'?null:opts.gm):Object.keys(T.GIMMICKS).reverse().find(g=>G.gimmicks[g]&&avail(T.GIMMICKS[g]));
         if(gk){const p=G.pegs.find(p=>p.tower&&!p.tower.gm),M=T.GIMMICKS[gk];if(p&&G.balls>=M.cost+30){G.balls-=M.cost;p.tower.gm=gk}}}
     }
   }
@@ -45,6 +45,7 @@ function buyBoard(i){const B=T.BOARDS.find(b=>b.stage===i); if(!B||!B.price) ret
 localStorage.clear(); T.G.state='hub';
 G.balls=150;G.deck=['normal','normal','normal','fire','ice'];G.owned={fire:1,ice:1};G.cleared=[];G.bought=[];
 for(const k in G.unlocked) G.unlocked[k]=k==='basic'; for(const k in G.gimmicks) G.gimmicks[k]=false;
+if(opts.gm) for(const k in T.GIMMICKS) G.gimmicks[k]=true;   // gm：ギミックは全部 持っている（お店で買わない）
 const out={};
 // from:台の番号 … その前の台はクリアずみ・その台はコインで買ったところから始める（前の台までの品は1つずつ持っている。自動プレイのキャンペーンと同じく、その台の品はまだ買っていない）
 // coins:はじめのコイン（数か [下,上]。なければ 200〜800 のどれか。キャンペーンで砂漠に入るときは 300〜2000 くらい）、deckStart:はじめのセット（なければ キャンペーンでなる形）
@@ -60,6 +61,7 @@ for(let s=opts.from||0;s<=upTo;s++){
   if(opts.deck) res.push('set:'+G.deck.join(','));
   for(let w=0;w<20&&!buyBoard(s);w++){const r=runBoard(s-1);res.push('稼ぎ'+(r.clear?'C':r.wave));shop()}
   if(!T.stageOpen(s)){res.push('開かない');break}
+  if(opts.shop0&&s===opts.from) shop();   // shop0：はじめの1回目の前に お店で買う（その台の品を 持った形で 測る）
   if(opts.deck&&res.length>1) res.push('set:'+G.deck.join(','));
   for(let k=0;k<tries&&!G.cleared.includes(s);k++){const r=runBoard(T.BOARDS.findIndex(b=>b.stage===s));res.push((r.clear?'C'+r.life:'w'+r.wave+(opts.boss&&r.boss!=null?'('+r.boss.toFixed(2)+')':''))+'@'+r.c0+(opts.bt&&r.bt!=null?'/b'+r.bt:'')+(opts.log?'['+r.lives.join(',')+']':''));shop()}
   if(!G.cleared.includes(s)) break;
