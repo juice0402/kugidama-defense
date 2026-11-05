@@ -2145,7 +2145,7 @@ const inSet=k=>G.deck.filter(x=>x===k).length;
 
 /* ---------- ロビー（夜のゲームセンター）：下のタブで 台・玉・タワー・ギミック・セット ---------- */
 const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',gimmick:'お店・ギミック',set:'玉のセット'};
-const SHOP_BALLS=['fire','ice','bolt','poison','lead','bb','heal'], SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
+const SHOP_BALLS=['lead','bb','heal','fire','ice','bolt','poison'],   // 無属性弾 → 回復弾 → 属性弾 SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
 let hubTab='board', toastT=0;
 function openHub(tab){
   G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; G.pend=[]; G.portals=[]; G.fw=[]; G.conf=[]; closeSheet(); closeBuy();
