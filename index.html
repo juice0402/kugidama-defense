@@ -382,12 +382,12 @@ const COMBO={
 const LIFE_MAX=10;                            // ライフ（上のバー）
 const BUFF_T=10;                              // 玉でついた属性・とくしゅ効果・わざ・攻撃UP・連射UP がつづく秒数
 const TOWERS={
-  basic:{name:'ふつうタワー',color:'#a6e38c',range:78,rate:.9,dmg:1,cost:30,desc:'近くの敵を自動で撃つ'},
-  fire:{name:'ほのおタワー',color:'#ff8a4a',range:74,rate:.95,dmg:1.7,cost:45,el:'fire',unlock:400,desc:'弾でやけど。火炎弾が当たると「ばくはつ」'},
-  ice:{name:'こおりタワー',color:'#a8dcff',range:72,rate:1,dmg:1.2,cost:45,el:'ice',unlock:400,desc:'弾でおそく。氷結弾が当たると「氷の霧」'},
-  bolt:{name:'かみなりタワー',color:'#ffe14f',range:76,rate:1.1,dmg:1.5,cost:50,el:'bolt',unlock:400,desc:'弾がとびうつる。雷弾が当たると「いなずま」'},
-  poison:{name:'どくタワー',color:'#c08bff',range:70,rate:1,dmg:1,cost:40,el:'poison',unlock:400,desc:'弾でどく。毒弾が当たると「毒の沼」'},
-  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:2.2,cost:55,unlock:300,desc:'遠くまで届く。撃つのはゆっくり'},
+  basic:{name:'ふつうタワー',color:'#a6e38c',range:78,rate:.9,dmg:1.7,cost:30,desc:'近くの敵を自動で撃つ'},
+  fire:{name:'ほのおタワー',color:'#ff8a4a',range:74,rate:.95,dmg:2.9,cost:45,el:'fire',unlock:400,desc:'弾でやけど。火炎弾が当たると「ばくはつ」'},
+  ice:{name:'こおりタワー',color:'#a8dcff',range:72,rate:1,dmg:2,cost:45,el:'ice',unlock:400,desc:'弾でおそく。氷結弾が当たると「氷の霧」'},
+  bolt:{name:'かみなりタワー',color:'#ffe14f',range:76,rate:1.1,dmg:2.6,cost:50,el:'bolt',unlock:400,desc:'弾がとびうつる。雷弾が当たると「いなずま」'},
+  poison:{name:'どくタワー',color:'#c08bff',range:70,rate:1,dmg:1.7,cost:40,el:'poison',unlock:400,desc:'弾でどく。毒弾が当たると「毒の沼」'},
+  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:3.7,cost:55,unlock:300,desc:'遠くまで届く。撃つのはゆっくり'},
 };
 // 砲身の先（杭の半径に対する長さ）。弾はここから出る
 const MUZ={basic:1.8,long:2.4,fire:1.5,ice:1.75,bolt:1.6,poison:1.3};
@@ -402,8 +402,8 @@ const ENEMIES={
   fast:{hp:2,sp:.62,r:9,color:'#f1c94e',reward:5},
   tough:{hp:9,sp:.22,r:14,color:'#a084dc',reward:10},
   // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）
-  mid:{hp:1500,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:6,calls:['slime','slime']},
-  boss:{hp:4000,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['slime','fast','tough']},
+  mid:{hp:1000,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:6,calls:['slime','slime']},
+  boss:{hp:2200,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['slime','fast','tough']},
 };
 const WAVES=10, WAVE_T=30, SPAWN_T=22, MID_WAVE=5, HP_GROW=.35, WAVE_N=[4,2.4];   // HP_GROW＝ウェーブごとに敵のHPがふえる割合。WAVE_N＝敵の数（a＋b×ウェーブ）   // 1ウェーブ30秒（1ゲーム約5分）。敵は最初の22秒で出る。倒しきると早めに次へ
 // scale＝玉・敵の大きさの倍率、range＝タワーのとどく広さの倍率
@@ -419,7 +419,8 @@ const BOARDS=[
   {soon:true,name:'？？？',price:1500,desc:'買うと、お店に新しいタワーや玉がふえる',thumb:'repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)'},
 ];
 const START_COINS=150, MIN_COINS=100;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
-const XP_NEED=[0,4,10,18];
+const XP_NEED=[0,12,36,80];                  // Lv2・Lv3・Lv4（最大）になる経験値。いちばん上のまん中の杭に最初に建てると、5ウェーブごろに最大
+const BOSS_RES=.3;                            // 中ボス・ボスの状態異常の耐性（やけど・どく・おそい・しびれ・止まるが3割早くとけ、おそさも3割弱い）
 const DECK_N=5;                               // セットは5つ固定。あいた所はノーマル玉
 const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,ice:1};
 const SAVE_KEY='kugidama-save-v1';
@@ -1324,12 +1325,13 @@ function update(dt){
   // 敵が進む
   for(const e of G.en){
     if(e.dead) continue;
-    e.slow=Math.max(0,e.slow-dt); e.flash=Math.max(0,e.flash-dt); e.stun=Math.max(0,(e.stun||0)-dt); e.shock=Math.max(0,(e.shock||0)-dt);
-    if(e.burn>0){e.burn-=dt;hurtEnemy(e,e.burnD*dt,true)}
-    if(e.psnT>0){e.psnT-=dt;hurtEnemy(e,e.psnD*dt,true)}
+    const E=ENEMIES[e.t], rd=E.boss?dt/(1-BOSS_RES):dt;   // 中ボス・ボスは状態異常が早くとける
+    e.slow=Math.max(0,e.slow-rd); e.flash=Math.max(0,e.flash-dt); e.stun=Math.max(0,(e.stun||0)-rd); e.shock=Math.max(0,(e.shock||0)-rd);
+    if(e.burn>0){e.burn-=rd;hurtEnemy(e,e.burnD*dt,true)}
+    if(e.psnT>0){e.psnT-=rd;hurtEnemy(e,e.psnD*dt,true)}
     if(e.dead) continue;
-    e.y+=e.sp*(e.stun>0?0:e.slow>0?(e.slowF||.45):1)*f;
-    const E=ENEMIES[e.t];
+    const sf=e.slowF||.45, slowK=E.boss?1-(1-sf)*(1-BOSS_RES):sf;   // おそくなる強さも弱め
+    e.y+=e.sp*(e.stun>0?0:e.slow>0?slowK:1)*f;
     e.x=inArch(e.x+Math.sin(G.time*1.7+e.ph)*(E.boss?.12:.28)*f,e.y,e.r); e.born+=dt;
     if(E.call&&e.stun<=0){e.callT-=dt;if(e.callT<=0){e.callT=E.call;for(const t of E.calls)spawn(t,e);burst(e.x,e.y,E.color,14);sfx.warp()}}
     if(e.y>=578-(E.boss?e.r*.6:0)){
