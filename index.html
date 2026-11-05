@@ -178,7 +178,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 /* 台のタブ＝パチンコ屋さんのホール：台が目の前に並び、左右にスワイプで台をかえる。イス（座る）をタップで台へ */
 .hub-body>*{flex:none}
 .hub-body.hall{overflow:hidden;padding-inline:0;padding-block:10px 12px;gap:10px}
-.hub-body.hall>.setstrip{margin-left:max(16px,env(safe-area-inset-left,0px));margin-right:max(16px,env(safe-area-inset-right,0px));padding:7px 10px}
+.hub-body.hall>.setstrip,.hub-body.hall>.crownbar{margin-left:max(16px,env(safe-area-inset-left,0px));margin-right:max(16px,env(safe-area-inset-right,0px));padding:7px 10px}
 .hub-body.hall>.hallwrap{flex:1 1 auto;min-height:0}
 .hallwrap{--cw:200px;--gap:20px;position:relative;display:flex;flex-direction:column}
 .hallwrap::before{content:"";position:absolute;left:50%;top:-10px;bottom:0;width:calc(var(--cw)*2.4);max-width:100%;transform:translateX(-50%);pointer-events:none;
@@ -212,6 +212,18 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .shutter{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#5d5580;
   font:400 calc(var(--cw)*.09)/1.3 var(--f-arc);letter-spacing:.08em;background:repeating-linear-gradient(180deg,#25213a 0 18px,#17142a 18px 21px)}
 .newb{color:#7ef0b0;font-weight:800;text-shadow:0 0 8px rgba(126,240,176,.55)}
+.ending-on .hud,.ending-on .bottom{visibility:hidden}
+.ending{background:transparent;-webkit-backdrop-filter:none;backdrop-filter:none;align-items:start;cursor:pointer}
+.end-in{margin-top:clamp(28px,7vh,64px);text-align:center;display:flex;flex-direction:column;gap:6px;pointer-events:none;animation:up .6s ease-out}
+.end-kick{margin:0;font:400 14px var(--f-arc);letter-spacing:.3em;color:#ffe08a;text-shadow:0 0 10px rgba(255,216,74,.8)}
+.end-title{margin:0;font:500 clamp(28px,9vw,40px)/1.15 var(--f-disp);background:linear-gradient(90deg,#ffb3c8,#ffd2a0,#fff2a0,#b8f5c8,#a8e0ff,#d4b8ff);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 0 10px rgba(255,200,240,.55))}
+.end-msg{margin:4px 0 0;font:700 14px/1.6 var(--f-body);color:#fff4fa;text-shadow:0 2px 6px rgba(20,8,40,.9)}
+.end-thanks{margin:2px 0 0;font:800 17px var(--f-body);color:#ffe9a0;text-shadow:0 0 10px rgba(255,216,74,.6),0 2px 6px rgba(20,8,40,.9)}
+.end-tap{margin:10px 0 0;font:700 12px var(--f-body);color:#d8c8f0;opacity:.85;animation:blink 1.6s steps(1) infinite}
+.crownbar{display:flex;align-items:center;justify-content:center;gap:10px;padding:7px 12px;border-radius:14px;border:1.5px solid #ffd84a;background:linear-gradient(90deg,rgba(255,216,74,.16),rgba(255,140,220,.16),rgba(140,220,255,.16));color:#fff3c4;cursor:pointer;box-shadow:0 0 14px rgba(255,216,74,.3)}
+.crownbar svg{width:30px;height:23px;flex:none;filter:drop-shadow(0 0 6px rgba(255,216,74,.7))}
+.crownbar span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.25}
+.crownbar b{font:800 14px var(--f-body)} .crownbar small{font:700 11px var(--f-body);color:#e8d8ff}
 .shutter.lockd{color:#a8f0d0;font:500 calc(var(--cw)*.07)/1.6 "Kiwi Maru",serif;letter-spacing:.02em;text-shadow:0 0 8px rgba(126,240,176,.6);
   background:repeating-linear-gradient(180deg,rgba(28,25,48,.86) 0 18px,rgba(12,10,24,.93) 18px 21px)}
 .shutter.buyd{color:#ffe9a0;font:500 calc(var(--cw)*.075)/1.6 "Kiwi Maru",serif;letter-spacing:.02em;text-shadow:0 0 8px rgba(255,216,74,.65);
@@ -300,6 +312,16 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
     </div>
   </div>
 
+  <div class="overlay ending" id="ending" hidden>
+    <div class="end-in" role="dialog" aria-label="ぜんぶの台 クリア">
+      <p class="end-kick">ALL CLEAR</p>
+      <h2 class="end-title">ぜんぶの台 クリア！</h2>
+      <p class="end-msg">9つの台の おばけたちが<br>みんなで おめでとうって 手を ふってるよ</p>
+      <p class="end-thanks">あそんでくれて ありがとう！</p>
+      <p class="end-tap">タップで とじる</p>
+    </div>
+  </div>
+
   <div class="hub" id="hub" hidden>
     <header class="hub-top">
       <div class="sign"><b id="hubTitle">台えらび</b></div>
@@ -368,7 +390,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
 
 /* ==================== コードのしくみ（フック） ====================
    台ごとの中身は「表に行を足す＋小さな関数（フック）」で足す。共通のループ（update・stepBalls・draw・drawGhost…）は if をふやさずにフックを呼ぶ。
-   フックの関数は、表の行に書いても、あとで Object.assign(表.キー,{...}) でつけてもよい（台ごとの区切り「草原（0）」「森（1）」「洋館（2）」「砂漠（3）」「雪山（4）」「火山（5）」「魔王城（6）」「宇宙（7）」を見本に）。
+   フックの関数は、表の行に書いても、あとで Object.assign(表.キー,{...}) でつけてもよい（台ごとの区切り「草原（0）」「森（1）」「洋館（2）」「砂漠（3）」「雪山（4）」「火山（5）」「魔王城（6）」「宇宙（7）」「天国（8）」を見本に）。
    ・BALLS[k] 玉：name,color,el（属性）,e（はね返り）,g（重さ）,r,dmg,price,board,desc, deco(b,r) 玉の上の絵（ボムの導火線など）
        台の上の玉 b：b.clone＝ぶんしんミラーの 分身の玉（drawBall は drawClone で描く・ヘソに入らない・b.age を 30−寿命 から始めて 時間切れで きえる）
    ・ELEM[k] 属性：name,color,tag（説明の文字）,part（粒の種類 FXK）,skin（体の色 {tint,edge,wash,spr:[色,濃さ]}）,mood（顔 ['hot'] / [名前,1]＝強い顔）,
@@ -410,6 +432,10 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
    ・道具：hurtEnemy(e,d,dot)・applyEl(e,el,lv,dmg)・around(e,R,fn)・zapFrom(e,n,dmg,fn)・tangle(o,秒)・pushBack(o,d)・ringAt(e,R,色)・zone(...)・burst(x,y,色,n)・
        fxEl/fxBurst/fxMist/fxArc（粒）・glowIn（おばけの絵の中の光）・sfx.〇〇（音。足すときは sfx に1行）。台ごとの関数は その台の区切りに置く
        宇宙の道具：gravPull(e,R)（まわりを 引きよせる。前へは 引かない）・gravAll(e,R,fn)・starDrop(at,dmg,o)（少しあとで 星が ふってくる。at＝おばけ か {x,y}）
+       天国の道具：purify(o)（おはらい：すけすけ・にせもの・かばう を けして 少し いたずらできない）・holyAll(e,R,fn)・holyBoss(o,d)・nijiPick(not)（にじ：ランダムな属性）・nijiCombo(x,e,dmg)
+       しゅくふく：砲台の T.bless（G.time より大きい間）は towerDmg×T.blessK・towerCd×T.blessC（てんしタワー・金色の玉）。金色の玉 b.gold は pegHit で goldHit（光の輪）
+       台の みんなに 効く いたずら（王さまの 遠ぼえ・パンダの 光のたて）は heavenTick・heavenBullet・heavenBall を 天国の おばけの tick・bulletHit・ballHit で よぶ
+       エンディング：G.ending の間は draw が drawEnding だけ描く（さいごの台を はじめて クリア → showEnding。hideOverlays で おわる）
    ==================================================================== */
 
 
@@ -444,6 +470,9 @@ const BALLS={
   // 宇宙の台が開くと お店にならぶ（deco は宇宙の区切りでつける）
   gravity:{name:'じゅうりょく弾',color:'#6a78ff',el:'gravity',e:.5,g:.16,r:5,dmg:1,price:350,board:7,desc:'「じゅうりょく」をつける。まわりの敵を 1か所に 引きよせて、少し おそくする'},
   star:{name:'ながれ星弾',color:'#fff0a0',el:'star',e:.5,g:.16,r:5,dmg:1,price:350,board:7,desc:'「ながれ星」をつける。少しあとで 空から 星が ふってきて、まわりの敵にも ダメージ'},
+  // 天国の台が開くと お店にならぶ（deco は天国の区切りでつける）
+  holy:{name:'ひかり弾',color:'#fff6dc',el:'holy',e:.5,g:.16,r:5,dmg:1,price:375,board:8,desc:'「ひかり」をつける。おはらいで すけすけ・にせもの・いたずらを けして、中ボス・ボスには 大きな ダメージ'},
+  rainbow:{name:'にじ弾',color:'#ff9de2',el:'rainbow',e:.5,g:.16,r:5,dmg:1,price:375,board:8,desc:'「にじ」をつける。当たるたびに ちがう属性が出る（どれが出るかは おたのしみ）'},
 };
 // 属性。タワーの上で2つの属性が出会うと「わざ」。敵の状態：火 burn/burnD・氷 slow/slowF/freeze・雷 shock（と stun）・毒 psnT/psnD・水 wet（push）・つる vineT/root/rootCD/thorn
 const ELEM={
@@ -583,6 +612,19 @@ const ELEM={
     on(e,lv,dmg){starOn(e,lv,dmg)},                                       // 少しあとで 星が ふってくる
     has:e=>e.starP>0,
     mark(e,r,t,ga){if(e.starP>0)drawStarMark(e,r,t,ga)}},
+  // 天国の ひかり・にじ（フックの中身は天国の区切り）。ひかり＝おはらい（すけすけ・にせもの・いたずらを けす）＋中ボス・ボスに つよい、
+  // にじ＝毎回 ちがう属性（にじ いがいの 全属性から 1つ）
+  holy:{name:'ひかり',color:'#fff6dc',tag:'ひかり',part:'plume',mood:['laugh'],skin:{wash:'rgba(255,225,140,.16)',spr:['#ffe08a',.3]},fx:{en:[3,1,-.5]},
+    on(e,lv,dmg){holyOn(e,lv,dmg)},                                       // おはらい＋ダメージ（ボスに 大きく）
+    has:e=>e.holyT>0,
+    tick(e,dt,rd){if(e.holyT>0)e.holyT=Math.max(0,e.holyT-rd);if(e.pure>0)e.pure=Math.max(0,e.pure-dt);if(e.pilT>0)e.pilT=Math.max(0,e.pilT-dt)},
+    calm:e=>e.pure>0,                                                     // おはらいの間は いたずらできない
+    mark(e,r,t,ga){if(e.holyT>0)drawHolyMark(e,r,t,ga)}},
+  rainbow:{name:'にじ',color:'#ff9de2',tag:'にじ',part:'prism',fx:{en:[3,1,-.3]},
+    on(e,lv,dmg){nijiOn(e,lv,dmg)},                                       // 毎回 ちがう属性
+    has:e=>e.rbT>0,
+    tick(e,dt){if(e.rbT>0)e.rbT=Math.max(0,e.rbT-dt)},
+    mark(e,r,t,ga){if(e.rbT>0)drawNijiMark(e,r,t,ga)}},
 };
 const EL_ORDER=[];                                   // ELEM にならんだ順（finishHooks で入る）。わざのキーはこの順
 const EL_TICK=[], EL_SPEED=[], EL_HOLD=[], EL_DMG=[], EL_MARK=[], EL_SKIN=[], EL_MOOD=[], EL_CALM=[], EL_HIT=[];   // そのフックを持つ属性（finishHooks で入る）
@@ -637,6 +679,11 @@ const SPECIAL={
     fx(e,dmg){blackHole(e,dmg)}},
   star:{name:'りゅうせいぐん',color:'#fff4c0',n:12,desc:'弾が当たると 流星群。まわりに 星が つぎつぎ ふってくる',
     fx(e,dmg){meteorShower(e,dmg)}},
+  // 天国の ひかり・にじ
+  holy:{name:'せいなるはしら',color:'#fff0b8',n:12,desc:'弾が当たった所に 光の柱。中の おばけは おはらいされて（いたずらできない）、少しずつ ダメージ（中ボス・ボスには 大きく）',
+    fx(e,dmg){holyOn(e,2,dmg);holyPillar(e.x,e.y,dmg)}},
+  rainbow:{name:'にじのきせき',color:'#ffb8f0',n:14,desc:'弾が当たると 大きな にじ。当たった敵には 5つ、まわりの敵にも 2つずつ、ちがう属性が つく',
+    fx(e,dmg){nijiMiracle(e,dmg)}},
 };
 // ちがう属性が出会うと「わざ」。tint＝わざのときの粒の色（どくの炎はピンクの炎など。なければ属性の色）
 const COMBO={
@@ -961,6 +1008,63 @@ const COMBO={
     fx(e,dmg){chainAll(e,3,o=>starDrop(o,dmg*.6+2,{R:18,c:this.color,quiet:o!==e}))}},
   'gravity+star':{name:'ぎんが',color:'#c8b0ff',tint:{gravity:'#7a80ff',star:'#fff0a0'},desc:'まわりの敵を 引きよせて、まん中に 星が つぎつぎ ふってくる',
     fx(e,dmg){const p=gravPull(e,56);for(let i=0;i<4;i++)starDrop(p,dmg*.6+2,{d:.5+i*.22,R:26,c:i%2?'#fff0a0':'#c8b0ff',quiet:i>0})}},
+  // 天国の ひかり（×前の台の属性）。わざは まわりの敵を おはらいして（すけすけ・にせもの・いたずらを けす）属性をつける（holyAll）。中ボス・ボスには よく効く（holyBoss）
+  'fire+holy':{name:'せいか',color:'#ffcf70',tint:{fire:'#ffb040',holy:'#fff0c0'},desc:'聖なる ほのお。まわりの敵を おはらいして やけど、ボスには 大きな ダメージ',
+    fx(e,dmg){holyAll(e,46,o=>{applyEl(o,'fire',2);holyBoss(o,dmg*.8)});pillarFx(e,this.color)}},
+  'ice+holy':{name:'ダイヤモンドダスト',color:'#e8f8ff',tint:{ice:'#bfeeff',holy:'#ffffff'},desc:'きらきら光る 氷の つぶ。まわりの敵を おはらいして、とても おそくする',
+    fx(e){holyAll(e,50,o=>applyEl(o,'ice',2));twinkleBurst(e,'#c8f0ff',10)}},
+  'bolt+holy':{name:'てんばつ',color:'#fff7a0',tint:{bolt:'#ffe14f',holy:'#fff8e0'},desc:'空から 光の いなずま。当たった敵は おはらいされて 少し止まり、2体に とびうつる。ボスには 大きな ダメージ',
+    fx(e,dmg){purify(e);if(!(e.flinchCD>0)){e.stun=Math.max(e.stun||0,.45);e.flinchCD=1.8}holyBoss(e,dmg*1.1);zapFrom(e,2,dmg*.5,purify);skyBolt(e)}},
+  'poison+holy':{name:'にがいくすり',color:'#e0b0ff',tint:{poison:'#c890ff',holy:'#fff0d0'},desc:'よく効く にがい おくすり。まわりの敵を おはらいして、どく2つ',
+    fx(e){holyAll(e,44,o=>applyEl(o,'poison',2))}},
+  'water+holy':{name:'せいすい',color:'#bfe8ff',tint:{water:'#7ac8ff',holy:'#ffffff'},desc:'聖なる 水。まわりの敵を おはらいして ぬらして、押しもどす',
+    fx(e){holyAll(e,50,o=>{o.wet=5;pushBack(o,10)});fxBurst('water',e.x,e.y,10)}},
+  'vine+holy':{name:'はなかんむり',color:'#c8f0a0',tint:{vine:'#8fe36a',holy:'#ffd6f4'},desc:'花の かんむり。まわりの敵を おはらいして、少し 止める',
+    fx(e){holyAll(e,44,o=>{if(!(o.rootCD>0))tangle(o,.6)});twinkleBurst(e,'#ffd6f4',8)}},
+  'sound+holy':{name:'ハレルヤ',color:'#fff0d8',tint:{sound:'#ffa3ea',holy:'#fff6dc'},desc:'てんしの うた。広い はんいの敵を おはらいして、みんな ひるむ',
+    fx(e,dmg){holyAll(e,64,o=>{flinch(o,.35);o.noteT=3;if(o!==e)hurtEnemy(o,dmg*.3)});for(const R of [28,46])ringAt(e,R,this.color,.35)}},
+  'shadow+holy':{name:'にっしょく',color:'#d8c8ff',tint:{shadow:'#8a6cff',holy:'#fff0b8'},desc:'ひかりと やみが かさなる。まわりの敵を おはらいして、こんらん',
+    fx(e){holyAll(e,48,o=>applyEl(o,'shadow',1));G.obs.push({k:'eclipse',x:e.x,y:e.y-e.r*1.6,t:0,max:.8})}},
+  'sand+holy':{name:'きんのすな',color:'#ffe08a',tint:{sand:'#f2c070',holy:'#fff0c0'},desc:'きらきら 金の すな。まわりの敵を おはらいして すなかぶり、ボスには 重い ダメージ',
+    fx(e,dmg){holyAll(e,48,o=>{applyEl(o,'sand',1);holyBoss(o,dmg*.6)})}},
+  'wind+holy':{name:'そよかぜ',color:'#d0fff0',tint:{wind:'#7dffd0',holy:'#ffffff'},desc:'てんごくの そよかぜ。まわりの敵を おはらいして、まん中へ ふきよせる',
+    fx(e){holyAll(e,56,o=>blowSide(o,1));G.obs.push({k:'whirl',x:e.x,y:e.y,R:32,t:0,max:.5,c:'#e8fff6'})}},
+  'snow+holy':{name:'せいなるよる',color:'#f4f0ff',tint:{snow:'#ffffff',holy:'#ffe9a0'},desc:'しずかな 雪の よる。まわりの敵を おはらいして、みんなに 雪',
+    fx(e){holyAll(e,50,o=>applyEl(o,'snow',1));applyEl(e,'snow',1)}},
+  'crystal+holy':{name:'ステンドグラス',color:'#f0c8ff',tint:{crystal:'#c0b8ff',holy:'#fff0c0'},desc:'色とりどりの ガラス。まわりの敵を おはらいして 結晶（割れると 光が とびちる）',
+    fx(e,dmg){holyAll(e,46,o=>crystOn(o,1,dmg,'holy'))}},
+  'magma+holy':{name:'たいようのかけら',color:'#ffb070',tint:{magma:'#ff3d8a',holy:'#ffe08a'},desc:'たいようの かけら。まわりの敵を おはらいして ようがん、ボスには 大きな ダメージ',
+    fx(e,dmg){holyAll(e,44,o=>{applyEl(o,'magma',1,dmg*.6);holyBoss(o,dmg*.5)});pillarFx(e,this.color)}},
+  'bomb+holy':{name:'しゅくほう',color:'#ffd0a0',tint:{bomb:'#ff5a5a',holy:'#fff0c0'},desc:'おいわいの 花火の ボム。ばくはつで まわりの敵みんなを おはらい',
+    fx(e,dmg){purify(e);bombOn(e,2,dmg*1.2,{el:'holy',lv:1,c:this.color})}},
+  'curse+holy':{name:'のろいがえし',color:'#e8ff9a',tint:{curse:'#b6ff3d',holy:'#fff0c0'},desc:'のろいを ひかりで はね返す。まわりの敵を おはらいして、ついていた のろいの 数だけ ダメージ＋のろい',
+    fx(e,dmg){holyAll(e,50,o=>{const n=o.curseT>0?(o.curseN||1):0;if(n)hurtEnemy(o,(dmg*.5+2)*n,true);curseOn(o,1)})}},
+  'chain+holy':{name:'ひかりのつな',color:'#fff0b8',tint:{chain:'#ffc94d',holy:'#ffffff'},desc:'光の つなで つなぐ。つないだ敵みんなを おはらい、ボスには 大きな ダメージ',
+    fx(e,dmg){chainAll(e,3,o=>{purify(o);holyBoss(o,dmg*.5)})}},
+  'gravity+holy':{name:'てんのとびら',color:'#e0d8ff',tint:{gravity:'#8a90ff',holy:'#fff0c0'},desc:'てんの とびらが ひらく。まわりの敵を 引きよせて おはらい、まん中に 光の柱',
+    fx(e,dmg){const p=gravAll(e,50,o=>purify(o));G.zones.push({k:'pillar',x:p.x,y:p.y,R:24,t:2,max:2,dmg:HOLY.pDmg})}},
+  'star+holy':{name:'ねがいぼし',color:'#fff8c0',tint:{star:'#fff0a0',holy:'#ffffff'},desc:'ねがいを かなえる 星が ふってくる。まわりの敵を おはらい、ボスには 大きな ダメージ',
+    fx(e,dmg){starDrop(e,dmg*.9+2,{R:28,c:this.color,fn:o=>{purify(o);holyBoss(o,dmg*.8)}})}},
+  // 天国の にじ（×前の台の属性・ひかり）。わざは その属性＋ その属性と 毎回 ちがう属性の わざ（nijiCombo）
+  'fire+rainbow':{name:'にじいろのほのお',color:'#ffb38a',tint:{fire:'#ff9a5a',rainbow:'#ffd0f0'},desc:'にじいろの ほのお。やけどに、毎回 ちがう わざ（火と なにかの わざ）が まざる',fx(e,dmg){nijiCombo('fire',e,dmg)}},
+  'ice+rainbow':{name:'にじいろアイス',color:'#bfefff',tint:{ice:'#9fe8ff',rainbow:'#ffd0f0'},desc:'にじいろの アイス。おそくして、毎回 ちがう わざ（氷と なにかの わざ）が まざる',fx(e,dmg){nijiCombo('ice',e,dmg)}},
+  'bolt+rainbow':{name:'にじいろいなずま',color:'#fff38a',tint:{bolt:'#ffe14f',rainbow:'#ffd0f0'},desc:'にじいろの いなずま。とびうつって、毎回 ちがう わざ（雷と なにかの わざ）が まざる',fx(e,dmg){nijiCombo('bolt',e,dmg)}},
+  'poison+rainbow':{name:'にじいろキャンディ',color:'#e6a8ff',tint:{poison:'#c08bff',rainbow:'#ffd0f0'},desc:'あやしい にじいろの あめ。どくに、毎回 ちがう わざ（毒と なにかの わざ）が まざる',fx(e,dmg){nijiCombo('poison',e,dmg)}},
+  'water+rainbow':{name:'あめあがり',color:'#a8dcff',tint:{water:'#6ac0ff',rainbow:'#ffd0f0'},desc:'雨あがりの にじ。ぬらして、毎回 ちがう わざ（水と なにかの わざ）が まざる',fx(e,dmg){nijiCombo('water',e,dmg)}},
+  'vine+rainbow':{name:'にじのはなばたけ',color:'#b8f5a0',tint:{vine:'#6fe36a',rainbow:'#ffd0f0'},desc:'にじいろの 花ばたけ。からめて、毎回 ちがう わざ（つると なにかの わざ）が まざる',fx(e,dmg){nijiCombo('vine',e,dmg)}},
+  'sound+rainbow':{name:'にじのメロディ',color:'#ffb8ec',tint:{sound:'#ff7ad9',rainbow:'#ffd0f0'},desc:'にじいろの うた。ひるませて、毎回 ちがう わざ（おとと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('sound',e,dmg)}},
+  'shadow+rainbow':{name:'よるのにじ',color:'#b8a8ff',tint:{shadow:'#8a6cff',rainbow:'#ffd0f0'},desc:'よるに かかる にじ。こんらんさせて、毎回 ちがう わざ（やみと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('shadow',e,dmg)}},
+  'sand+rainbow':{name:'ゆめのすな',color:'#ffd9a0',tint:{sand:'#f2b866',rainbow:'#ffd0f0'},desc:'にじいろの ゆめの すな。すなかぶりに、毎回 ちがう わざ（すなと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('sand',e,dmg)}},
+  'wind+rainbow':{name:'にじのかざぐるま',color:'#a8ffe0',tint:{wind:'#7dffd0',rainbow:'#ffd0f0'},desc:'にじいろの かざぐるま。ふきよせて、毎回 ちがう わざ（かぜと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('wind',e,dmg)}},
+  'snow+rainbow':{name:'ゆきのにじ',color:'#f0f4ff',tint:{snow:'#ffffff',rainbow:'#ffd0f0'},desc:'雪の上の にじ。雪を つもらせて、毎回 ちがう わざ（ゆきと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('snow',e,dmg)}},
+  'crystal+rainbow':{name:'プリズム',color:'#d8c8ff',tint:{crystal:'#a8b0ff',rainbow:'#ffd0f0'},desc:'ひかりを わける プリズム。結晶に、毎回 ちがう わざ（けっしょうと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('crystal',e,dmg)}},
+  'magma+rainbow':{name:'にじいろマグマ',color:'#ff9ac0',tint:{magma:'#ff3d8a',rainbow:'#ffd0f0'},desc:'にじいろの ようがん。よろいを わって、毎回 ちがう わざ（ようがんと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('magma',e,dmg)}},
+  'bomb+rainbow':{name:'にじいろはなび',color:'#ffa8a8',tint:{bomb:'#ff4a4a',rainbow:'#ffd0f0'},desc:'にじいろの 花火の ボム。ばくはつに、毎回 ちがう わざ（ボムと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('bomb',e,dmg)}},
+  'curse+rainbow':{name:'まほうのにじ',color:'#d8ff98',tint:{curse:'#b6ff3d',rainbow:'#ffd0f0'},desc:'ふしぎな まほうの にじ。のろいに、毎回 ちがう わざ（のろいと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('curse',e,dmg)}},
+  'chain+rainbow':{name:'にじのわっか',color:'#ffe0a0',tint:{chain:'#ffc94d',rainbow:'#ffd0f0'},desc:'にじいろの わっかで つなぐ。くさりに、毎回 ちがう わざ（くさりと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('chain',e,dmg)}},
+  'gravity+rainbow':{name:'にじのうず',color:'#b0b8ff',tint:{gravity:'#6a78ff',rainbow:'#ffd0f0'},desc:'にじいろの うず。引きよせて、毎回 ちがう わざ（じゅうりょくと なにかの わざ）が まざる',fx(e,dmg){nijiCombo('gravity',e,dmg)}},
+  'star+rainbow':{name:'ほしふるにじ',color:'#fff4b8',tint:{star:'#fff0a0',rainbow:'#ffd0f0'},desc:'星が ふる にじ。星に、毎回 ちがう わざ（ながれ星と なにかの わざ）が まざる',fx(e,dmg){nijiCombo('star',e,dmg)}},
+  'holy+rainbow':{name:'にじのかけはし',color:'#ffe0ff',tint:{holy:'#fff6dc',rainbow:'#ff9de2'},desc:'光の にじの はし。近くの敵 4体に にじが かかって、おはらい＋毎回 ちがう属性',fx(e,dmg){nijiBridge(e,dmg)}},
 };
 // 地面に残るもの（とくしゅ効果・わざが置く）。中の敵に tick、粒は fx、絵は draw
 const ZONES={
@@ -996,6 +1100,9 @@ const ZONES={
   bhole:{color:'#6a78ff',tick(z,e,dt){e.bhT=.25;e.grav=Math.max(e.grav||0,.3);if(!(e.gpT>0))pullTo(e,z.x,z.y,.2);hurtEnemy(e,GRAV.hDot*dt,true)},   // ブラックホール（中の敵は すいよせられて とても おそい・少しずつ ダメージ）
     fx(z,dt){for(let i=fxN(6,dt);i--;)fxEl('gravity',z.x,z.y,z.R*.9,false)},
     draw(z,t,a){drawBHole(z,t,a)}},
+  pillar:{color:'#fff0b8',tick(z,e){purify(e);if(!(e.pilT>0)){e.pilT=HOLY.pCd;hurtEnemy(e,(z.dmg||HOLY.pDmg)*(ENEMIES[e.t].boss?2:1),true)}},   // せいなるはしら（中の敵は おはらい＋少しずつ ダメージ。ボスは 2倍）
+    fx(z,dt){for(let i=fxN(5,dt);i--;)fxEl('holy',z.x,z.y,z.R*.8,false)},
+    draw(z,t,a){drawPillar(z,t,a)}},
 };
 const zone=(k,x,y,R,t)=>G.zones.push({k,x,y,R,t,max:t});
 function zoneRing(z,c,a){ctx.globalAlpha=a;ctx.strokeStyle=hexA(c,.6);ctx.lineWidth=1.2;ctx.setLineDash([3,4]);circle(z.x,z.y,z.R);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1}
@@ -1029,6 +1136,9 @@ const TOWERS={
   // 宇宙の台が開くと お店にならぶ。じゅうりょくタワーの弾は BULLETK.grav、レーザータワーは ためてから まっすぐ1本の光で つらぬく（shoot・tick と OBJK.laser は宇宙の区切り）
   gravity:{name:'じゅうりょくタワー',color:'#6a78ff',range:76,rate:1.05,dmg:2.5,cost:75,el:'gravity',unlock:700,board:7,muz:1.65,bullet:'grav',desc:'弾で じゅうりょく（まわりの敵を 1か所に 引きよせて、少し おそく）。じゅうりょく弾が当たると「ブラックホール」'},
   laser:{name:'レーザータワー',color:'#ff5ad8',range:96,rate:1.6,dmg:4.5,cost:80,unlock:700,board:7,muz:2,tag:'つらぬく',desc:'光を ためてから、まっすぐ 1本の レーザー。通り道の おばけ みんなに 一気に当たる（とおくまで とどく）'},
+  // 天国の台が開くと お店にならぶ。ひかりタワーの弾は BULLETK.holy、てんしタワーは 撃たずに とどく中の 砲台を しゅくふく（tick は天国の区切り）
+  holy:{name:'ひかりタワー',color:'#ffe9a0',range:76,rate:1.05,dmg:2.6,cost:80,el:'holy',unlock:750,board:8,muz:1.85,bullet:'holy',desc:'弾で ひかり（おはらい：すけすけ・にせもの・いたずらを けす。中ボス・ボスに つよい）。ひかり弾が当たると「せいなるはしら」'},
+  tenshi:{name:'てんしタワー',color:'#ffb8e8',range:72,rate:1,dmg:0,cost:85,unlock:750,board:8,muz:.8,tag:'てだすけ',desc:'自分は 撃たずに、とどく中の 砲台を つよくする（はやく・つよく。レベルで もっと）。玉で ついた 効き目も まわりの 砲台に 分ける'},
 };
 const SOUND_FX=2;                             // サウンドタワー：玉でついた とくしゅ効果・わざが出る敵の数（属性は波の中の敵みんなに）
 // ギミック：どの砲台にも1つつけられる（お店で解放 → 台の上で砲台をタップして、コインでつける）。属性のある砲台につけると、ギミックにも属性が宿る
@@ -1047,6 +1157,8 @@ const TRAP={max:2, R:22, life:6, lead:.7, k:1.3, stun:.5, cd:2, fx:2, arm:.25}; 
 const BUNSHIN={pad:1, per:3, cap:10, life:6, lift:.6, drag:.02, ringR:40, cd:.5, glowR:32, glowCd:.6};   // ぶんしんミラー：玉が当たる広さ（杭のふちから）・1つの玉が 分かれる回数・台の上の 分身の玉の上限・分身の玉が きえるまでの秒・分身の玉の 重さを消す割合（ふわっと落ちる）・速さがへる割合（1コマ）・宿ったミラーの 光の輪の広さ・つぎの輪まで・宿った分身の玉の 光の広さ・つぎの光まで
 const LASER={charge:.55, len:1.7, w:5, fx:2};   // レーザータワー：ためる秒・光の長さ（とどく広さに対して）・光の太さ（おばけの半径に足す）・とくしゅ効果・わざが出る数（属性は 光の中 みんな。砲台に近い順）
 const WAKU={pad:1.5, R:13, sq:.5, tl:-.3, w:.14, out:4.2, use:2, xp:1, float:3.5, lift:.8, drag:.02, flow:2.5, cd:.45, ringR:46};   // わくせいリング：玉が のる広さ（杭のふちから）・わっかの半径（杭のふちから）・わっかの たて横の比・かたむき・1コマに まわる角度・とんでいく速さ・1つの玉が のれる リングの数・まわり終わりの経験値・とんでいった玉が ふわふわ（むじゅうりょく）する秒・そのとき重さを消す割合・速さがへる割合・まわったあと わっかが まわりつづける秒・宿った技のつぎまで（秒）・宿った技の広さ
+const ANGEL={k:[1.2,1.26,1.32,1.4], cd:[.85,.81,.77,.72], every:2, keep:4};   // てんしタワー：しゅくふくの ダメージの倍率・撃つ間の倍率（Lv1〜4）・効き目を 分ける 間（秒）・分けた 効き目の のこり秒
+const HALO={y:-18, w:15, t:6, float:2.5, lift:.55, drag:.015, xp:1, long:1.5, k:1.25, keep:4, coin:1, ringR:44, cd:.4};   // 光の輪：輪の高さ（杭のまん中から）・輪の はば（半分）・金色の玉の秒・ふわっと おちる秒・そのとき重さを消す割合・速さがへる割合・金色の玉が当たった砲台：経験値＋・バフの のび（倍）・しゅくふくの ダメージ倍率・その秒・コイン＋・宿った技の広さ・つぎまで（秒）
 // ならび：お店・砲台のシートの順。自動プレイ（dev/sim）は いちばん下の持っているギミックを全部の砲台につける（sim.js の gm で えらべる）。雪山のジャンプ台は ありじごくの上に置いた（ありじごくの方が強い。記録の雪山）。火山のふんか口は いちばん下（ありじごく・ジャンプ台と分けて測って そろえた。記録の火山）
 const GIMMICKS={
   bumper:{name:'バンパー',color:'#e8f4ff',unlock:300,cost:20,pad:BUMP_R,ring:2.5,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい。属性のある砲台なら、はね返すたびに属性の輪がはじける'},
@@ -1058,6 +1170,7 @@ const GIMMICKS={
   funka:{name:'ふんか口',color:'#ff6a5a',unlock:550,cost:45,board:5,pad:FUNKA.pad,ring:2.5,desc:'杭の上に 小さな ふんか口。上から入った玉を ためて、3つ たまると 上へ いっせいに ふき上げる（もう一度 杭に当たれる）。属性のある砲台なら、ふき上げた玉に その効き目が宿って、ふき上げるときに まわりの おばけにも効く'},
   bunshin:{name:'ぶんしんミラー',color:'#d8c8ff',unlock:600,cost:50,board:6,pad:BUNSHIN.pad,ring:2.5,desc:'杭のまわりに 魔法の かがみ。当たった玉が 2つに 分かれる（分身の玉は 少しで きえて、ヘソには 入らない・コインは かからない）。属性のある砲台なら、分身の玉に その効き目が宿って、分かれるときに まわりの おばけにも効く'},
   wakusei:{name:'わくせいリング',color:'#ffd27a',unlock:650,cost:55,board:7,pad:WAKU.pad,ring:3,desc:'杭のまわりに わくせいの わっか。当たった玉は 砲台の まわりを 1周 まわってから とんでいく（まわりの 杭や おばけに 当たりやすい）。属性のある砲台なら、まわっている間 まわりの おばけに その効き目、とんでいく玉にも 効き目が 宿る'},
+  halo:{name:'光の輪',color:'#ffe08a',unlock:700,cost:60,board:8,ring:2.5,desc:'砲台の 上に 光の輪。玉が 輪を くぐると 金色の玉に なる（その玉が 砲台に当たると 経験値が 多めで、バフが 長く・つよく なって、コインも 少し もらえる）。属性のある砲台なら、くぐった玉に 効き目が 宿って、くぐるときに まわりの おばけにも 効く'},
 };
 // おばけ（イタズラ好きの白いおばけに動物の特ちょう。gh＝おばけの絵）。台ごとの顔ぶれは STAGES の foes（ふつう・はやい・かたい・中ボス・ボス）
 // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）。いたずらはフック（草原・森の区切り）
@@ -1111,6 +1224,12 @@ const ENEMIES={
   kame:{gh:1,hp:8.5,sp:.22,r:14,color:'#6fe0a8',reward:10},                          // 宇宙ガメおばけ（かたい）：こうらの まわりに 星のバリア（砲台の弾などが へる。玉が当たると 消える）
   tako:{gh:1,hp:300,sp:.13,r:24,color:'#ff6a8a',reward:60,boss:1,call:6,calls:['kurage','kurage'],tintK:.82,ey:.12},   // 中ボス：すみを はいて まわりの砲台の とどく広さを ちぢめる（ふくらませている間に 玉が当たると止まる。玉で すみが 晴れる）
   kujira:{gh:1,hp:2000,sp:.15,r:32,color:'#6a9cff',reward:150,boss:2,call:5,calls:['kurage','iruka','kame'],ey:.1},   // ボス：口を あけて 砲台の弾を すいこんで 回復、小さい クラゲを はき出す（玉が当たると 口が とじる）
+  // 天国のおばけ（いたずらは天国の区切り。パンダの 光のたて・王さまの 遠ぼえは みんなに 効く）
+  hitsuji:{gh:1,hp:2.4,sp:.32,r:11,color:'#ffb8dc',reward:4},                       // ひつじおばけ（ふつう）：雲に のって ふわふわ。ときどき 雲に かくれる（玉が当たると 雲が晴れる）
+  hato:{gh:1,hp:2,sp:.46,r:9,color:'#8ec8ff',reward:5},                             // はとおばけ（はやい）：群れで とんで 一気に 前へ（玉が当たると 羽が ちって 歩くだけ）
+  unicorn:{gh:1,hp:8.5,sp:.22,r:14,color:'#c8a8ff',reward:10,ey:.14},                // ユニコーンおばけ（かたい）：角が光って まわりの おばけを 回復（玉が当たると 角が くもる）
+  panda:{gh:1,hp:300,sp:.13,r:24,color:'#7fe8c8',reward:60,boss:1,call:6,calls:['hitsuji','hitsuji'],tintK:.82,ey:.12},   // 中ボス：てんしのパンダ。おいのりで まわりに 光のたて（玉が当たると われる）
+  ousama:{gh:1,hp:2000,sp:.15,r:32,color:'#ffcf4a',reward:150,boss:2,call:5,calls:['hitsuji','hato','unicorn'],ey:.1},   // ボス：おばけの王さま（白い トラ）。これまでの台の ボスの いたずらを じゅんばんに
 };
 // Canvaで作ったおばけの絵（11/5 ためし：わたげ・正面向き）。h＝おばけの半径に対する絵の高さ、by＝絵の下はしの位置（半径に対して）。絵がない種類はコードの絵
 const SPRITE_SRC={wata:{h:3.0,by:1.05,src:'data:image/png;base64,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'}};
@@ -1193,6 +1312,16 @@ const KUJIRA={first:5, every:10, open:.8, gulp:3.5, heal:.5, R:90, spit:2};   //
 const GRAV={t:2.5, R:50, pullT:.6, pull:1.1, boss:.35, mid:.3, slow:.72, bslow:.88, hR:44, hT:3, hs:.3, hbs:.7, hDot:.6};   // じゅうりょく：おそい秒・引きよせる広さ（＋lv×8）・引きよせる秒・引きよせる速さ（1コマ）・ボスの引きよせの倍率・引きよせる先を 台のまん中へ よせる割合・おそさ・ボスのおそさ・ブラックホールの広さ・秒・中の おそさ・ボスの おそさ・中の ダメージ（1秒）
 const STAR={delay:.8, gap:.25, R:22, k:.8, base:1.5, max:3, flinch:.2, rain:5};   // ながれ星：ふってくるまでの秒・lv が2つ以上のときの間・当たる広さ・ダメージ（当たったダメージ×k＋base）・1体に ねらう星の数・ひるむ秒・流星群の星の数
 // 宇宙のステージギミック：まわる惑星。2つの小さな惑星が 円を描いて まわる（cx,cy＝まわる中心・R＝半径・w＝1秒に まわる角度・r＝惑星の大きさ）。玉は バンパーのように はじく、おばけに ぶつかると ダメージ（dmg×ウェーブの強さ。同じおばけは cd 秒に1回）
+// 天国のおばけのいたずら
+const HITSUJI={first:2.5, every:5.5, hide:2, k:1.1, lock:4};                    // ひつじ：はじめに 雲に かくれるまで・つぎまで・かくれる秒（すけすけ＝ねらわれない）・かくれている間の速さ・玉が当たって 雲が晴れたあと かくれられない秒
+const HATO={first:2, every:5, flap:.35, fly:.9, k:2.5, R:80, fall:.9, walk:5};   // はと：はじめに とぶまで・つぎまで・はばたく秒（止まる）・とぶ秒・とぶ速さ・いっしょに とぶ なかまの広さ・おちて 目がまわる秒・羽が ちってから 歩くだけの秒
+const UNI={first:3, every:6, glow:1, R:80, heal:.12, boss:.03, cloud:5};        // ユニコーン：はじめに 角が光るまで・つぎまで・ためる秒（玉が当たると止まる）・回復の広さ・回復（最大HPの割合）・中ボス・ボスへの回復・玉が当たって 角が くもる秒
+const PANDA={first:6, every:9, pray:1.1, R:110, n:3, t:5};                      // てんしのパンダ：はじめの おいのりまで・つぎまで・おいのりの秒（玉が当たると止まる）・たての広さ・たてが ふせぐ 弾の数・たての秒
+const KING={first:5, every:9, aim:1, dur:[1.6,2,2.2,4,1,1.2,3,3], R:160, n:2, k:2, rush:2.5, rushK:1.5, sand:.45, back:.4, heal:.4, fireW:34, fireL:200, lock:3.5};   // おばけの王さま：はじめの いたずらまで・つぎまで・ためる秒（頭の上に その台の しるし。玉が当たると止まる）・いたずらの秒（草原の ダッシュ・森の 根っこ・洋館の 遠ぼえ・砂漠の すなのたて・雪山の 雪玉・火山の 火・魔王城の はね返し・宇宙の すいこみ）・根っこ/雪玉の とどく広さ・その砲台の数・ダッシュの速さ・遠ぼえで 速くなる秒・その速さ・すなのたての間に 効く割合・はね返した弾で 砲台が おくれる秒・すいこんだ弾で 回復する割合・火の はば・長さ・火で 撃てない秒
+const HOLY={t:3, k:.3, boss:.8, base:1, calm:1, bcalm:.15, pR:30, pT:3, pDmg:2, pCd:.5};   // ひかり：光の輪の しるしの秒・当たったときの ダメージ（当たったダメージ×k＋base×lv。中ボス・ボスは ×boss・base×1.5）・おはらいで いたずらできない秒（中ボス・ボスは bcalm）・せいなるはしらの 広さ・秒・ダメージ・つぎまで
+const NIJI={t:2.5};                                                             // にじ：頭の上の にじの 秒
+// 天国のステージギミック：天使のラッパ。玉が当たると 鳴って dur 秒 すべての砲台が k 倍 はやく撃つ。鳴らした ラッパは cd 秒 お休み。近くR の おばけは びっくり
+const HORN={at:[[120,292],[256,292]], r:9, e:.7, dur:4, k:1.6, cd:6, R:70};
 const PLANET={at:[{cx:188,cy:104,R:42,w:-.62,r:10,kind:'ring'},{cx:188,cy:290,R:36,w:.9,r:9,kind:'band'}], e:1, kick:3.4, dmg:4, cd:1.4};
 const WAVES=10, WAVE_T=30, SPAWN_T=22, MID_WAVE=5, HP_GROW=.35, WAVE_N=[4,2.4];   // HP_GROW＝ウェーブごとに敵のHPがふえる割合。WAVE_N＝敵の数（a＋b×ウェーブ）   // 1ウェーブ30秒（1ゲーム約5分）。敵は最初の22秒で出る。倒しきると早めに次へ
 // scale＝玉・敵の大きさの倍率、range＝タワーのとどく広さの倍率
@@ -1205,6 +1334,7 @@ const STAGES=[
   {name:'火山',style:'volcano',scale:1.3,range:1.15,accent:'#ff5a8a',layout:layoutVolcano,foes:['buta','hinotori','sai','inoshishi','dragon'],hp:4.5,grow:9.2,bossHp:1.2,fly:'#ff8a5a',flies:14,stars:10,grass:false},
   {name:'魔王城',style:'castle',scale:1.3,range:1.15,accent:'#b56bff',layout:layoutCastle,foes:['karasu','hebi','kaeru','yagi','kujaku'],hp:4.5,grow:8,bossHp:1.3,fly:'#b6ff3d',flies:12,stars:16,grass:false},
   {name:'宇宙',style:'space',scale:1.3,range:1.15,accent:'#3ef0ff',layout:layoutSpace,foes:['kurage','iruka','kame','tako','kujira'],hp:4.5,grow:8,bossHp:1.3,fly:'#7af0ff',flies:14,stars:24,grass:false},
+  {name:'天国',style:'heaven',scale:1.3,range:1.15,accent:'#fff0a8',layout:layoutHeaven,foes:['hitsuji','hato','unicorn','panda','ousama'],hp:4.5,grow:8,bossHp:1.4,fly:'#fff0c0',flies:14,stars:16,grass:false},
 ];
 // 台えらび。stage＝STAGES の番号。need＝この台をクリアすると開く（price があれば、そのあとコインで買う）。soon＝まだ作っていない台（担当が作ったら soon を消す）
 const SOON_THUMB='repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)', SOON_DESC='買うと、お店に新しいタワーや玉がふえる';
@@ -1217,7 +1347,7 @@ const BOARDS=[
   {stage:5,price:3000,need:4,desc:'ネオンな夜の火山。火口の杭と、ふき上がる ようがんの噴水',thumb:'radial-gradient(ellipse at 50% 30%,#ffd25a 0 3%,#ff3d8a 6%,transparent 15%),linear-gradient(#07030c 0 26%,#3a0c26 27% 52%,#24101e 53% 78%,#ff3d8a 79% 81%,#140a12 82%)'},
   {stage:6,price:3500,need:5,desc:'ネオンな夜の魔王城。魔法陣の杭と、光をためる まほうじん',thumb:'radial-gradient(circle at 50% 18%,#ffd84d 0 2%,#b6ff3d 3%,#7a3cff 6%,transparent 10%),linear-gradient(#04020a 0 14%,#140a26 15% 40%,#1e0c34 41% 66%,#2c1048 67% 82%,#0e0618 83%)'},
   {stage:7,price:4000,need:6,desc:'ネオンな宇宙。らせん銀河の杭と、まわる わくせい',thumb:'radial-gradient(circle at 72% 24%,#ffd27a 0 5%,transparent 6%),radial-gradient(20% 5% at 72% 24%,transparent 0 55%,#ff8ad8 62% 78%,transparent 84%),radial-gradient(circle at 46% 58%,#ffe0f4 0 3%,rgba(255,90,216,.45) 10%,transparent 34%),radial-gradient(circle at 70% 70%,rgba(62,240,255,.35),transparent 30%),linear-gradient(#010208 0 30%,#060a2c 31% 70%,#160c3a 71%)'},
-  {stage:8,price:5000,need:7,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 天国
+  {stage:8,price:5000,need:7,desc:'ネオンな夜明けの天国。天使の羽の杭と、鳴らすと 砲台が はやく撃つ 天使のラッパ',thumb:'radial-gradient(ellipse 30% 9% at 50% 22%,transparent 0 55%,#ffd96a 62% 72%,transparent 80%),radial-gradient(circle at 50% 78%,#fff0c0 0 4%,rgba(255,200,150,.6) 9%,transparent 22%),linear-gradient(#0e0828 0 22%,#2c1650 23% 48%,#8a3a88 49% 62%,#ffb08a 63% 72%,#6c4c9e 73% 86%,#4c3480 87%)'},
 ];
 const START_COINS=150, MIN_COINS=100;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
 const XP_NEED=[0,12,36,80];                  // Lv2・Lv3・Lv4（最大）になる経験値。いちばん上のまん中の杭に最初に建てると、5ウェーブごろに最大
@@ -1397,6 +1527,19 @@ const sfx={
   suuu(){tone(220,1.2,'sine',.02,.5)},                                                                                // クジラが すいこむ
   pe(){seq([600,420],70,.1,.025)},                                                                                    // はき出す
   buoo(){tone(110,1,'triangle',.035,1.3)},                                                                            // クジラの なきごえ
+  horn(){seq([784,988,1175,1568],80,.16,.035)},                                                                   // 天使のラッパ（ぱぱぱーん）
+  baa(){tone(520,.3,'triangle',.03,.85)},                                                                           // ひつじが 雲に かくれる（めぇ）
+  poppo(){seq([700,560],90,.08,.025)},                                                                              // はとが とぶ（ぽっぽ）
+  hihin(){tone(900,.25,'sine',.03,1.6);setTimeout(()=>tone(1400,.2,'sine',.02,1.3),120)},                           // ユニコーンの 角が光る
+  pray(){seq([1047,1319,1568],100,.2,.025)},                                                                        // パンダの おいのり
+  lshield(){tone(1200,.25,'sine',.025,1.4)},                                                                        // 光のたて
+  lbreak(){tone(1800,.15,'triangle',.03,.5)},                                                                       // 光のたてが われる
+  roar(){tone(150,.5,'sawtooth',.04,1.8)},                                                                          // 王さまの がおー
+  chime(){const n=performance.now();if(n-(sfx._ch||0)<80)return;sfx._ch=n;tone(1568,.18,'sine',.022,1.5)},        // ひかり（ちりん）
+  prism(){const n=performance.now();if(n-(sfx._pr||0)<90)return;sfx._pr=n;seq([1319,1568,1760],50,.08,.016)},      // にじ
+  halo(){const n=performance.now();if(n-(sfx._hl||0)<70)return;sfx._hl=n;tone(1760,.12,'sine',.02,1.2)},           // 光の輪を くぐる
+  bless(){const n=performance.now();if(n-(sfx._bl||0)<300)return;sfx._bl=n;tone(1175,.2,'sine',.015,1.25)},       // てんしの しゅくふく
+  ending(){seq([523,659,784,1047,988,1047,1319,1568],140,.25,.04)},                                                  // エンディング
 };
 
 /* ---------- 杭の配置 ---------- */
@@ -1445,6 +1588,9 @@ function layoutCastle(){
 const SPIRAL={x:188, y:290, r0:66, dr:15, a0:100, da:62};
 function spiralPts(){const P=[];for(const arm of [0,180])for(let i=0;i<6;i++){const a=rad(SPIRAL.a0+arm-i*SPIRAL.da), r=SPIRAL.r0+i*SPIRAL.dr;P.push([Math.round(SPIRAL.x+Math.cos(a)*r),Math.round(SPIRAL.y-Math.sin(a)*r)])}return P}
 function layoutSpace(){return {P:spiralPts(),pegR:11,heso:{x:188,y:480}}}
+// 9面：ネオンな夜明けの天国。天使の形に杭12本：頭の上の 光の輪（1本）・左右の羽（5本ずつ。羽の先）・まん中の ハート（1本）。天使のラッパは 羽の内がわに2つ（HORN.at）
+const WING_P=[[188,158],[140,224],[96,192],[60,246],[76,312],[122,368],[236,224],[280,192],[316,246],[300,312],[254,368],[188,290]];
+function layoutHeaven(){return {P:WING_P.map(p=>p.slice()),pegR:11,heso:{x:188,y:480}}}
 
 /* ---------- 台を作る ---------- */
 // 台の上で動いているものを空にする（台に入るとき・ロビーにもどるとき）
@@ -2301,7 +2447,7 @@ function burst(x,y,color,n){
 }
 function pegHit(p,b,impact){
   if(p.tower){
-    if(G.time-(b.hit[p.id]??-9)>.25){b.hit[p.id]=G.time;towerHit(p,b)}
+    if(G.time-(b.hit[p.id]??-9)>.25){b.hit[p.id]=G.time;towerHit(p,b);if(b.gold>0)goldHit(p,b)}   // 金色の玉（光の輪。天国の区切り）
   }else p.flash=.22;
   if(impact>.6) sfx.tick();
 }
@@ -2314,8 +2460,8 @@ const effColor=f=>f.combo?comboOf(f.combo).color:f.sp?spOf(f.sp).color:ELEM[f.el
 const effTint=f=>f.combo?(comboOf(f.combo).tint||{})[effEl(f)]:undefined;
 function effFx(f,x,y,n){if(f.combo){const tint=comboOf(f.combo).tint||{};for(const k of comboEls(f.combo))fxBurst(k,x,y,n,tint[k])}else fxBurst(effEl(f),x,y,n)}
 // 砲台の強さ（レベル・攻撃UP・連射UP・FEVER）
-const towerDmg=(T,D)=>D.dmg*(1+.4*(T.lv-1))*(T.pow>0?1.7:1)*(G.fever>0?2:1);
-const towerCd=(T,D)=>D.rate*Math.pow(.85,T.lv-1)*(T.rapid>0?.5:1)*(G.fever>0?.5:1);
+const towerDmg=(T,D)=>D.dmg*(1+.4*(T.lv-1))*(T.pow>0?1.7:1)*(G.fever>0?2:1)*(T.bless>G.time?T.blessK||1:1);   // bless＝しゅくふく（てんしタワー・金色の玉。天国の区切り）
+const towerCd=(T,D)=>D.rate*Math.pow(.85,T.lv-1)*(T.rapid>0?.5:1)*(G.fever>0?.5:1)*(T.bless>G.time?T.blessC||1:1);
 const towerRange=T=>TOWERS[T.type].range*(1+.08*(T.lv-1))*G.rscale*(T.inkT>G.time?TAKO.k:1);   // タコの すみの中（T.inkT）は ちぢむ
 const pegR=p=>p.r+((p.tower&&p.tower.gm&&GIMMICKS[p.tower.gm].pad)||0);   // 玉が当たる広さ（バンパーは広い）
 // 新しい砲台（建てるとき。自動プレイも同じものを使う）。ang＝砲身の向き（はじめは上）。gm＝ギミック。回転十字は左半分なら左回り（下のうでがまん中へ動く）
@@ -2951,8 +3097,10 @@ function drawBall(b){
   if(B.el){ctx.globalCompositeOperation='lighter';glow(B.color,b.x,b.y,r*3.2,.55);ctx.globalCompositeOperation='source-over'}
   if(B.heal){ctx.globalCompositeOperation='lighter';glow(B.color,b.x,b.y,r*2.6,.4);ctx.globalCompositeOperation='source-over'}
   if(b.inf){ctx.globalCompositeOperation='lighter';glow(effColor(b.inf),b.x,b.y,r*3.4,.85);ctx.globalCompositeOperation='source-over'}   // ツタで属性が宿った玉
+  if(b.gold>0) goldBall(b,r,false);                                                                    // 光の輪で 金色に なった玉（天国の区切り）
   ctx.fillStyle=g; circle(b.x,b.y,r); ctx.fill();
   if(B.deco) B.deco(b,r);                                                                             // 玉ごとの絵（ボムの導火線など）
+  if(b.gold>0) goldBall(b,r,true);
   if(B.heal){ctx.strokeStyle='#fff';ctx.lineWidth=r*.36;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(b.x-r*.45,b.y);ctx.lineTo(b.x+r*.45,b.y);ctx.moveTo(b.x,b.y-r*.45);ctx.lineTo(b.x,b.y+r*.45);ctx.stroke()}
   if(b.inf){ctx.strokeStyle=mixW(effColor(b.inf),.25);ctx.lineWidth=1.3;circle(b.x,b.y,r+1.4);ctx.stroke()}
 }
@@ -3458,7 +3606,7 @@ function drawGhost(e){
     ctx.beginPath();ctx.arc(e.x+jx,cy-r*.1,r*1.42,0,Math.PI*2);ctx.stroke();ctx.restore()}
   // びっくり（すけすけの馬に玉が当たった）
   if(e.oops>0){const y=cy-r*1.55-Math.sin((.8-e.oops)*14)*3;ctx.font=`900 ${Math.round(r*.7)}px "M PLUS Rounded 1c",sans-serif`;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#2b2140';ctx.strokeText('!',e.x+r*.7,y);ctx.fillStyle='#ffe14f';ctx.fillText('!',e.x+r*.7,y)}
-  if(e.dying) return;
+  if(e.dying||e.parade) return;   // parade＝エンディングの おばけ（HPは 出さない）
   // HP：ボスは上のバー。ほかは、ダメージを受けたときだけ足もとに うすいバー（2.5秒で消える）。減った所は白く残ってからおいかける
   const src=e.fake&&e.real?e.real:e, fr=Math.max(0,src.hp/src.max), lag=Math.max(fr,src.hpLag??fr), hc=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a';
   if(E.boss){
@@ -8009,6 +8157,914 @@ Object.assign(ENEMIES.kujira,{
   pose(e,P){if(e.dying)return;if(e.gulp>0){P.sx*=1.05+.02*Math.sin(G.time*20);P.sy*=1.04}else if(e.op>0){P.sy*=1+.05*Math.min(1,(KUJIRA.open-e.op)/KUJIRA.open)}},
 });
 
+/* ---------- 天国（8）：天使の羽の杭・天使のラッパ・ひかり/にじ・ひかりタワー/てんしタワー・光の輪・おばけのいたずら・エンディング ---------- */
+// ---- ひかり・にじ（ELEM のフックの中身） ----
+// ひかり：おはらい（すけすけ・にせもの・雪にまぎれる・かばわれる を けして、HOLY.calm 秒 いたずらできない）＋ ボスに つよい（holyOn）
+function purify(o){
+  if(o.dead) return;
+  if(o.fake){vanishFake(o);return}
+  if(o.ghost>0){o.ghost=0;o.oops=Math.max(o.oops||0,.5)}
+  if(o.cover>G.time) o.cover=0;
+  if(o.hide>0){o.found=Math.max(o.found||0,3);o.hide=0}
+  o.pure=Math.max(o.pure||0,ENEMIES[o.t].boss?HOLY.bcalm:HOLY.calm);
+}
+const holyBoss=(o,d)=>{if(!o.dead&&ENEMIES[o.t].boss)hurtEnemy(o,d,true)};   // 中ボス・ボスには ひかりが よく効く（わざ用）
+function holyOn(e,lv,dmg){
+  if(e.dead) return;
+  if(e.fake){vanishFake(e);return}
+  const B=ENEMIES[e.t].boss, was=e.holyT>0;
+  purify(e); e.holyT=Math.max(e.holyT||0,HOLY.t);
+  hurtEnemy(e,(dmg||1)*(B?HOLY.boss:HOLY.k)+HOLY.base*(lv||1)*(B?1.5:1),true);
+  if(!was&&!e.dead){G.rings.push({x:e.x,y:e.y,R:e.r*1.6,c:'rgba(255,240,190,.9)',t:.3});sfx.chime()}
+}
+function holyAll(e,R,fn){   // まわり R の敵を おはらいして fn（わざ用。すけすけ・にせものにも とどく）
+  for(const o of G.en){if(o.dead||(o.x-e.x)**2+(o.y-e.y)**2>R*R)continue;if(o.fake){vanishFake(o);continue}purify(o);fn(o)}
+  ringAt(e,R,'rgba(255,240,190,.9)');
+}
+function holyPillar(x,y,dmg){G.zones.push({k:'pillar',x,y,R:HOLY.pR,t:HOLY.pT,max:HOLY.pT,dmg:HOLY.pDmg+(dmg||1)*.3});sfx.chime()}   // せいなるはしら
+// にじ：毎回 ちがう属性（にじ いがいの 全属性から 1つ）
+const nijiPick=not=>{const L=EL_ORDER.filter(k=>k!=='rainbow'&&k!==not);return L[Math.random()*L.length|0]};
+function nijiOn(e,lv,dmg){if(e.dead)return;const k=nijiPick();e.rbT=NIJI.t;e.rbC=ELEM[k].color;applyEl(e,k,lv||1,dmg);sfx.prism()}
+// にじの わざ（x＋にじ）：x の属性＋ x と 毎回ちがう属性の わざ（にじ いがいの 全部の わざから）
+function nijiCombo(x,e,dmg){
+  if(e.dead) return;
+  applyEl(e,x,1,dmg); if(e.dead) return;
+  const p=nijiPick(x); applyCombo(e,comboKey(x,p),dmg*.8);
+  e.rbT=NIJI.t; e.rbC=ELEM[p].color;
+  G.obs.push({k:'rbarc',x:e.x,y:e.y,R:30,t:0,max:.6}); sfx.prism();
+}
+function nijiMiracle(e,dmg){   // にじのきせき：当たった敵に 5つ、まわりの敵に 2つずつ ちがう属性
+  const give=(o,n)=>{const L=EL_ORDER.filter(k=>k!=='rainbow').sort(()=>Math.random()-.5).slice(0,n);for(const k of L){if(o.dead)break;applyEl(o,k,1,dmg*.6)}o.rbT=NIJI.t;o.rbC=ELEM[L[0]].color};
+  give(e,5); around(e,50,o=>{if(o!==e&&!o.dead)give(o,2)});
+  G.obs.push({k:'rbarc',x:e.x,y:e.y,R:50,t:0,max:.8}); sfx.prism();
+}
+function nijiBridge(e,dmg){   // にじのかけはし：近くの 4体に にじが かかって、おはらい＋ちがう属性
+  const d2=o=>(o.x-e.x)**2+(o.y-e.y)**2, L=G.en.filter(o=>!o.dead&&!(o.ghost>0)&&d2(o)<90*90).sort((a,b)=>d2(a)-d2(b)).slice(0,4), pts=L.map(o=>[o.x,o.y]);
+  for(const o of L){holyOn(o,1,dmg*.6);if(!o.dead)applyEl(o,nijiPick('holy'),2,dmg)}
+  if(pts.length>1) G.obs.push({k:'bridge',pts,t:0,max:.8});
+  G.obs.push({k:'rbarc',x:e.x,y:e.y,R:34,t:0,max:.6}); sfx.prism();
+}
+// わざの 見せ方
+function pillarFx(e,c){G.obs.push({k:'pfx',x:e.x,y:e.y,t:0,max:.55,c})}
+function skyBolt(e){G.zaps.push({x1:e.x+(Math.random()-.5)*20,y1:Math.max(30,e.y-150),x2:e.x,y2:e.y,t:.25,c:'#fff7a0'},{x1:e.x,y1:Math.max(30,e.y-150),x2:e.x,y2:e.y,t:.2,c:'#ffffff',thin:true})}
+function twinkleBurst(e,c,n){for(let i=0;i<(reduce?3:n);i++){const a=Math.random()*6.28,s=1+Math.random()*2;FXK.twinkle.pop(e.x,e.y,Math.cos(a)*s,Math.sin(a)*s-.4,a,i,i%2?c:'#ffffff')}}
+
+// ---- 絵：ひかり・にじ（おばけの体の上・光の柱） ----
+function drawHolyMark(e,r,t,ga){   // ひかり：頭の上に 金の 光の輪（おはらいされている）
+  const k=Math.min(1,e.holyT*2), y=-r*1.32+Math.sin(t*3+e.ph)*r*.04;
+  glowIn('#ffe08a',0,y,r*.9,.35*k,ga); ctx.globalAlpha=ga*k;
+  ctx.strokeStyle='#ffd66a'; ctx.lineWidth=Math.max(1,r*.09); ctx.beginPath(); ctx.ellipse(0,y,r*.5,r*.15,0,0,Math.PI*2); ctx.stroke();
+  ctx.strokeStyle='#fffbe8'; ctx.lineWidth=Math.max(.6,r*.035); ctx.stroke(); ctx.globalAlpha=ga;
+}
+function drawNijiMark(e,r,t,ga){   // にじ：頭の上に 小さな にじ（いま ついた 属性の 色が いちばん外）
+  const k=Math.min(1,e.rbT*2), cs=[e.rbC||'#ff9de2',...RAINBOW.slice(1,5)];
+  ctx.lineWidth=Math.max(.8,r*.07);
+  cs.forEach((c,i)=>{ctx.globalAlpha=ga*k*.9;ctx.strokeStyle=c;ctx.beginPath();ctx.arc(r*.55,-r*.78,r*(.5-i*.07),Math.PI*1.05,Math.PI*1.95);ctx.stroke()});
+  ctx.globalAlpha=ga;
+}
+function drawPillar(z,t,a){   // せいなるはしら：空から とどく 光の柱と、足もとの 光の輪
+  const {x,y,R}=z, top=Math.max(20,y-190);
+  ctx.save(); fieldPath(ctx,RO,H-6); ctx.clip(); ctx.globalCompositeOperation='lighter';
+  const g=ctx.createLinearGradient(0,top,0,y); g.addColorStop(0,'rgba(255,240,190,0)'); g.addColorStop(1,hexA('#fff0b8',.38*a));
+  ctx.fillStyle=g; ctx.fillRect(x-R*.55,top,R*1.1,y-top);
+  ctx.fillStyle=hexA('#ffffff',.25*a); ctx.fillRect(x-R*.14+Math.sin(t*9)*1.5,top,R*.28,y-top);
+  ctx.globalAlpha=a*.85; ctx.strokeStyle='#ffe08a'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.ellipse(x,y+4,R,R*.36,0,0,Math.PI*2); ctx.stroke();
+  for(let i=0;i<4;i++){const q=(t*.8+i/4)%1;ctx.globalAlpha=a*(1-q);sparkle(ctx,x+Math.sin(i*2.1+t)*R*.4,y-q*90,2.4,'#fffbe8')}
+  ctx.restore(); ctx.globalAlpha=1;
+}
+function drawNote(x,y,s,c,a,f){   // ♪（音ぷ。文字ではなく 絵で）
+  ctx.globalAlpha=a; ctx.fillStyle=c; ctx.strokeStyle=c; ctx.lineWidth=s*.22;
+  ctx.beginPath(); ctx.ellipse(x,y,s*.55,s*.4,-.4,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(x+s*.48,y-s*.1); ctx.lineTo(x+s*.48,y-s*1.6); ctx.quadraticCurveTo(x+s*1.1,y-s*1.2*(f||1),x+s*1.05,y-s*.7); ctx.stroke();
+}
+// 粒：ひかり＝ふわっと おちる 白い 羽、にじ＝きらっと ひかる 小さな ひしがた（にじの 色）
+Object.assign(FXK,{
+  plume:{
+    spawn(x,y,big,c){const r=Math.random;fxAdd({k:'plume',x,y,vx:(r()-.5)*.3,vy:.12+r()*.2,a:r()*6.28,va:(r()-.5)*3,max:.7+r()*.5,s:(big?3.4:2.6)+r(),c})},
+    pop(x,y,vx,vy,a,i,c){fxAdd({k:'plume',x,y,vx:vx*.8,vy:vy*.8-.3,a,va:(Math.random()-.5)*6,max:.6+Math.random()*.4,s:3+Math.random()*1.4,c})},
+    upd(q,f){q.x+=q.vx*f+Math.sin(q.t*6+q.a)*.25*f;q.y+=q.vy*f;q.vx*=.96;q.vy=q.vy*.96+.012*f;q.a+=q.va*f/60},
+    glow(q,k,a){glow(q.c&&q.c[0]==='#'?q.c:'#ffe9a0',q.x,q.y,q.s*2.6,a*.45)},
+    draw(q,k,a){ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.a);ctx.globalAlpha=a;ctx.fillStyle=q.c&&q.c[0]==='#'?mixW(q.c,.55):'#fffaf0';
+      ctx.beginPath();ctx.ellipse(0,0,q.s*.42,q.s,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle='rgba(220,180,90,.7)';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(0,-q.s);ctx.lineTo(0,q.s*1.2);ctx.stroke();ctx.restore()}},
+  prism:{
+    spawn(x,y,big,c){const r=Math.random;fxAdd({k:'prism',x,y,vx:(r()-.5)*.4,vy:-.2-r()*.3,max:.5+r()*.4,s:(big?2.8:2)+r(),ci:r()*6|0,c})},
+    pop(x,y,vx,vy,a,i,c){fxAdd({k:'prism',x,y,vx,vy,max:.45+Math.random()*.3,s:2.4+Math.random(),ci:i%6,c})},
+    upd(q,f){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.94;q.vy*=.94},
+    glow(q,k,a){glow(q.c&&q.c[0]==='#'?q.c:RAINBOW[q.ci],q.x,q.y,q.s*2.8,a*.5)},
+    draw(q,k,a){ctx.globalAlpha=a;ctx.fillStyle=mixW(q.c&&q.c[0]==='#'?q.c:RAINBOW[(q.ci+(q.t*8|0))%6],.35);const s=q.s*(1-.3*k);ctx.beginPath();ctx.moveTo(q.x,q.y-s);ctx.lineTo(q.x+s*.6,q.y);ctx.lineTo(q.x,q.y+s);ctx.lineTo(q.x-s*.6,q.y);ctx.closePath();ctx.fill()}},
+});
+// 玉の上の絵（drawBall の deco）
+BALLS.holy.deco=(b,r)=>{   // ひかり弾：上に 金の 光の輪、まん中に 十字の きらっ
+  ctx.strokeStyle='#ffc94d'; ctx.lineWidth=Math.max(.6,r*.18); ctx.beginPath(); ctx.ellipse(b.x,b.y-r*1.05,r*.62,r*.2,0,0,Math.PI*2); ctx.stroke();
+  sparkle(ctx,b.x,b.y,r*.62,'#ffffff');
+};
+BALLS.rainbow.deco=(b,r)=>{   // にじ弾：まわる にじの しま
+  ctx.save(); ctx.beginPath(); ctx.arc(b.x,b.y,r*.94,0,Math.PI*2); ctx.clip(); ctx.translate(b.x,b.y); ctx.rotate(G.time*1.5);
+  RAINBOW.forEach((c,i)=>{ctx.fillStyle=hexA(c,.6);ctx.fillRect(-r,-r+i*r/3,r*2,r/3+.2)}); ctx.restore();
+  ctx.fillStyle='rgba(255,255,255,.8)'; circle(b.x-r*.32,b.y-r*.36,r*.22); ctx.fill();
+};
+
+// ---- 天使のラッパ（ステージギミック） ----
+// 羽の 内がわに ラッパが2つ（HORN.at）。玉が当たると ぱぱぱーんと 鳴って、HORN.dur 秒 すべての砲台が HORN.k 倍 はやく撃つ（光の音ぷ）。
+// 鳴らした ラッパは HORN.cd 秒 お休み（その間は ふつうに はね返す）。近くの おばけは びっくりして 少し ひるむ
+function hornSetup(){G.sx.horn=HORN.at.map(([x,y],i)=>({x,y,s:i?1:-1,cd:0,fl:0}));G.sx.hornT=0;G.sx.notes=[]}
+function stepHorn(dt){
+  const X=G.sx; if(!X.horn) return;
+  for(const h of X.horn){h.cd=Math.max(0,h.cd-dt);h.fl=Math.max(0,h.fl-dt)}
+  if(X.hornT>0){
+    X.hornT=Math.max(0,X.hornT-dt);
+    for(const p of G.pegs){const T=p.tower;if(T&&TOWERS[T.type].dmg>0)T.cd-=dt*(HORN.k-1)}   // すべての砲台が はやく撃つ
+    if(Math.random()<dt*9){const L=G.pegs.filter(p=>p.tower);const p=L[Math.random()*L.length|0];if(p)X.notes.push({x:p.x+(Math.random()-.5)*14,y:p.y-p.r,t:0,max:.9,c:Math.random()<.5?'#ffe27a':'#ffc8f0',vx:(Math.random()-.5)*.4})}
+  }
+  for(const q of X.notes) q.t+=dt; X.notes=X.notes.filter(q=>q.t<q.max);
+}
+function hornBall(b){
+  for(const h of G.sx.horn||[]){
+    const dx=b.x-h.x, dy=b.y-h.y, rr=b.r+HORN.r; if(dx*dx+dy*dy>=rr*rr) continue;
+    dotHit(b,h.x,h.y,HORN.r,HORN.e);
+    if(b.clone) continue;
+    if(h.cd>0){if(G.time-(h.bAt??-9)>.15){h.bAt=G.time;sfx.tick()}continue}
+    blowHorn(h);
+  }
+}
+const hornMouth=h=>[h.x+h.s*15,h.y-13];
+function blowHorn(h){
+  h.cd=HORN.cd; h.fl=.5; G.sx.hornT=Math.max(G.sx.hornT,HORN.dur);
+  const [bx,by]=hornMouth(h);
+  G.rings.push({x:bx,y:by,R:26,c:'rgba(255,230,140,.95)',t:.45},{x:bx,y:by,R:46,c:'rgba(255,200,240,.8)',t:.4});
+  for(let i=0;i<8;i++) G.sx.notes.push({x:bx+(Math.random()-.5)*20,y:by-Math.random()*10,t:-i*.05,max:1.1,c:i%2?'#ffe27a':'#ffc8f0',vx:h.s*(.3+Math.random()*.7)});
+  for(const e of G.en){if(e.dead)continue;if((e.x-bx)**2+(e.y-by)**2<HORN.R*HORN.R)flinch(e,.3)}   // 近くの おばけは びっくり
+  sfx.horn();
+}
+function drawTrumpet(x,y,s,t,fl,ready){   // 金の ラッパ（口が 上の 外がわを 向く）と パステルの リボン
+  ctx.save(); ctx.translate(x,y); ctx.scale(s,1); ctx.rotate(-.55);
+  if(ready||fl>0){ctx.globalCompositeOperation='lighter';glow('#ffe08a',16,0,16+12*fl+2*Math.sin(t*4),(ready?.35:0)+.6*fl);ctx.globalCompositeOperation='source-over'}
+  const g=ctx.createLinearGradient(0,-6,0,6); g.addColorStop(0,'#fff4c0'); g.addColorStop(.45,'#ffd04a'); g.addColorStop(1,'#b8781a');
+  ctx.fillStyle=g; ctx.strokeStyle='#7a4a10'; ctx.lineWidth=.8;
+  ctx.beginPath(); ctx.moveTo(-15,-1.6); ctx.lineTo(8,-1.8); ctx.quadraticCurveTo(14,-3,19,-8.5); ctx.lineTo(19,8.5); ctx.quadraticCurveTo(14,3,8,1.8); ctx.lineTo(-15,1.6); ctx.closePath(); ctx.fill(); ctx.stroke();   // 管と 口
+  ctx.fillStyle='#ffe9a0'; ctx.beginPath(); ctx.ellipse(19,0,2.2,8.5,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#ffd04a'; ctx.beginPath(); ctx.ellipse(-15,0,1.6,2.6,0,0,Math.PI*2); ctx.fill(); ctx.stroke();   // マウスピース
+  for(const vx of [-6,-2,2]){ctx.fillStyle='#fff0b0';ctx.fillRect(vx-1,-5.5,2,4);ctx.strokeRect(vx-1,-5.5,2,4)}   // ピストン
+  ctx.strokeStyle='#ffd04a'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(-9,1.8); ctx.quadraticCurveTo(-3,7,4,1.8); ctx.stroke();   // 下の 管
+  const sw=Math.sin(t*2.4)*.15;   // リボン（ピンクと 水色）
+  ctx.fillStyle='#ffb8e8'; ctx.beginPath(); ctx.moveTo(4,2); ctx.quadraticCurveTo(2,12,-2+sw*8,20); ctx.lineTo(3+sw*8,18); ctx.quadraticCurveTo(6,10,6,2); ctx.closePath(); ctx.fill();
+  ctx.fillStyle='#a8e0ff'; ctx.beginPath(); ctx.moveTo(6,2); ctx.quadraticCurveTo(10,10,12-sw*8,17); ctx.lineTo(8-sw*8,18); ctx.quadraticCurveTo(7,10,4,2); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+function drawHorns(t){
+  for(const h of G.sx.horn||[]){
+    const ready=!(h.cd>0);
+    drawTrumpet(h.x,h.y,h.s,t,h.fl/.5,ready);
+    if(!ready){ctx.strokeStyle='rgba(255,230,160,.55)';ctx.lineWidth=1.4;ctx.beginPath();ctx.arc(h.x,h.y+2,HORN.r+5,-Math.PI/2,-Math.PI/2+(1-h.cd/HORN.cd)*Math.PI*2);ctx.stroke()}   // お休みの のこり
+  }
+}
+function drawNotes(t){
+  const X=G.sx; if(!X.notes||!X.notes.length) return;
+  ctx.save(); fieldPath(ctx,RO,H-6); ctx.clip();
+  for(const q of X.notes){if(q.t<0)continue;const u=q.t/q.max, x=q.x+(q.vx||0)*q.t*40+Math.sin(q.t*7)*3, y=q.y-q.t*42;
+    ctx.globalCompositeOperation='lighter'; glow(q.c,x,y,8,.5*(1-u)); ctx.globalCompositeOperation='source-over';
+    drawNote(x,y,4.2,q.c,Math.min(1,(1-u)*2),1)}
+  ctx.restore(); ctx.globalAlpha=1;
+  if(X.hornT>0){const a=Math.min(1,X.hornT*2);ctx.globalCompositeOperation='lighter';for(const p of G.pegs)if(p.tower&&TOWERS[p.tower.type].dmg>0)glow('#ffe08a',p.x,p.y,p.r*2.4,.22*a);ctx.globalCompositeOperation='source-over'}   // ラッパの間：砲台が 金色に 光る
+}
+function drawFeathers(t){   // 手前を ふわふわ おちる 白い 羽と 光（台の中だけ。時間で位置がきまる）
+  ctx.save(); fieldPath(ctx,RO,H-6); ctx.clip();
+  const n=reduce?4:9;
+  for(let i=0;i<n;i++){const sp=7+(i*5)%6, x=30+((i*83.7)%300)+Math.sin(t*.7+i)*14, y=((i*131.3)+t*sp)%600, a=.35+.25*Math.sin(t*1.7+i*2.1), rot=Math.sin(t*1.3+i)*.8;
+    if(i%3===0){ctx.globalCompositeOperation='lighter';glow(i%2?'#ffd6f4':'#ffe9a0',x,y,6,a*.7);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=a;sparkle(ctx,x,y,2,'#ffffff');continue}
+    ctx.save(); ctx.translate(x,y); ctx.rotate(rot); ctx.globalAlpha=a*.85; ctx.fillStyle='#fffaf2'; ctx.beginPath(); ctx.ellipse(0,0,2.2,5.4,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='rgba(230,190,120,.7)'; ctx.lineWidth=.5; ctx.beginPath(); ctx.moveTo(0,-5.4); ctx.lineTo(0,6.4); ctx.stroke(); ctx.restore()}
+  ctx.restore(); ctx.globalAlpha=1;
+}
+function drawRays(t){   // 雲の海から のぼる 光の柱（ゆらゆら）と、門の中の 夜明けの光
+  ctx.save(); fieldPath(ctx,RO,H-6); ctx.clip(); ctx.globalCompositeOperation='lighter';
+  for(const [x,w,ph,c] of [[44,16,0,'#ffe9a0'],[112,10,1.7,'#ffc8f0'],[262,12,3.1,'#ffe9a0'],[326,18,4.4,'#c8e8ff']]){
+    const a=.07+.05*Math.sin(t*.9+ph), g=ctx.createLinearGradient(0,40,0,470); g.addColorStop(0,hexA(c,0)); g.addColorStop(.7,hexA(c,a)); g.addColorStop(1,hexA(c,a*1.6));
+    ctx.fillStyle=g; ctx.fillRect(x-w/2+Math.sin(t*.5+ph)*3,40,w,430)}
+  glow('#ffd6a0',188,468,46+4*Math.sin(t*1.4),.32);
+  ctx.restore();
+}
+Object.assign(STAGES[8],{
+  build:buildHeaven,
+  setup(){hornSetup()},
+  tick(dt){stepHorn(dt)},
+  ball(b){hornBall(b)},
+  drawBack(t){drawRays(t);drawHorns(t)},
+  drawFront(t){drawNotes(t);drawFeathers(t)},
+});
+
+// ---- 天国の台の絵 ----
+// 雲の 大理石の フレーム（パステルの にじの ネオン・金の 線・真珠の ランプ）→ 夜明けの 空（上は 夜の むらさき、下ほど ピンクと 金）・光の柱・パステルの にじ・うかぶ島
+// → 天使の 羽（杭は 羽の先）と 光の輪・ハート → 雲の海と 天使の門（ヘソは 門の中）
+const HVN={pk:'#ffb8e8',gd:'#ffd96a',mn:'#9ff0d8',sk:'#9fd8ff',lv:'#c8b0ff',cr:'#fff4dc'};
+const PASTEL=['#ffb3c8','#ffd2a0','#fff2a0','#b8f5c8','#a8e0ff','#d4b8ff'];
+function puff(c,x,y,r,col){c.fillStyle=col;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
+function cloudBank(c,y,h,col,rimC,seed,amp){   // 横に ながい もこもこの 雲（上の ふちが 光る）
+  const rnd=seeded(seed), pts=[];
+  for(let x=-10;x<=W+10;x+=16+rnd()*10) pts.push([x,y-(rnd()*.8+.2)*amp,12+rnd()*12]);
+  c.fillStyle=col; c.beginPath(); c.moveTo(-20,H+10); for(const [x,yy] of pts) c.lineTo(x,yy+6); c.lineTo(W+20,H+10); c.closePath(); c.fill();
+  for(const [x,yy,r] of pts) puff(c,x,yy+r*.5,r,col);
+  c.globalCompositeOperation='lighter'; c.lineWidth=1.3;
+  for(const [x,yy,r] of pts){c.strokeStyle=hexA(rimC,.55);c.beginPath();c.arc(x,yy+r*.5,r,Math.PI*1.1,Math.PI*1.9);c.stroke()}
+  c.globalCompositeOperation='source-over';
+}
+function heavenFrame(c,V){   // 外：パステルの 雲の 大理石（もやもやの 雲・金の きらきら・小さな 羽）
+  const w=V.x1-V.x0, h=V.y1-V.y0, rnd=seeded(9191);
+  const g=c.createLinearGradient(0,V.y0,0,V.y1); g.addColorStop(0,'#2a1a52'); g.addColorStop(.5,'#3a2264'); g.addColorStop(1,'#24163e');
+  c.fillStyle=g; c.fillRect(V.x0,V.y0,w,h);
+  for(let i=0;i<70;i++){const x=V.x0+rnd()*w, y=V.y0+rnd()*h, r=10+rnd()*26;sglow(c,[HVN.pk,HVN.lv,'#ffffff',HVN.sk][i%4],x,y,r,.07+rnd()*.07)}
+  c.fillStyle='rgba(255,240,220,.08)'; for(let i=0;i<46;i++){const x=V.x0+rnd()*w, y=V.y0+rnd()*h;c.beginPath();c.ellipse(x,y,6+rnd()*10,3+rnd()*5,rnd()*3,0,Math.PI*2);c.fill()}   // 大理石の もよう
+  for(let i=0;i<40;i++){const x=V.x0+rnd()*w, y=V.y0+rnd()*h, s=1+rnd()*1.8;c.globalAlpha=.4+rnd()*.5;sparkle(c,x,y,s,i%3?'#fff4c8':'#ffd6f4')}
+  c.globalAlpha=1;
+}
+function heavenRim(c){   // 台のふち：真珠の 白い ふち・外は パステルの にじの ネオン、内は 金の ネオン、金の ビーズ
+  const edge=r=>{c.beginPath();c.moveTo(CX-r,H-6+(r-RO));c.lineTo(CX-r,CY);c.arc(CX,CY,r,Math.PI,Math.PI*2);c.lineTo(CX+r,H-6+(r-RO))};
+  c.lineCap='round'; c.lineJoin='round';
+  c.strokeStyle='rgba(0,0,0,.45)'; c.lineWidth=12; edge(RO+6); c.stroke();
+  c.strokeStyle='#d8c8f0'; c.lineWidth=9; edge(RO+5); c.stroke();
+  c.strokeStyle='#fffaf2'; c.lineWidth=3; edge(RO+5.6); c.stroke();
+  c.strokeStyle='rgba(160,120,200,.6)'; c.lineWidth=1; edge(RO+2); c.stroke();
+  const rg=c.createLinearGradient(CX-RO,0,CX+RO,0); PASTEL.forEach((col,i)=>rg.addColorStop(i/5,col));
+  c.globalCompositeOperation='lighter';
+  c.strokeStyle=rg; c.globalAlpha=.3; c.lineWidth=7; edge(RO+9); c.stroke(); c.globalAlpha=1;
+  c.lineWidth=1.4; edge(RO+9.5); c.stroke();
+  c.strokeStyle=hexA(HVN.gd,.9); c.lineWidth=1; edge(RO+1.4); c.stroke();
+  c.globalCompositeOperation='source-over';
+  for(let d=175;d>=5;d-=10){const a=rad(d), x=CX+(RO+5)*Math.cos(a), y=CY-(RO+5)*Math.sin(a);c.fillStyle=d%20===15?HVN.gd:'#fffaf2';c.beginPath();c.arc(x,y,d%20===15?1.8:1.2,0,Math.PI*2);c.fill()}   // 金と 真珠の ビーズ
+  c.strokeStyle='#d8c8f0'; c.lineWidth=8; c.beginPath(); c.moveTo(CX-RO-5,H-1); c.lineTo(CX+RO+5,H-1); c.stroke();
+  c.strokeStyle=rg; c.lineWidth=1.3; c.beginPath(); c.moveTo(CX-RO-3,H+3.4); c.lineTo(CX+RO+3,H+3.4); c.stroke();
+}
+function heavenLamps(c){   // フレームの 真珠の ランプ（パステル）。光のゆらぎは G.fruits
+  const pts=[]; for(let d=162;d>=18;d-=24){const a=rad(d);pts.push([CX+(RO+5)*Math.cos(a),CY-(RO+5)*Math.sin(a)])}
+  for(const y of [262,352,442]){pts.push([CX-RO-5,y]);pts.push([CX+RO+5,y])}
+  pts.forEach(([x,y],i)=>{const col=PASTEL[i%6];
+    c.globalCompositeOperation='lighter'; sglow(c,col,x,y,11,.6); c.globalCompositeOperation='source-over';
+    const g=c.createRadialGradient(x-1.2,y-1.4,.3,x,y,3.6); g.addColorStop(0,'#ffffff'); g.addColorStop(1,col);
+    c.fillStyle=g; c.beginPath(); c.arc(x,y,3.4,0,Math.PI*2); c.fill(); c.strokeStyle=HVN.gd; c.lineWidth=.8; c.stroke();
+    G.fruits.push({x,y,r:2,c:col,ph:i*1.1});
+  });
+}
+function heavenSky(c,rnd){   // 夜明けの 空（上は 夜の むらさき → ピンク → 金）・星・光の柱・パステルの にじ
+  const g=c.createLinearGradient(0,0,0,H); g.addColorStop(0,'#0e0828'); g.addColorStop(.3,'#24124c'); g.addColorStop(.55,'#4a2470'); g.addColorStop(.7,'#8a3a88'); g.addColorStop(.78,'#d86a8e'); g.addColorStop(.84,'#ffb08a'); g.addColorStop(1,'#ffd8a0');
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  c.globalCompositeOperation='lighter';
+  for(const [x,y,R,col,a] of [[80,150,90,HVN.lv,.12],[300,120,80,HVN.pk,.1],[188,260,110,'#ffd0f0',.08],[60,360,70,HVN.pk,.08],[320,330,70,HVN.sk,.08],[188,470,150,'#ffc890',.22]]) sglow(c,col,x,y,R,a);
+  c.globalCompositeOperation='source-over';
+  c.fillStyle='#ffffff'; for(let i=0;i<80;i++){const x=10+rnd()*340,y=10+rnd()*300;c.globalAlpha=(.15+rnd()*.55)*(1-y/360);c.beginPath();c.arc(x,y,rnd()<.08?1.1:.55,0,Math.PI*2);c.fill()} c.globalAlpha=1;
+  for(let i=0;i<7;i++){const x=24+rnd()*312,y=20+rnd()*220,s=1.8+rnd()*2;c.globalCompositeOperation='lighter';sglow(c,PASTEL[i%6],x,y,s*3,.5);c.globalCompositeOperation='source-over';c.globalAlpha=.9;sparkle(c,x,y,s,'#ffffff');c.globalAlpha=1}
+  // パステルの にじ（大きく うすい アーチ）
+  c.save(); c.globalCompositeOperation='lighter'; c.lineWidth=4.5;
+  PASTEL.forEach((col,i)=>{c.strokeStyle=hexA(col,.2);c.beginPath();c.arc(188,470,214-i*5,Math.PI*1.04,Math.PI*1.96);c.stroke()});
+  c.restore();
+}
+function floatIsle(c,x,y,s,flip){   // うかぶ島（草の 上に 小さな 白い おみや）と 光の たき
+  c.save(); c.translate(x,y); c.scale(s*(flip?-1:1),s);
+  c.globalCompositeOperation='lighter'; sglow(c,'#ffe9c0',0,4,30,.25); c.globalCompositeOperation='source-over';
+  const g=c.createLinearGradient(0,0,0,26); g.addColorStop(0,'#8a78b8'); g.addColorStop(1,'#3a2a60');
+  c.fillStyle=g; c.beginPath(); c.moveTo(-24,0); c.quadraticCurveTo(-14,10,-6,26); c.quadraticCurveTo(0,30,4,22); c.quadraticCurveTo(14,10,24,0); c.closePath(); c.fill();
+  c.fillStyle='#7fe0b8'; c.beginPath(); c.ellipse(0,0,25,5,0,0,Math.PI*2); c.fill();
+  c.strokeStyle=hexA(HVN.mn,.9); c.lineWidth=1; c.beginPath(); c.ellipse(0,-.5,25,5,0,Math.PI,Math.PI*2); c.stroke();
+  c.fillStyle='#fffaf2'; c.fillRect(-10,-14,20,3); c.fillRect(-9,-11,2.6,10); c.fillRect(-1.3,-11,2.6,10); c.fillRect(6.4,-11,2.6,10); c.fillRect(-11,-2,22,2.4);   // おみやの 柱
+  c.fillStyle='#ffe9a0'; c.beginPath(); c.arc(0,-14,9,Math.PI,0); c.fill(); c.strokeStyle=HVN.gd; c.lineWidth=.8; c.stroke();   // 金の ドーム
+  c.fillStyle='#ffd04a'; c.beginPath(); c.arc(0,-23.5,1.6,0,Math.PI*2); c.fill();
+  c.globalCompositeOperation='lighter'; const wg=c.createLinearGradient(0,10,0,60); wg.addColorStop(0,'rgba(200,230,255,.35)'); wg.addColorStop(1,'rgba(200,230,255,0)'); c.fillStyle=wg; c.fillRect(8,8,3,52); c.globalCompositeOperation='source-over';   // 光の たき
+  c.restore();
+}
+function angelWings(c){   // 天使の 羽：まん中の ハートの 左右の かたから ひろがる 羽（長い 風切り羽の 先が 杭・つけねに まるい 羽）・頭の上の 光の輪・ハート
+  const P=WING_P;
+  for(let s=0;s<2;s++){
+    const sx=188+(s?1:-1)*20, sy=276, dir=s?1:-1;
+    for(let i=4;i>=0;i--){const [px,py]=P[1+s*5+i], dx=px-sx, dy=py-sy, L=Math.hypot(dx,dy)+10, a=Math.atan2(dy,dx), w=11+i*1.5;   // 風切り羽（先が まるい 長い 羽）
+      c.save(); c.translate(sx,sy); c.rotate(a);
+      const g=c.createLinearGradient(0,0,L,0); g.addColorStop(0,'rgba(255,248,250,.05)'); g.addColorStop(.6,'rgba(255,240,250,.16)'); g.addColorStop(1,'rgba(255,236,248,.3)');
+      c.fillStyle=g; c.beginPath(); c.moveTo(0,-2); c.quadraticCurveTo(L*.55,-w*dir*.9,L-w*.5,-w*dir*.55); c.arc(L-w*.5,0,w*.55,-Math.PI/2*dir,Math.PI/2*dir,dir<0); c.quadraticCurveTo(L*.55,w*dir*.25,0,2); c.closePath(); c.fill();
+      c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(i%2?HVN.pk:'#fff4fa',.4); c.lineWidth=1.1; c.stroke();
+      c.strokeStyle=hexA('#ffffff',.18); c.lineWidth=.6; c.beginPath(); c.moveTo(6,0); c.lineTo(L-w*.6,0); c.stroke(); c.globalCompositeOperation='source-over';
+      c.restore()}
+    for(let i=0;i<7;i++){const aL=-Math.PI*.58-i*.2, a=s?Math.PI-aL:aL, R=34+(i%2)*4, x=sx+Math.cos(a)*R*.95, y=sy+Math.sin(a)*R*.8;   // つけねの まるい 羽（2だん）
+      for(const [k,al] of [[1.25,.14],[.75,.2]]){const xx=sx+(x-sx)*k*.9, yy=sy+(y-sy)*k*.9;
+        c.fillStyle=`rgba(255,246,252,${al})`; c.beginPath(); c.ellipse(xx,yy,9*k,6.5*k,a,0,Math.PI*2); c.fill();
+        c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(HVN.pk,.3); c.lineWidth=.9; c.beginPath(); c.ellipse(xx,yy,9*k,6.5*k,a,-.6,1.6); c.stroke(); c.globalCompositeOperation='source-over'}}
+  }
+  c.save(); c.globalCompositeOperation='lighter';
+  const [hx,hy0]=P[0], hy=hy0-30; sglow(c,HVN.gd,hx,hy,34,.28);   // 頭の上の 光の輪（いちばん上の 杭の 上に うかぶ）
+  c.strokeStyle=hexA(HVN.gd,.35); c.lineWidth=6; c.beginPath(); c.ellipse(hx,hy,24,7,0,0,Math.PI*2); c.stroke();
+  c.strokeStyle=hexA('#fff4c0',.9); c.lineWidth=1.4; c.stroke();
+  const [cx,cy]=P[11], hs=22; sglow(c,HVN.pk,cx,cy,34,.25);   // まん中の ハート
+  c.strokeStyle=hexA(HVN.pk,.85); c.lineWidth=1.5; c.beginPath(); c.moveTo(cx,cy+hs*.95);
+  c.bezierCurveTo(cx-hs*1.5,cy+hs*.1,cx-hs*.95,cy-hs*1.05,cx,cy-hs*.35); c.bezierCurveTo(cx+hs*.95,cy-hs*1.05,cx+hs*1.5,cy+hs*.1,cx,cy+hs*.95); c.stroke();
+  c.restore();
+}
+function heavenGate(c){   // 天使の門：真珠の 柱・金の アーチ・ひらいた 金の とびら（ヘソは 門の中。夜明けの 光が もれる）
+  const x0=146, x1=230, y0=430, yb=512, ax=188, ay=440, ar=42;
+  c.globalCompositeOperation='lighter'; sglow(c,'#ffd8a0',188,470,64,.55); sglow(c,'#ffffff',188,476,26,.4); c.globalCompositeOperation='source-over';
+  for(const x of [x0,x1]){
+    const g=c.createLinearGradient(x-6,0,x+6,0); g.addColorStop(0,'#c8b8e8'); g.addColorStop(.4,'#fffaf2'); g.addColorStop(1,'#a898d0');
+    c.fillStyle=g; c.fillRect(x-6,y0,12,yb-y0); c.strokeStyle='rgba(120,90,170,.6)'; c.lineWidth=.6; for(const dx of [-2.5,0,2.5]){c.beginPath();c.moveTo(x+dx,y0+4);c.lineTo(x+dx,yb-3);c.stroke()}
+    c.fillStyle=HVN.gd; c.fillRect(x-8,y0-3,16,4); c.fillRect(x-8,yb-3,16,4);
+  }
+  c.lineWidth=5; c.strokeStyle='#fffaf2'; c.beginPath(); c.arc(ax,ay,ar,Math.PI,0); c.stroke();
+  c.lineWidth=1.4; c.strokeStyle=HVN.gd; c.beginPath(); c.arc(ax,ay,ar+3,Math.PI,0); c.stroke(); c.beginPath(); c.arc(ax,ay,ar-3,Math.PI,0); c.stroke();
+  for(let i=0;i<=8;i++){const a=Math.PI+i/8*Math.PI;c.fillStyle=i%2?'#ffd6f4':'#ffffff';c.beginPath();c.arc(ax+Math.cos(a)*ar,ay+Math.sin(a)*ar,1.7,0,Math.PI*2);c.fill()}   // 真珠
+  c.fillStyle=HVN.gd; c.beginPath(); c.moveTo(ax,ay-ar-12); c.lineTo(ax+5,ay-ar-3); c.lineTo(ax,ay-ar+2); c.lineTo(ax-5,ay-ar-3); c.closePath(); c.fill();   // てっぺんの 金の かざり
+  c.strokeStyle=hexA(HVN.gd,.9); c.lineWidth=1.1;   // ひらいた とびら（金の くるくる）
+  for(const s of [-1,1]){const bx=s<0?x0-7:x1+7;
+    for(let k=0;k<3;k++){c.beginPath();c.moveTo(bx,y0+10+k*22);c.lineTo(bx+s*14,y0+6+k*22);c.lineTo(bx+s*14,y0+26+k*22);c.lineTo(bx,y0+28+k*22);c.stroke();
+      c.beginPath();c.arc(bx+s*7,y0+17+k*22,3.2,0,Math.PI*1.6);c.stroke()}}
+}
+function heavenClouds(c){   // 雲の海（うしろ・まん中・手前の 3つ）
+  cloudBank(c,456,0,'#5a3c8c',HVN.pk,111,16);
+  cloudBank(c,488,0,'#6c4c9e',HVN.gd,222,14);
+  heavenGate(c);
+  cloudBank(c,540,0,'#4c3480','#ffe0f0',333,12);
+}
+function buildHeaven(c,V){
+  const rnd=seeded(8383);
+  G.fruits=[]; c.lineCap='round';
+  heavenFrame(c,V);
+  c.save(); fieldPath(c,RO,H-6); c.clip();
+  heavenSky(c,rnd);
+  floatIsle(c,62,124,.9,false); floatIsle(c,312,104,.8,true);
+  angelWings(c);
+  heavenClouds(c);
+  c.restore();
+  rails(c);
+  heavenRim(c);
+  heavenLamps(c);
+  if(V.y1>H+8){   // 画面の下のはし：雲
+    c.fillStyle='#24163e'; c.fillRect(V.x0,H+7,V.x1-V.x0,V.y1-H-7);
+    const r2=seeded(93); for(let i=0;i<30;i++) sglow(c,i%2?HVN.pk:'#ffffff',V.x0+r2()*(V.x1-V.x0),H+12+r2()*(V.y1-H-12),8+r2()*10,.08);
+  }
+  hesoCup(c,HVN.gd);
+  c.globalCompositeOperation='lighter'; for(const p of G.pegs){sglow(c,p.id===11?HVN.pk:p.id===0?HVN.gd:'#ffffff',p.x,p.y,p.r*2.3,.38)} c.globalCompositeOperation='source-over';   // 杭は 羽の 先（うしろが 光る）
+  for(const p of G.pegs) if(!p.tower) drawStake(c,p.x,p.y,p.r);
+}
+
+// ---- ひかりタワー・てんしタワー ----
+Object.assign(TOWERS.holy,{
+  gun(T,R){   // 聖なる柱：白い 大理石の 柱の 砲身（たての みぞ・金の わっか）、先に 光る 宝石と 小さな 光の輪
+    const t=G.time, x0=R*.25, L=R*1.05, w=R*.42;
+    const g=ctx.createLinearGradient(0,-w/2,0,w/2); g.addColorStop(0,'#d8d0ec'); g.addColorStop(.4,'#fffaf2'); g.addColorStop(1,'#a898c8');
+    ctx.fillStyle=g; rrPath(ctx,x0,-w/2,L,w,1.2); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();
+    ctx.strokeStyle='rgba(140,120,180,.6)'; ctx.lineWidth=.5; for(const y of [-.25,0,.25]){ctx.beginPath();ctx.moveTo(x0+2,y*w);ctx.lineTo(x0+L-3,y*w);ctx.stroke()}
+    ctx.fillStyle='#ffd04a'; for(const x of [x0,x0+L-R*.18]) ctx.fillRect(x,-w/2-1,R*.18,w+2);
+    const x=x0+L+R*.24;
+    ctx.globalCompositeOperation='lighter'; glow('#ffe08a',x,0,R*.9,.45+.15*Math.sin(t*5)); ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='#fffbe8'; ctx.beginPath(); ctx.moveTo(x-R*.22,0); ctx.lineTo(x,-R*.2); ctx.lineTo(x+R*.22,0); ctx.lineTo(x,R*.2); ctx.closePath(); ctx.fill(); ctx.strokeStyle='#ffc94d'; ctx.lineWidth=.7; ctx.stroke();
+    ctx.strokeStyle='#ffd04a'; ctx.lineWidth=R*.07; ctx.beginPath(); ctx.ellipse(x+R*.36,0,R*.08,R*.3,0,0,Math.PI*2); ctx.stroke();
+  },
+  over(p,T,t){if(Math.random()<.04)FXK.plume.spawn(p.x+(Math.random()-.5)*12,p.y-p.r*.8,false,null)},   // ふわっと 羽が まう
+});
+BULLETK.holy={   // ひかりタワーの弾：ねらった敵を 追いかける 光の 玉（十字の きらっ と 羽）
+  step(u,f){BULLETK.dot.step(u,f);if(Math.random()<f*.1)fxAdd({k:'plume',x:u.x,y:u.y,vx:0,vy:.2,a:Math.random()*6.28,va:2,max:.35,s:1.8,c:null})},
+  draw(u){ctx.globalCompositeOperation='lighter';glow(u.c,u.x,u.y,9,.75);ctx.globalCompositeOperation='source-over';sparkle(ctx,u.x,u.y,4.4,'#ffffff');ctx.fillStyle=mixW(u.c,.3);circle(u.x,u.y,1.7);ctx.fill()},
+};
+// てんしタワー：自分は 撃たない。とどく中の 砲台を しゅくふく（T.bless の間 ダメージ×blessK・撃つ間が×blessC。レベルで つよく ANGEL.k/cd）。
+// 玉で ついた 効き目（属性・とくしゅ効果・わざ）は ANGEL.every 秒ごとに まわりの 砲台に 分ける（玉が当たったときと 同じ くみあわせ方。のこり ANGEL.keep 秒）
+function shareEff(U,f){
+  const K=ANGEL.keep;
+  if(f.combo){if(U.comboT>0&&U.combo!==f.combo)return;U.combo=f.combo;U.comboT=Math.max(U.comboT,K);U.elT=0;U.spT=0;return}
+  if(U.comboT>0) return;
+  const E=f.sp||f.el;
+  if(f.sp){if(U.spT>0&&U.sp!==E)return;U.sp=E;U.spT=Math.max(U.spT,K);U.el=E;U.elT=Math.max(U.elT,K);return}
+  const now=curEl(U);
+  if(!now){U.el=E;U.elT=Math.max(U.elT,K)}
+  else if(now!==E&&!(U.spT>0)){U.combo=comboKey(now,E);U.comboT=K;U.elT=0;U.spT=0}
+}
+Object.assign(TOWERS.tenshi,{
+  shoot(p,T){T.cd=.25;return true},   // 自分は 撃たない
+  tick(p,T,dt){
+    const R=towerRange(T), k=ANGEL.k[T.lv-1], c=ANGEL.cd[T.lv-1], f=curEff(T);
+    T.pulse=(T.pulse||0)-dt; const share=!!f&&T.pulse<=0; if(T.pulse<=0) T.pulse=ANGEL.every;
+    T.nb=[];
+    for(const q of G.pegs){const U=q.tower;if(!U||q===p||U.type==='tenshi')continue;if((q.x-p.x)**2+(q.y-p.y)**2>R*R)continue;
+      T.nb.push(q);
+      if(!(U.bless>G.time)){U.blessK=k;U.blessC=c}else{U.blessK=Math.max(U.blessK||1,k);U.blessC=Math.min(U.blessC||1,c)}
+      U.bless=Math.max(U.bless||0,G.time+.15);
+      if(share){shareEff(U,f);G.obs.push({k:'feather',x0:p.x,y0:p.y-p.r,p:q,t:0,dur:.5,c:effColor(f)})}
+    }
+    if(share&&T.nb.length) sfx.bless();
+  },
+  gun(T,R){   // 天使の 羽（左右）と 頭の上の 光の輪（砲台の向きは いつも上）
+    const t=G.time, fl=Math.sin(t*3)*.12;
+    for(const s of [-1,1]){
+      ctx.save(); ctx.rotate(s*(.25+fl));
+      for(let i=0;i<4;i++){const L=R*(1.25-i*.2), a=s*(.35+i*.32);
+        ctx.save(); ctx.rotate(a); ctx.fillStyle=i%2?'#fff4fa':'#ffffff'; ctx.strokeStyle='rgba(200,150,190,.85)'; ctx.lineWidth=.6;
+        ctx.beginPath(); ctx.ellipse(-R*.05,s*L*.55,R*.17,L*.55,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore()}
+      ctx.restore();
+    }
+    const x=R*1.15;
+    ctx.globalCompositeOperation='lighter'; glow('#ffe08a',x,0,R*.8,.35+.1*Math.sin(t*4)); ctx.globalCompositeOperation='source-over';
+    ctx.strokeStyle='#ffd04a'; ctx.lineWidth=R*.12; ctx.beginPath(); ctx.ellipse(x,0,R*.12,R*.46,0,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='#fffbe8'; ctx.lineWidth=R*.04; ctx.stroke();
+  },
+  over(p,T,t){   // しゅくふくしている 砲台へ 金の 点線
+    if(!T.nb||!T.nb.length) return;
+    ctx.save(); ctx.globalAlpha=.35+.15*Math.sin(t*3); ctx.strokeStyle=curEff(T)?effColor(curEff(T)):'#ffe08a'; ctx.lineWidth=1; ctx.setLineDash([2,5]); ctx.lineDashOffset=-t*14;
+    for(const q of T.nb){ctx.beginPath();ctx.moveTo(p.x,p.y-p.r*.4);ctx.lineTo(q.x,q.y-q.r*.4);ctx.stroke()}
+    ctx.restore(); ctx.globalAlpha=1;
+    for(const q of T.nb){const y=q.y-q.r-7+Math.sin(t*3+q.id)*1.2;ctx.strokeStyle=hexA('#ffe08a',.75);ctx.lineWidth=1.1;ctx.beginPath();ctx.ellipse(q.x,y,4.6,1.5,0,0,Math.PI*2);ctx.stroke()}   // 小さな 光の輪
+  },
+});
+
+// ---- 光の輪（ギミック） ----
+// 砲台の 上に 光の輪。玉が 輪を くぐると 金色の玉（b.gold＝HALO.t 秒）になって 少し ふわっと おちる（HALO.float 秒）。1つの玉は 同じ輪で1回。
+// 金色の玉が 砲台に当たると（pegHit の goldHit）：経験値 +HALO.xp・いまの バフが HALO.long 倍 長く・HALO.keep 秒 ダメージ×HALO.k（しゅくふく）・コイン +HALO.coin。
+// 宿った輪は、くぐった玉に 効き目を 宿す（b.inf）＋ くぐるとき まわり HALO.ringR の おばけに 効き目（属性は みんな、とくしゅ効果・わざは 受け皿に近い2体。HALO.cd 秒に1回）
+function haloPass(b,p,T){
+  (b.halo||(b.halo={}))[p.id]=1; b.gold=HALO.t; b.goldF=HALO.float; b.goldFrom=p.id; T.hfl=.35;
+  G.rings.push({x:p.x,y:p.y+HALO.y,R:12,c:'rgba(255,230,140,.95)',t:.3});
+  for(let i=0;i<(reduce?2:5);i++){const a=Math.random()*6.28;FXK.twinkle.pop(b.x,b.y,Math.cos(a)*1.4,Math.sin(a)*1.4,a,i,'#ffe08a')}
+  const f=curEff(T);
+  if(f){
+    b.inf=f; b.infT=GM.infT; b.infFrom=p.id;
+    if(!(T.gcd>0)){T.gcd=HALO.cd;const R=HALO.ringR, dmg=towerDmg(T,TOWERS[T.type])*GM.k;
+      G.rings.push({x:p.x,y:p.y,R,c:hexA(effColor(f),.75),t:.4}); effFx(f,p.x,p.y,5);
+      const hit=G.en.filter(e=>!e.dead&&!(e.ghost>0)&&(e.x-p.x)**2+(e.y-p.y)**2<=(R+e.r*.5)**2).sort((a,b)=>b.y-a.y);
+      hit.forEach((e,i)=>{if(f.el||i<SOUND_FX)applyEff(e,f,dmg)})}
+  }
+  sfx.halo();
+}
+function goldHit(p,b){
+  const T=p.tower; if(!T) return;
+  T.xp+=HALO.xp; if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,TOWERS[T.type].color,14);sfx.lv()}
+  const L=BUFF_T*HALO.long; for(const k of ['elT','spT','comboT','pow','rapid']) if(T[k]>0) T[k]=Math.max(T[k],L);
+  if(!(T.bless>G.time)){T.blessK=HALO.k;T.blessC=1}else T.blessK=Math.max(T.blessK||1,HALO.k);
+  T.bless=Math.max(T.bless||0,G.time+HALO.keep);
+  G.balls+=HALO.coin; if(G.time-(T.gtx??-9)>.6){T.gtx=G.time;addText(p.x,p.y-18,'+'+HALO.coin,GOLD)}
+  burst(p.x,p.y,'#ffe08a',4);
+}
+Object.assign(GIMMICKS.halo,{
+  step(b,p,T,h){
+    if(b.goldFrom===p.id&&b.gold>0){b.gold-=h/60;if(b.goldF>0&&b.vy>0){b.vy-=BALLS[b.t].g*HALO.lift*h;b.vy*=Math.pow(1-HALO.drag,h);b.goldF-=h/60}}   // 金色の玉は 少し ふわっと
+    if(b.rail||(b.halo&&b.halo[p.id])) return;
+    const ry=p.y+HALO.y, ny=b.y+b.vy*h;
+    if((b.y-ry)*(ny-ry)>0||Math.abs(b.x+b.vx*h*.5-p.x)>HALO.w) return;
+    haloPass(b,p,T);
+  },
+  tick(p,T,dt){T.hfl=Math.max(0,(T.hfl||0)-dt)},
+  draw(p,T,t,c){   // 砲台の 上に うかぶ 金の 光の輪（くぐると ぴかっ）と まわる きらきら
+    const y=p.y+HALO.y+Math.sin(t*2+p.id)*.8, k=(T.hfl||0)/.35, col=c||'#ffd04a';
+    ctx.globalCompositeOperation='lighter'; glow(c||'#ffe08a',p.x,y,HALO.w+8,.22+(c?.12:0)+.45*k); ctx.globalCompositeOperation='source-over';
+    ctx.strokeStyle='rgba(60,30,10,.4)'; ctx.lineWidth=3.6; ctx.beginPath(); ctx.ellipse(p.x,y,HALO.w,4.2,0,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle=k>0?'#ffffff':col; ctx.lineWidth=2; ctx.stroke();
+    ctx.strokeStyle=c?mixW(c,.5):'#fffbe8'; ctx.lineWidth=.7; ctx.beginPath(); ctx.ellipse(p.x,y-.4,HALO.w-1.6,3,0,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+    const a=t*2.2+p.id; ctx.globalAlpha=.9; sparkle(ctx,p.x+Math.cos(a)*HALO.w,y+Math.sin(a)*4.2,2.2,'#ffffff'); ctx.globalAlpha=1;
+  },
+});
+// 金色の玉の 絵（drawBall から）
+function goldBall(b,r,front){
+  if(!front){ctx.globalCompositeOperation='lighter';glow('#ffd84a',b.x,b.y,r*3,.6);ctx.globalCompositeOperation='source-over';return}
+  ctx.fillStyle='rgba(255,205,70,.42)'; circle(b.x,b.y,r); ctx.fill();
+  ctx.strokeStyle='#ffe27a'; ctx.lineWidth=1.4; circle(b.x,b.y,r+.9); ctx.stroke();
+}
+
+// ---- 台の上の小物（羽・にじ・光・王さまの 火） ----
+Object.assign(OBJK,{
+  feather:{step(o,dt){o.t+=dt;return o.t<o.dur},   // てんしタワーの 羽が となりの 砲台へ
+    top(o,t){const u=o.t/o.dur, x=o.x0+(o.p.x-o.x0)*u, y=o.y0+(o.p.y-o.p.r-o.y0)*u-18*Math.sin(u*Math.PI);
+      ctx.globalCompositeOperation='lighter'; glow(o.c,x,y,7,.6*(1-u*.5)); ctx.globalCompositeOperation='source-over';
+      ctx.save(); ctx.translate(x,y); ctx.rotate(u*4); ctx.fillStyle='#fffaf2'; ctx.beginPath(); ctx.ellipse(0,0,1.8,4.4,0,0,Math.PI*2); ctx.fill(); ctx.restore()}},
+  rbarc:{step(o,dt){o.t+=dt;return o.t<o.max},   // にじの アーチが ひろがる
+    top(o,t){const u=o.t/o.max, R=o.R*(.5+u*.7); ctx.lineWidth=2.2;
+      RAINBOW.forEach((c,i)=>{ctx.globalAlpha=(1-u)*.85;ctx.strokeStyle=c;ctx.beginPath();ctx.arc(o.x,o.y+R*.3,R-i*2.4,Math.PI*1.08,Math.PI*1.92);ctx.stroke()}); ctx.globalAlpha=1}},
+  bridge:{step(o,dt){o.t+=dt;return o.t<o.max},   // にじのかけはし（敵と 敵を むすぶ にじ）
+    top(o,t){const u=o.t/o.max; ctx.lineWidth=1.6;
+      for(let k=1;k<o.pts.length;k++){const [x0,y0]=o.pts[k-1], [x1,y1]=o.pts[k], mx=(x0+x1)/2, my=Math.min(y0,y1)-30;
+        RAINBOW.forEach((c,i)=>{ctx.globalAlpha=(1-u)*.9;ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(x0,y0-i*1.6);ctx.quadraticCurveTo(mx,my-i*1.6,x1,y1-i*1.6);ctx.stroke()})}
+      ctx.globalAlpha=1}},
+  pfx:{step(o,dt){o.t+=dt;return o.t<o.max},   // せいか・ほか：さっと 光の柱
+    top(o,t){const u=o.t/o.max, a=1-u; ctx.save(); fieldPath(ctx,RO,H-6); ctx.clip(); ctx.globalCompositeOperation='lighter';
+      const g=ctx.createLinearGradient(0,o.y-120,0,o.y); g.addColorStop(0,'rgba(255,240,190,0)'); g.addColorStop(1,hexA(o.c,.55*a)); ctx.fillStyle=g; ctx.fillRect(o.x-9*(1-u*.5),o.y-120,18*(1-u*.5),124);
+      glow(o.c,o.x,o.y,22,.7*a); ctx.restore()}},
+  eclipse:{step(o,dt){o.t+=dt;return o.t<o.max},   // にっしょく：くらい まると 金の 光の ふち
+    top(o,t){const u=o.t/o.max, a=Math.min(1,(1-u)*2), R=14+u*10;
+      ctx.globalCompositeOperation='lighter'; glow('#ffe08a',o.x,o.y,R*2,.6*a); ctx.globalCompositeOperation='source-over';
+      ctx.globalAlpha=a*.85; ctx.fillStyle='#120a28'; circle(o.x,o.y,R); ctx.fill(); ctx.strokeStyle='#fff0b8'; ctx.lineWidth=1.6; ctx.stroke(); ctx.globalAlpha=1}},
+  uheal:{step(o,dt){o.t+=dt;return o.t<o.max},   // ユニコーンの 回復の にじの わっか
+    back(o,t){const u=o.t/o.max, R=o.R*(.3+u*.7); ctx.lineWidth=2;
+      RAINBOW.forEach((c,i)=>{ctx.globalAlpha=(1-u)*.6;ctx.strokeStyle=c;circle(o.x,o.y,R-i*2.2);ctx.stroke()}); ctx.globalAlpha=1}},
+  kfire:{step(o,dt){o.t+=dt;if(o.t<o.dur)return true;const T=o.p.tower;if(T&&!(T.scorch>0)){T.scorch=KING.lock;burst(o.p.x,o.p.y,'#ff6a8a',8);sfx.jyu()}return false},   // 王さまの 火の玉
+    top(o,t){const u=Math.min(1,o.t/o.dur), x=o.x0+(o.p.x-o.x0)*u, y=o.y0+(o.p.y-o.y0)*u;
+      ctx.globalCompositeOperation='lighter'; glow('#ff6a3d',x,y,10,.9); glow('#ffe08a',x,y,4,.9); ctx.globalCompositeOperation='source-over'}},
+});
+
+// ---- 天国のおばけのいたずら ----
+// どの おばけも：王さまの 遠ぼえで 速く（e.kRush）・パンダの 光のたて（e.lsh＝ふせげる 弾の数、e.lshT＝のこり秒。玉が当たると われる）
+function heavenTick(e,dt,o){
+  if(e.kRush>0){e.kRush=Math.max(0,e.kRush-dt);o.mv*=KING.rushK;if(!o.held&&Math.random()<dt*8)G.parts.push({x:e.x+(Math.random()-.5)*e.r*1.4,y:e.y-e.r*.9,vx:0,vy:-1.4,t:.3,c:'#ffe27a'})}
+  if(e.lshT>0){e.lshT=Math.max(0,e.lshT-dt);if(!e.lshT)e.lsh=0}
+  e.lshHit=Math.max(0,(e.lshHit||0)-dt);
+}
+function heavenBullet(e,u){   // 光のたて：砲台の弾を ふせぐ（PANDA.n 回で われる）
+  if(!(e.lsh>0&&e.lshT>0)) return false;
+  e.lsh--; e.lshHit=.15; burst(u.x,u.y,'#fff0b8',3);
+  if(e.lsh<=0){e.lshT=0;shieldBreak(e)}else sfx.kin();
+  return true;
+}
+function heavenBall(e){if(e.lsh>0&&e.lshT>0){e.lsh=0;e.lshT=0;shieldBreak(e)}}
+function shieldBreak(e){
+  for(let i=0;i<(reduce?3:8);i++){const a=Math.random()*6.28,s=1+Math.random()*2;FXK.plume.pop(e.x,e.y,Math.cos(a)*s,Math.sin(a)*s,a,i,null)}
+  G.rings.push({x:e.x,y:e.y,R:e.r*2,c:'rgba(255,240,180,.9)',t:.35}); sfx.lbreak();
+}
+function drawLShield(e,r,t,P){   // 光のたて：金の まくと、まわる 小さな 羽（のこりの 数）
+  if(!(e.lsh>0&&e.lshT>0)||e.dying) return;
+  const a=Math.min(1,e.lshT*2), cy=-r*.15;
+  glowIn('#fff0b8',0,cy,r*1.8,(.15+(e.lshHit>0?.4:0))*a,P.ga); ctx.globalAlpha=P.ga*a;
+  ctx.strokeStyle='rgba(255,236,170,.8)'; ctx.lineWidth=Math.max(1,r*.05); ctx.beginPath(); ctx.ellipse(0,cy,r*1.35,r*1.3,0,0,Math.PI*2); ctx.stroke();
+  ctx.fillStyle='rgba(255,246,210,.12)'; ctx.fill();
+  for(let i=0;i<e.lsh;i++){const q=t*2+i/Math.max(1,e.lsh)*Math.PI*2, x=Math.cos(q)*r*1.35, y=cy+Math.sin(q)*r*1.3;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(q); ctx.fillStyle='#fffaf2'; ctx.strokeStyle='#e8c060'; ctx.lineWidth=.6; ctx.beginPath(); ctx.ellipse(0,0,r*.1,r*.24,0,0,Math.PI*2); ctx.fill(); ctx.stroke(); ctx.restore()}
+  ctx.globalAlpha=P.ga;
+}
+function cloudPuff(e){for(let i=0;i<(reduce?3:7);i++)fxMist(e.x,e.y+e.r*.4,e.r*1.6,i%2?'#ffffff':'#ffe0f4',true);G.rings.push({x:e.x,y:e.y,R:e.r*1.7,c:'rgba(255,240,250,.85)',t:.35})}
+Object.assign(ENEMIES.hitsuji,{   // ひつじ：雲に のって ふわふわ。ときどき 雲に かくれる（すけすけ＝ねらわれない）。玉が当たると 雲が晴れて HITSUJI.lock 秒 かくれられない
+  init(e){e.hz='walk';e.ht=HITSUJI.first*(.6+Math.random()*.8);e.clear=0},
+  tick(e,dt,o){heavenTick(e,dt,o);
+    e.clear=Math.max(0,e.clear-dt); o.wob=Math.sin(e.born*1.6+e.ph)*.3;
+    if(e.hz==='hide'){
+      if(!(e.ghost>0)){e.hz='walk';e.ht=HITSUJI.every;return}   // 玉・ひかりで 雲が 晴れた
+      e.ghost=1; o.mv*=HITSUJI.k; e.ht-=dt;
+      if(e.ht<=0){e.ghost=0;e.hz='walk';e.ht=HITSUJI.every*(.8+Math.random()*.4);cloudPuff(e)}
+      return;
+    }
+    if(o.held||o.stop||e.clear>0) return;
+    e.ht-=dt; if(e.ht<=0&&e.y>60){e.hz='hide';e.ht=HITSUJI.hide;e.ghost=1;cloudPuff(e);sfx.baa()}
+  },
+  ballHit(e){heavenBall(e);if(!(e.clear>0))cloudPuff(e);e.clear=HITSUJI.lock;if(e.hz==='hide'){e.hz='walk';e.ht=HITSUJI.every}return false},
+  bulletHit:(e,u)=>heavenBullet(e,u),
+  mood:e=>e.dying?null:e.hz==='hide'?'laugh':null,
+});
+function flock(e){   // はと：1羽が とぶと 近くの はとも いっしょに（群れ）
+  let n=0;
+  for(const o of G.en){if(o.dead||o.t!=='hato'||o.hz!=='walk'||o.walk>0||o.pure>0||o.stun>0||o.sleep>0)continue;if(o!==e&&(o.x-e.x)**2+(o.y-e.y)**2>HATO.R*HATO.R)continue;o.hz='flap';o.ht=HATO.flap+(o===e?0:Math.random()*.15);n++}
+  if(n) sfx.poppo();
+}
+function featherPuff(e){for(let i=0;i<(reduce?3:8);i++){const a=Math.random()*6.28,s=.8+Math.random()*1.6;FXK.plume.pop(e.x,e.y,Math.cos(a)*s,Math.sin(a)*s,a,i,i%2?'#c8d8f0':null)}}
+Object.assign(ENEMIES.hato,{   // はと：群れで とぶ（近くの はとも いっしょに）→ 一気に 前へ。玉が当たると 羽が ちって しばらく 歩くだけ（とんでいる時なら おちて 目がまわる）
+  init(e){e.hz='walk';e.ht=HATO.first*(.6+Math.random()*.8);e.walk=0},
+  tick(e,dt,o){heavenTick(e,dt,o);
+    e.walk=Math.max(0,e.walk-dt);
+    if(e.hz==='flap'){o.mv=0;o.wob=0;e.ht-=dt;e.hopY=Math.max(0,Math.min(1,(HATO.flap-e.ht)/HATO.flap))*.4;if(e.ht<=0){e.hz='fly';e.ht=HATO.fly}return}
+    if(e.hz==='fly'){
+      o.mv*=HATO.k; o.wob=Math.sin(e.born*9)*.2; e.hopY=.5; e.ht-=dt;
+      e.trailT=(e.trailT||0)-dt; if(e.trailT<=0){e.trailT=.07;e.trail.push({x:e.x,y:e.y,a:.35})}
+      if(Math.random()<dt*6) fxAdd({k:'plume',x:e.x+(Math.random()-.5)*e.r*2,y:e.y,vx:0,vy:.3,a:Math.random()*6.28,va:3,max:.5,s:2,c:null});
+      if(e.ht<=0||o.held){e.hz='walk';e.ht=HATO.every*(.8+Math.random()*.4);e.hopY=0}
+      return;
+    }
+    if(e.hz==='fall'){o.mv=0;o.wob=0;e.ht-=dt;if(e.ht<=0){e.hz='walk';e.ht=HATO.every}return}
+    o.wob=Math.sin(e.born*5+e.ph)*.25;   // ぽっぽ（首を ふって 歩く）
+    if(o.held||o.stop||e.walk>0) return;
+    e.ht-=dt; if(e.ht<=0&&e.y>50&&e.y<480) flock(e);
+  },
+  ballHit(e){heavenBall(e);if(e.hz==='fly'||e.hz==='flap'){e.hz='fall';e.ht=HATO.fall;e.hopY=0;e.oops=.6;sfx.pote()}else if(e.hz==='walk')e.ht=Math.max(e.ht,1);if(!(e.walk>0))featherPuff(e);e.walk=HATO.walk;return false},
+  bulletHit:(e,u)=>heavenBullet(e,u),
+  mood:e=>e.dying?null:e.hz==='fly'?'laugh':e.hz==='flap'?'wow':e.hz==='fall'?'dizzy':null,
+});
+function uniHeal(e){   // ユニコーン：まわりの おばけを 回復（中ボス・ボスは 少しだけ）
+  for(const o of G.en){if(o.dead||o.fake)continue;if((o.x-e.x)**2+(o.y-e.y)**2>UNI.R*UNI.R)continue;
+    if(o.hp<o.max){o.hp=Math.min(o.max,o.hp+o.max*(ENEMIES[o.t].boss?UNI.boss:UNI.heal));o.hpVis=2;for(let i=0;i<2;i++)G.parts.push({x:o.x+(Math.random()-.5)*o.r,y:o.y-o.r*.6,vx:0,vy:-1.2,t:.5,c:'#9ff0b8'})}}
+  G.obs.push({k:'uheal',x:e.x,y:e.y,R:UNI.R,t:0,max:.7}); twinkleBurst(e,'#ffd6f4',8);
+}
+Object.assign(ENEMIES.unicorn,{   // ユニコーン：ときどき 角が光って（ためている間に 玉が当たると止まる）まわりの おばけを 回復。玉が当たると 角が くもって UNI.cloud 秒 回復できない
+  init(e){e.ut=UNI.first*(.6+Math.random()*.8);e.ug=0;e.fog=0},
+  tick(e,dt,o){heavenTick(e,dt,o);
+    e.fog=Math.max(0,e.fog-dt); o.wob=Math.sin(e.born*1.4+e.ph)*.15;
+    if(e.ug>0){o.mv*=.4;e.ug-=dt;if(Math.random()<dt*14)fxAdd({k:'prism',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*1.5,vx:(Math.random()-.5)*.6,vy:-.4,max:.5,s:2.2,ci:Math.random()*6|0,c:null});if(e.ug<=0){e.ug=0;e.ut=UNI.every;uniHeal(e)}return}
+    if(o.held||e.fog>0) return;
+    e.ut-=dt; if(e.ut<=0){e.ug=UNI.glow;sfx.hihin()}
+  },
+  ballHit(e){heavenBall(e);if(e.ug>0){e.ug=0;e.ut=UNI.every*.6;stopMischief(e)}if(!(e.fog>0))for(let i=0;i<4;i++)fxMist(e.x,e.y-e.r*1.3,e.r*.8,'#e8e4f0',true);e.fog=UNI.cloud;return false},
+  bulletHit:(e,u)=>heavenBullet(e,u),
+  mood:e=>e.dying?null:e.ug>0?'wow':null,
+});
+function castShield(e){   // てんしのパンダ：まわりの おばけに 光のたて
+  for(const o of G.en){if(o.dead||o===e||o.fake)continue;if((o.x-e.x)**2+(o.y-e.y)**2>PANDA.R*PANDA.R)continue;o.lsh=PANDA.n;o.lshT=PANDA.t;G.rings.push({x:o.x,y:o.y,R:o.r*1.7,c:'rgba(255,240,180,.85)',t:.35})}
+  G.obs.push({k:'wave',x:e.x,y:e.y-e.r*.4,r0:e.r,R:PANDA.R,t:0,max:.7,c:'#fff0b8'}); sfx.lshield();
+}
+Object.assign(ENEMIES.panda,{   // てんしのパンダ（中ボス）：おいのり（玉が当たると止まる）→ まわりの おばけに 光のたて（砲台の弾を PANDA.n 回 ふせぐ。玉が当たると われる）
+  init(e){e.pt=PANDA.first;e.pray=0},
+  tick(e,dt,o){if(e.fake)return;heavenTick(e,dt,o);
+    if(e.pray>0){o.mv=0;o.wob=0;e.pray-=dt;if(Math.random()<dt*10)FXK.plume.spawn(e.x+(Math.random()-.5)*e.r*2,e.y-e.r*1.2,false,null);if(e.pray<=0){e.pray=0;e.pt=PANDA.every;castShield(e)}return}
+    if(o.held) return;
+    e.pt-=dt; if(e.pt<=0){e.pray=PANDA.pray;sfx.pray();G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:'rgba(255,240,180,.85)',t:.45})}
+  },
+  ballHit(e){heavenBall(e);if(e.pray>0){e.pray=0;e.pt=PANDA.every*.6;stopMischief(e)}return false},
+  bulletHit:(e,u)=>heavenBullet(e,u),
+  mood:e=>e.dying?null:e.pray>0&&!(e.stun>0)?'idle':null,
+});
+// おばけの王さま（ボス）：これまでの台の ボスの いたずらを 1つずつ じゅんばんに（さいごの ふりかえり）。KING.aim 秒 ためて（頭の上に その台の しるし）→ KING.dur 秒。
+// ためている・いたずら中に 玉が当たると 止まる（その いたずらで 止めた 砲台も もどる）
+const KTRICK=[{k:'dash',c:'#d65cff'},{k:'root',c:'#7ee36a'},{k:'howl',c:'#7fb2ff'},{k:'sand',c:'#ffd24a'},{k:'snow',c:'#dff0ff'},{k:'fire',c:'#ff4f7a'},{k:'fan',c:'#3ee8d0'},{k:'gulp',c:'#6a9cff'}];   // 草原の馬・森の大木・洋館のオオカミ・砂漠のスフィンクス・雪山のマンモス・火山のドラゴン・魔王城のまおう・宇宙のクジラ
+const kTrick=e=>e.kAct>0||e.kAim>0?KTRICK[e.ki].k:null;
+function nearTowers(e,R,n){return G.pegs.filter(p=>p.tower&&!(p.tower.bind>0||p.tower.snowed>0||p.tower.scorch>0)&&(p.x-e.x)**2+(p.y-e.y)**2<R*R).sort((a,b)=>((a.x-e.x)**2+(a.y-e.y)**2)-((b.x-e.x)**2+(b.y-e.y)**2)).slice(0,n)}
+function kingStart(e){
+  const k=KTRICK[e.ki].k; e.kAct=KING.dur[e.ki]; e.kLock=[];
+  if(k==='dash'){e.ghost=1;sfx.dash()}
+  else if(k==='root'){for(const p of nearTowers(e,KING.R,KING.n)){G.obs.push({k:'root',p,x0:e.x,y0:e.y+e.r*.6,t:0,dur:.6,done:false,from:e});e.kLock.push(p)}sfx.root()}
+  else if(k==='howl'){e.kw=0;sfx.howl()}
+  else if(k==='sand'){sfx.shield();G.rings.push({x:e.x,y:e.y,R:e.r*1.6,c:'rgba(255,210,74,.9)',t:.4})}
+  else if(k==='snow'){for(const p of nearTowers(e,KING.R,KING.n)){G.obs.push({k:'sbFly',p,x0:e.x+e.r*.3,y0:e.y-e.r*1.5,t:0,dur:.6,from:e});e.kLock.push(p)}sfx.toss2()}
+  else if(k==='fire'){for(const p of G.pegs.filter(p=>p.tower&&p.y>e.y&&p.y-e.y<KING.fireL&&Math.abs(p.x-e.x)<KING.fireW+p.r).sort((a,b)=>a.y-b.y).slice(0,3)){G.obs.push({k:'kfire',p,x0:e.x,y0:e.y+e.r*.5,t:0,dur:.45,from:e});e.kLock.push(p)}sfx.fwoo()}
+  else if(k==='fan') sfx.fan();
+  else if(k==='gulp') sfx.suuu();
+}
+function kingStop(e,quiet){   // いたずらを 止める（止めた 砲台も もどす）
+  const k=kTrick(e);
+  if(k==='dash') e.ghost=0;
+  if(k==='howl') for(const o of G.en) if(o.kRush>0) o.kRush=Math.min(o.kRush,.5);
+  if(e.kAct>0){
+    G.obs=G.obs.filter(o=>o.from!==e);   // まだ とんでいる 雪玉・火の玉・根っこは きえる
+    for(const p of e.kLock||[]){const T=p.tower;if(!T)continue;for(const q of ['bind','snowed','scorch'])if(T[q]>0)TLOCK[q].free(p,true)}
+  }
+  e.kAim=0; e.kAct=0; e.kLock=[]; e.kt=KING.every*.6;
+  if(!quiet) stopMischief(e);
+}
+Object.assign(ENEMIES.ousama,{
+  init(e){e.kt=KING.first;e.kq=0;e.ki=0;e.kAim=0;e.kAct=0;e.kLock=[];e.ting=0},
+  tick(e,dt,o){if(e.fake)return;heavenTick(e,dt,o);
+    e.ting=Math.max(0,(e.ting||0)-dt);
+    if(e.kAct>0){
+      const k=KTRICK[e.ki].k; e.kAct-=dt;
+      if(k==='dash'){if(!(e.ghost>0)){kingStop(e,true);return}e.ghost=1;o.mv*=KING.k;o.wob=0;e.trailT=(e.trailT||0)-dt;if(e.trailT<=0){e.trailT=.06;e.trail.push({x:e.x,y:e.y,a:.45})}}
+      else if(k==='howl'){o.mv=0;o.wob=0;e.kw-=dt;if(e.kw<=0){e.kw=.45;G.obs.push({k:'wave',x:e.x,y:e.y-e.r*.4,r0:e.r,R:KING.R,t:0,max:.7,c:'#9fc8ff'})}
+        for(const x of G.en)if(!x.dead&&x!==e&&(x.x-e.x)**2+(x.y-e.y)**2<KING.R*KING.R)x.kRush=Math.max(x.kRush||0,KING.rush)}
+      else if(k==='fan'||k==='gulp'||k==='fire'){o.mv=0;o.wob=0}
+      else if(k==='sand') o.mv*=.8;
+      if(e.kAct<=0){if(k==='dash')e.ghost=0;e.kAct=0;e.kLock=[];e.kt=KING.every}
+      return;
+    }
+    if(e.kAim>0){o.mv=0;o.wob=0;e.kAim-=dt;if(e.kAim<=0){e.kAim=0;kingStart(e)}return}
+    if(o.held) return;
+    e.kt-=dt; if(e.kt<=0){e.ki=e.kq;e.kq=(e.kq+1)%KTRICK.length;e.kAim=KING.aim;sfx.roar();G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:hexA(KTRICK[e.ki].c,.85),t:.45})}
+  },
+  bulletHit(e,u){
+    if(heavenBullet(e,u)) return true;
+    const k=e.kAct>0?KTRICK[e.ki].k:null;
+    if(k==='fan'){   // まおうの はね返し：弾が 近くの 砲台に もどって 少し おくらせる
+      e.ting=.12; let best=null,bd=150*150; for(const p of G.pegs){if(!p.tower)continue;const d=(p.x-e.x)**2+(p.y-e.y)**2;if(d<bd){bd=d;best=p}}
+      if(best){best.tower.cd+=KING.back;G.zaps.push({x1:u.x,y1:u.y,x2:best.x,y2:best.y,t:.15,c:'#3ee8d0',thin:true})}
+      if(Math.random()<.5) sfx.kin(); return true}
+    if(k==='gulp'&&!u.top){e.hp=Math.min(e.max,e.hp+u.dmg*KING.heal);e.ting=.15;e.hpVis=2.5;return true}   // クジラの すいこみ：弾を すいこんで 回復
+    return false;
+  },
+  dmgK:e=>e.kAct>0&&KTRICK[e.ki].k==='sand'?KING.sand:1,   // スフィンクスの すなのたて
+  ballHit(e){heavenBall(e);if(e.kAim>0||e.kAct>0)kingStop(e);return false},
+  mood:e=>e.dying?null:e.kAct>0&&KTRICK[e.ki].k==='gulp'?'wow':(e.kAim>0||e.kAct>0)&&!(e.stun>0)?'dash':null,
+});
+/* ---------- おばけごとの絵（天国） ---------- */
+function smallCloud(x,y,w,a,col){   // おばけの 足もとの 小さな 雲
+  ctx.globalAlpha*=a; ctx.fillStyle=col||'#fffaf6';
+  for(const [dx,dy,s] of [[-.55,.05,.36],[-.2,-.12,.46],[.22,-.1,.44],[.56,.06,.34],[0,.12,.5]]){ctx.beginPath();ctx.arc(x+dx*w,y+dy*w,s*w,0,Math.PI*2);ctx.fill()}
+  ctx.strokeStyle='rgba(200,160,220,.55)'; ctx.lineWidth=Math.max(.6,w*.04); ctx.beginPath(); ctx.arc(x-.2*w,y-.12*w,.46*w,Math.PI*1.1,Math.PI*1.9); ctx.stroke();
+  ctx.beginPath(); ctx.arc(x+.22*w,y-.1*w,.44*w,Math.PI*1.15,Math.PI*1.9); ctx.stroke();
+}
+Object.assign(ENEMIES.hitsuji,{
+  back(e,r,t,P){const {line,lw}=P;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.88,-r*.42);ctx.rotate(s*(.9+Math.sin(t*2+e.ph)*.08));   // たれ耳
+      ctx.fillStyle='#ffe4ee';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.ellipse(0,r*.12,r*.13,r*.28,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.restore()}
+    if(!(e.clear>0)&&e.hz!=='hide'&&!e.dying) smallCloud(0,r*1.02,r*.95,.95);   // のっている 雲（玉が当たると 晴れる）
+    ctx.globalAlpha=P.ga;
+  },
+  skin(e,r,ey,t,P){   // あたまの もこもこの 毛と、くるっと まいた 角
+    const {line}=P;
+    ctx.fillStyle='#fff6ea'; ctx.strokeStyle=line; ctx.lineWidth=Math.max(.8,r*.05);
+    const W=[[-.62,-.66,.26],[-.32,-.86,.3],[0,-.94,.3],[.32,-.86,.3],[.62,-.66,.26],[-.16,-.62,.24],[.18,-.62,.24]];
+    for(const [x,y,s] of W){ctx.beginPath();ctx.arc(x*r,y*r,s*r,0,Math.PI*2);ctx.fill();ctx.stroke()}
+    for(const [x,y,s] of W){ctx.fillStyle='#fff6ea';ctx.beginPath();ctx.arc(x*r,y*r+r*.04,s*r*.82,0,Math.PI*2);ctx.fill()}
+    ctx.strokeStyle='rgba(230,190,170,.7)'; ctx.lineWidth=Math.max(.6,r*.03); for(const [x,y,s] of W){ctx.beginPath();ctx.arc(x*r+s*r*.1,y*r,s*r*.45,Math.PI*.9,Math.PI*1.9);ctx.stroke()}
+    for(const s of [-1,1]){   // 角（くるっ）
+      ctx.strokeStyle='#c89a6a'; ctx.lineWidth=Math.max(1,r*.11); ctx.beginPath();
+      for(let i=0;i<=14;i++){const q=i/14, a=s*(-.4+q*4.6), rr=r*(.26-q*.17);const x=s*r*.74+Math.cos(a)*rr*s, y=-r*.38+Math.sin(a)*rr;i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+      ctx.stroke(); ctx.strokeStyle='#ffe6c0'; ctx.lineWidth=Math.max(.5,r*.04); ctx.stroke();
+    }
+  },
+  front(e,r,ey,t,P){   // かくれている間は 雲が 体を つつむ
+    if(e.hz!=='hide'||e.dying) return;
+    const k=Math.min(1,(HITSUJI.hide-e.ht)*4);
+    ctx.save(); ctx.globalAlpha=Math.min(1,P.ga/.3)*.92*k;
+    for(const [x,y,s] of [[-.75,.3,.55],[-.3,.5,.62],[.25,.5,.62],[.75,.3,.55],[0,.15,.5],[-.55,-.1,.42],[.55,-.1,.42]]){const w=Math.sin(t*2+x*5)*r*.04;ctx.fillStyle='#fff8fc';ctx.beginPath();ctx.arc(x*r+w,y*r,s*r,0,Math.PI*2);ctx.fill()}
+    ctx.strokeStyle='rgba(220,170,230,.7)'; ctx.lineWidth=Math.max(.8,r*.05); ctx.beginPath(); ctx.arc(-r*.3,r*.5,r*.62,Math.PI*1.1,Math.PI*1.8); ctx.stroke(); ctx.beginPath(); ctx.arc(r*.25,r*.5,r*.62,Math.PI*1.2,Math.PI*1.9); ctx.stroke();
+    ctx.restore(); ctx.globalAlpha=P.ga;
+  },
+  mouth(e,r,ey){ctx.beginPath();ctx.moveTo(-r*.13,ey+r*.24);ctx.quadraticCurveTo(-r*.065,ey+r*.33,0,ey+r*.25);ctx.quadraticCurveTo(r*.065,ey+r*.33,r*.13,ey+r*.24);ctx.stroke()},   // ω
+  top(e,r,t,P){drawLShield(e,r,t,P)},
+  pose(e,P){if(e.dying)return;P.lift+=e.r*(.12+.06*Math.sin(G.time*2+e.ph))},   // 雲に のって ふわふわ
+});
+Object.assign(ENEMIES.hato,{
+  back(e,r,t,P){const {line,lw}=P, fly=!e.dying&&(e.hz==='fly'||e.hz==='flap'), ruff=e.walk>0&&!e.dying;
+    const fl=fly?Math.sin(t*(e.hz==='flap'?26:18)+e.ph)*.7:Math.sin(t*2+e.ph)*.08;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.78,r*.02);ctx.rotate(s*(fly?-.4+fl:.55+fl));   // 羽（とぶと ぱたぱた。羽が ちると 少なく）
+      const n=ruff?3:5;
+      for(let i=0;i<n;i++){ctx.fillStyle=i%2?'#e4ecfa':'#f6f9ff';ctx.strokeStyle=line;ctx.lineWidth=lw*.8;ctx.beginPath();ctx.ellipse(s*r*(.2+i*.1),-r*(.05-i*.08),r*.14,r*(.42-i*.04),s*(.5+i*.25),0,Math.PI*2);ctx.fill();ctx.stroke()}
+      ctx.restore()}
+    ctx.fillStyle='#ff9ab0'; ctx.strokeStyle=line; ctx.lineWidth=lw*.8; for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.28,r*1.0,r*.1,r*.06,0,0,Math.PI*2);ctx.fill();ctx.stroke()}   // ピンクの あし
+  },
+  skin(e,r,ey,t,P){   // あたまの上は あわい 青灰色、首の まわりに にじいろの つや
+    ctx.save(); ghostPath(ctx,r,t,e.ph); ctx.clip();
+    const g=ctx.createLinearGradient(0,-r*1.1,0,ey-r*.2); g.addColorStop(0,'#b8c8e8'); g.addColorStop(1,'#e8eefa');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(-r*1.2,-r*1.2); ctx.lineTo(r*1.2,-r*1.2); ctx.lineTo(r*1.2,ey-r*.38); ctx.quadraticCurveTo(0,ey-r*.2,-r*1.2,ey-r*.4); ctx.closePath(); ctx.fill();
+    const ny=ey+r*.62; ctx.lineWidth=Math.max(1,r*.09);
+    for(const [c,o] of [['rgba(120,220,170,.55)',0],['rgba(190,140,240,.5)',r*.09]]){ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(-r*.95,ny+o);ctx.quadraticCurveTo(0,ny+r*.18+o,r*.95,ny+o);ctx.stroke()}
+    ctx.restore();
+  },
+  front(e,r,ey,t,P){   // オレンジの くちばし と オリーブの えだ
+    const y=ey+r*.3;
+    ctx.fillStyle='#ffb04a'; ctx.strokeStyle=P.line; ctx.lineWidth=Math.max(.7,r*.04);
+    ctx.beginPath(); ctx.moveTo(-r*.12,y-r*.04); ctx.lineTo(r*.12,y-r*.04); ctx.lineTo(0,y+r*.14); ctx.closePath(); ctx.fill(); ctx.stroke();
+    if(e.dying||e.walk>0) return;   // 羽が ちると えだも おとす
+    ctx.strokeStyle='#5aa04a'; ctx.lineWidth=Math.max(.8,r*.05); ctx.beginPath(); ctx.moveTo(r*.05,y+r*.02); ctx.quadraticCurveTo(r*.4,y+r*.05,r*.7,y-r*.1); ctx.stroke();
+    ctx.fillStyle='#8fd86a'; for(const [x,yy,a] of [[.3,.0,-.5],[.45,.1,.6],[.6,-.08,-.3]]){ctx.save();ctx.translate(x*r,y+yy*r);ctx.rotate(a);ctx.beginPath();ctx.ellipse(0,0,r*.1,r*.045,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+  },
+  mouth(){},
+  top(e,r,t,P){drawLShield(e,r,t,P)},
+  pose(e,P){if(e.dying)return;if(e.hz==='fly')P.rot+=Math.sin(G.time*14)*.06;else if(e.hz==='walk')P.jx+=Math.sin(e.born*10)*e.r*.04},   // 首を ふって 歩く
+});
+Object.assign(ENEMIES.unicorn,{
+  back(e,r,t,P){const {line,lw}=P;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.55,-r*.82);ctx.rotate(s*.45);   // とがった 耳
+      ctx.fillStyle='#ffffff';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(-r*.13,0);ctx.quadraticCurveTo(0,-r*.48,r*.13,0);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='#ffc8e0';ctx.beginPath();ctx.moveTo(-r*.06,-r*.02);ctx.quadraticCurveTo(0,-r*.32,r*.06,-r*.02);ctx.closePath();ctx.fill();ctx.restore()}
+    ctx.lineCap='round';   // パステルの にじの たてがみ（うしろに ながれる）
+    PASTEL.slice(0,5).forEach((c,i)=>{const x0=-r*(.1+i*.14), sw=Math.sin(t*2.4+i+e.ph)*r*.06;
+      ctx.strokeStyle=line;ctx.lineWidth=r*.2+lw;ctx.beginPath();ctx.moveTo(x0,-r*.92+i*r*.08);ctx.quadraticCurveTo(x0-r*.4+sw,-r*.5+i*r*.12,x0-r*.35+sw,r*(.1+i*.08));ctx.stroke();
+      ctx.strokeStyle=c;ctx.lineWidth=r*.2;ctx.stroke()});
+  },
+  skin(e,r,ey,t,P){   // おでこの パステルの にじの まえがみ
+    ctx.strokeStyle=P.line; ctx.lineWidth=Math.max(.6,r*.03);
+    PASTEL.slice(0,4).forEach((c,i)=>{const x=r*(-.3+i*.17), y=-r*.72+Math.abs(i-1.5)*r*.05;ctx.fillStyle=c;ctx.beginPath();ctx.moveTo(x-r*.12,y-r*.06);ctx.quadraticCurveTo(x+r*.02,y-r*.2,x+r*.14,y-r*.02);ctx.quadraticCurveTo(x+r*.04,y+r*.06,x+r*.1,y+r*.16);ctx.quadraticCurveTo(x-r*.08,y+r*.08,x-r*.12,y-r*.06);ctx.closePath();ctx.fill();ctx.stroke()});
+  },
+  top(e,r,t,P){   // おでこの 金の らせんの 角（光ると にじいろ。くもると 灰色と 雲）
+    const glowK=e.ug>0&&!e.dying?1-e.ug/UNI.glow:0, fog=e.fog>0&&!e.dying;
+    ctx.save(); ctx.translate(0,-r*.95);
+    if(glowK>0){glowIn(RAINBOW[(G.time*8|0)%6],0,-r*.3,r*(.6+glowK*.8),.5+.3*glowK,P.ga)}
+    const g=ctx.createLinearGradient(-r*.12,0,r*.12,0); g.addColorStop(0,fog?'#a8a4b8':'#ffe08a'); g.addColorStop(.5,fog?'#d8d4e4':'#fff8d8'); g.addColorStop(1,fog?'#8a86a0':'#e8b040');
+    ctx.fillStyle=g; ctx.strokeStyle=P.line; ctx.lineWidth=Math.max(.8,r*.05);
+    ctx.beginPath(); ctx.moveTo(-r*.13,0); ctx.lineTo(0,-r*.62); ctx.lineTo(r*.13,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle=fog?'rgba(120,110,140,.7)':'rgba(200,140,40,.8)'; ctx.lineWidth=Math.max(.6,r*.03); for(const y of [-.12,-.26,-.4]){ctx.beginPath();ctx.moveTo(-r*.11*(1+y*1.4),y*r);ctx.lineTo(r*.11*(1+y*1.4),y*r-r*.05);ctx.stroke()}
+    if(fog){ctx.globalAlpha=P.ga*.85;smallCloud(0,-r*.28,r*.34,1,'#ece8f4');ctx.globalAlpha=P.ga}
+    ctx.restore();
+    drawLShield(e,r,t,P);
+  },
+  eye(e,x,ey,r,s,mood){if(mood!=='idle'&&mood!=='scared')return false;   // ながい まつげ
+    ghostEye(x,ey,r,false); ctx.strokeStyle='#2b2140'; ctx.lineWidth=Math.max(.7,r*.04);
+    for(const k of [0,1]){ctx.beginPath();ctx.moveTo(x+s*r*(.06+k*.06),ey-r*.14);ctx.lineTo(x+s*r*(.14+k*.07),ey-r*(.24-k*.03));ctx.stroke()} return true},
+  mouth(e,r,ey){ctx.beginPath();ctx.arc(0,ey+r*.2,r*.12,.2,Math.PI-.2);ctx.stroke()},
+  pose(e,P){if(e.dying)return;if(e.ug>0){P.sy*=1.04;P.rot+=Math.sin(G.time*10)*.03}},
+});
+Object.assign(ENEMIES.panda,{
+  back(e,r,t,P){const {line,lw}=P, f=e.pray>0&&!e.dying?Math.sin(t*12)*.25:Math.sin(t*2.5+e.ph)*.12;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.85,-r*.2);ctx.rotate(s*(-.2+f));   // 白い 天使の 羽
+      for(let i=0;i<4;i++){ctx.fillStyle=i%2?'#fff4fa':'#ffffff';ctx.strokeStyle=hexA('#e8a0c8',.9);ctx.lineWidth=lw*.7;ctx.beginPath();ctx.ellipse(s*r*(.25+i*.12),-r*(.1-i*.12),r*.13,r*(.45-i*.06),s*(.6+i*.3),0,Math.PI*2);ctx.fill();ctx.stroke()}
+      ctx.restore()}
+    ctx.fillStyle='#2a2438'; ctx.strokeStyle=line; ctx.lineWidth=lw; for(const s of [-1,1]){ctx.beginPath();ctx.arc(s*r*.6,-r*.8,r*.22,0,Math.PI*2);ctx.fill();ctx.stroke()}   // 黒い まるい 耳
+  },
+  skin(e,r,ey,t,P){   // 目の まわりの 黒い もよう
+    ctx.fillStyle='#2a2438'; for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.32,ey+r*.02);ctx.rotate(s*-.5);ctx.beginPath();ctx.ellipse(0,0,r*.2,r*.26,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+  },
+  eye(e,x,ey,r,s,mood){   // パンダの 目（もようの 中で 白く光る）。おいのりの 間は とじる
+    if(e.pray>0&&!e.dying){ctx.strokeStyle='#ffffff';ctx.lineWidth=Math.max(1,r*.05);ctx.beginPath();ctx.moveTo(x-r*.1,ey);ctx.quadraticCurveTo(x,ey+r*.08,x+r*.1,ey);ctx.stroke();return true}
+    if(mood!=='idle'&&mood!=='scared'&&mood!=='dash')return false;
+    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.ellipse(x,ey,r*.09,r*.12,0,0,Math.PI*2); ctx.fill(); ctx.fillStyle='#2b2140'; circle(x+s*r*.01,ey+r*.02,r*.055); ctx.fill(); return true},
+  front(e,r,ey,t,P){   // 黒い はな、おいのりの 手（むねの 前で あわせる）
+    ctx.fillStyle='#2a2438'; ctx.beginPath(); ctx.ellipse(0,ey+r*.2,r*.08,r*.05,0,0,Math.PI*2); ctx.fill();
+    if(e.pray>0&&!e.dying){const y=r*.56;glowIn('#ffe08a',0,y,r*.6,.55+.2*Math.sin(t*8),P.ga);star(0,y,r*.16,'#fff4c0');   // おいのりの 手（まるい 黒い 手で 光を つつむ）
+      ctx.fillStyle='#2a2438';ctx.strokeStyle=P.line;ctx.lineWidth=Math.max(.8,r*.035);for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.2,y+r*.02,r*.11,r*.13,s*.3,0,Math.PI*2);ctx.fill();ctx.stroke()}}
+  },
+  mouth(e,r,ey){ctx.beginPath();ctx.moveTo(0,ey+r*.25);ctx.lineTo(0,ey+r*.3);ctx.moveTo(-r*.1,ey+r*.34);ctx.quadraticCurveTo(0,ey+r*.28,r*.1,ey+r*.34);ctx.stroke()},
+  top(e,r,t,P){   // 頭の上に うかぶ 天使の 輪（おいのりで 光る）
+    const k=e.pray>0&&!e.dying?1:0, y=-r*1.28+Math.sin(t*2.4+e.ph)*r*.04;
+    glowIn('#ffe08a',0,y,r*(.7+.5*k),.3+.4*k,P.ga);
+    ctx.strokeStyle='#ffd04a'; ctx.lineWidth=Math.max(1.2,r*.09); ctx.beginPath(); ctx.ellipse(0,y,r*.5,r*.14,0,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle='#fffbe8'; ctx.lineWidth=Math.max(.6,r*.03); ctx.stroke();
+    drawLShield(e,r,t,P);
+  },
+  pose(e,P){if(e.dying)return;if(e.pray>0){P.lift+=e.r*.08*Math.min(1,(PANDA.pray-e.pray)*4);P.rot*=.3}},
+});
+function drawTrickIcon(k,x,y,s,c){   // 王さまの ふきだしの しるし（その台の ボスの いたずら）
+  ctx.save(); ctx.translate(x,y); ctx.strokeStyle=c; ctx.fillStyle=c; ctx.lineWidth=s*.16; ctx.lineCap='round';
+  if(k==='dash'){for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(-s*.7,(i-1)*s*.35);ctx.lineTo(s*(.1+(i%2)*.2),(i-1)*s*.35);ctx.stroke()}ctx.beginPath();ctx.moveTo(s*.3,-s*.4);ctx.lineTo(s*.75,0);ctx.lineTo(s*.3,s*.4);ctx.stroke()}
+  else if(k==='root'){for(const d of [-1,0,1]){ctx.beginPath();ctx.moveTo(d*s*.25,-s*.6);ctx.quadraticCurveTo(d*s*.6+s*.2,0,d*s*.4,s*.6);ctx.stroke()}}
+  else if(k==='howl'){for(const R of [.3,.55,.8]){ctx.beginPath();ctx.arc(-s*.5,0,R*s,-.7,.7);ctx.stroke()}}
+  else if(k==='sand'){ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*Math.PI*2+Math.PI/6;ctx.lineTo(Math.cos(a)*s*.62,Math.sin(a)*s*.62)}ctx.closePath();ctx.stroke()}
+  else if(k==='snow'){ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(0,0,s*.5,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#8aa0d8';ctx.lineWidth=s*.08;ctx.stroke()}
+  else if(k==='fire'){ctx.beginPath();ctx.moveTo(0,s*.6);ctx.quadraticCurveTo(-s*.6,s*.1,-s*.1,-s*.65);ctx.quadraticCurveTo(0,-s*.1,s*.2,-s*.3);ctx.quadraticCurveTo(s*.6,s*.1,0,s*.6);ctx.fill()}
+  else if(k==='fan'){for(let i=0;i<5;i++){const a=-Math.PI*.85+i/4*Math.PI*.7;ctx.beginPath();ctx.ellipse(Math.cos(a)*s*.45,s*.3+Math.sin(a)*s*.45,s*.12,s*.28,a+Math.PI/2,0,Math.PI*2);ctx.fill()}}
+  else if(k==='gulp'){ctx.beginPath();for(let i=0;i<=30;i++){const a=i/30*Math.PI*4,rr=s*.08+i/30*s*.55;i?ctx.lineTo(Math.cos(a)*rr,Math.sin(a)*rr):ctx.moveTo(Math.cos(a)*rr,Math.sin(a)*rr)}ctx.stroke()}
+  ctx.restore();
+}
+Object.assign(ENEMIES.ousama,{
+  back(e,r,t,P){const {line,lw}=P;
+    const fan=kTrick(e)==='fan'&&e.kAct>0&&!e.dying;
+    if(fan){for(let i=0;i<9;i++){const a=-Math.PI*.95+i/8*Math.PI*.9;ctx.save();ctx.rotate(a+Math.PI/2);ctx.fillStyle=i%2?'#2ab8a8':'#3ee8d0';ctx.strokeStyle=line;ctx.lineWidth=lw*.7;ctx.beginPath();ctx.ellipse(0,-r*1.35,r*.2,r*.62,0,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#ffd04a';circle(0,-r*1.7,r*.07);ctx.fill();ctx.restore()}}   // まおうの 羽の おうぎ
+    ctx.fillStyle='#c8304a'; ctx.strokeStyle=line; ctx.lineWidth=lw;   // 赤い ビロードの マント（白い ふち）
+    ctx.beginPath(); ctx.moveTo(-r*.7,-r*.3); ctx.quadraticCurveTo(-r*1.3,r*.3,-r*1.2,r*1.05); ctx.lineTo(r*1.2,r*1.05); ctx.quadraticCurveTo(r*1.3,r*.3,r*.7,-r*.3); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#fffaf2'; ctx.beginPath(); ctx.moveTo(-r*1.24,r*.95); ctx.lineTo(r*1.24,r*.95); ctx.lineTo(r*1.22,r*1.12); ctx.lineTo(-r*1.22,r*1.12); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#2a2438'; for(let i=-5;i<=5;i+=2){ctx.beginPath();ctx.ellipse(i*r*.22,r*1.04,r*.03,r*.05,0,0,Math.PI*2);ctx.fill()}
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.66,-r*.78);   // まるい トラの 耳
+      ctx.fillStyle='#ffffff';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.arc(0,0,r*.24,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#ffc8d8';ctx.beginPath();ctx.arc(0,r*.03,r*.12,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#4a4058';ctx.lineWidth=r*.05;ctx.beginPath();ctx.arc(0,0,r*.24,Math.PI*1.1,Math.PI*1.9);ctx.stroke();ctx.restore()}
+  },
+  skin(e,r,ey,t,P){   // 白い トラの しま（おでこに 王の もよう・ほっぺに 2本ずつ）
+    ctx.strokeStyle='#4a4058'; ctx.lineCap='round'; ctx.lineWidth=Math.max(1,r*.06);
+    const fy=-r*.55;
+    for(const [w,y] of [[.2,-.12],[.15,0],[.22,.12]]){ctx.beginPath();ctx.moveTo(-w*r,fy+y*r);ctx.lineTo(w*r,fy+y*r);ctx.stroke()}
+    ctx.beginPath(); ctx.moveTo(0,fy-.12*r); ctx.lineTo(0,fy+.12*r); ctx.stroke();
+    for(const s of [-1,1]) for(const k of [0,1]){ctx.beginPath();ctx.moveTo(s*r*.92,ey+r*(.0+k*.18));ctx.quadraticCurveTo(s*r*.75,ey+r*(.04+k*.18),s*r*.6,ey+r*(.0+k*.2));ctx.stroke()}
+    for(const s of [-1,1]){ctx.beginPath();ctx.moveTo(s*r*.5,-r*.82);ctx.lineTo(s*r*.42,-r*.66);ctx.stroke()}
+  },
+  front(e,r,ey,t,P){   // トラの 口もと（ふっくら・ピンクの はな・ひげの 点）。クジラの すいこみ中は 口を 大きく あける
+    const y=ey+r*.3, k=kTrick(e);
+    ctx.fillStyle='#ffffff'; ctx.strokeStyle=hexA('#c8a0b0',.9); ctx.lineWidth=Math.max(.7,r*.03);
+    for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.13,y,r*.15,r*.11,0,0,Math.PI*2);ctx.fill();ctx.stroke()}
+    ctx.fillStyle='#8a7a98'; for(const s of [-1,1]) for(const [dx,dy] of [[.08,-.02],[.15,.03],[.1,.06]]){circle(s*r*dx*1.2,y+dy*r,r*.015);ctx.fill()}
+    ctx.fillStyle='#ff8aa8'; ctx.beginPath(); ctx.moveTo(-r*.07,y-r*.1); ctx.lineTo(r*.07,y-r*.1); ctx.lineTo(0,y-r*.02); ctx.closePath(); ctx.fill();
+    if(!e.dying&&e.kAct>0&&(k==='gulp'||k==='howl'||k==='fire')){const h=k==='gulp'?r*.22:r*.13;ctx.fillStyle=k==='fire'?'#ff6a3d':'#2a1040';ctx.strokeStyle=P.line;ctx.beginPath();ctx.ellipse(0,y+r*.16+h*.5,r*.16,h,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      if(k==='gulp'&&e.ting>0)glowIn('#c8f0ff',0,y+r*.2,r*.5,.6,P.ga)}
+  },
+  mouth(){},
+  top(e,r,t,P){   // 金の 王冠（ほうせき）と、いたずらの ふきだし
+    const y=-r*1.0;
+    ctx.fillStyle='#ffd04a'; ctx.strokeStyle='#8a5a10'; ctx.lineWidth=Math.max(.8,r*.035);
+    ctx.beginPath(); ctx.moveTo(-r*.5,y+r*.1); ctx.lineTo(-r*.52,y-r*.24); ctx.lineTo(-r*.28,y-r*.06); ctx.lineTo(0,y-r*.34); ctx.lineTo(r*.28,y-r*.06); ctx.lineTo(r*.52,y-r*.24); ctx.lineTo(r*.5,y+r*.1); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#fff0a8'; ctx.fillRect(-r*.5,y+r*.02,r,r*.06);
+    for(const [x,c] of [[-.3,'#ff6aa8'],[0,'#6ad8ff'],[.3,'#7ef0a0']]){ctx.fillStyle=c;circle(x*r,y-r*.02,r*.06);ctx.fill()}
+    for(const x of [-.52,0,.52]){ctx.fillStyle='#fffbe8';circle(x*r,y-(x?r*.24:r*.34),r*.045);ctx.fill()}
+    if(kTrick(e)==='sand'&&e.kAct>0&&!e.dying){glowIn('#ffd24a',0,-r*.1,r*1.8,.18,P.ga);ctx.strokeStyle='rgba(255,210,74,.75)';ctx.lineWidth=Math.max(1,r*.04);ctx.beginPath();for(let i=0;i<6;i++){const a=i/6*Math.PI*2+t;ctx.lineTo(Math.cos(a)*r*1.4,-r*.1+Math.sin(a)*r*1.3)}ctx.closePath();ctx.stroke()}   // すなの たて
+    const k=kTrick(e);
+    if(k&&!e.dying){   // ふきだし（その台の 色）
+      const bx=r*1.0, by=-r*1.55, s=r*.32, c=KTRICK[e.ki].c, pop=e.kAim>0?Math.min(1,(KING.aim-e.kAim)*5):1;
+      ctx.save(); ctx.translate(bx,by); ctx.scale(pop,pop);
+      ctx.fillStyle='rgba(20,12,40,.85)'; ctx.strokeStyle=c; ctx.lineWidth=Math.max(1,r*.04);
+      ctx.beginPath(); ctx.arc(0,0,s*1.25,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(-s*1.2,s*1.15,s*.22,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      drawTrickIcon(k,0,0,s,c);
+      ctx.restore();
+    }
+    drawLShield(e,r,t,P);
+  },
+  pose(e,P){if(e.dying)return;if(e.kAim>0){P.sx*=1.04;P.sy*=1.04;P.jx+=Math.sin(G.time*40)*e.r*.015}else if(kTrick(e)==='howl')P.rot+=Math.sin(G.time*20)*.03},
+});
+
+// ---- エンディング（さいごの台を はじめて クリアしたとき・台えらびの 王冠から もう一度）：9つの台の おばけたちが ならんで 手をふる。タップで とじる ----
+// 台の絵は 天国のまま、うしろに にじと 光。G.ending の間は draw が drawEnding を描く（update は 止まっている）
+const PARADE=[   // うしろ：ボス8体、まん中：中ボス9体、まえ：ふつうの おばけ11体、まん中の 上に 王さま
+  ['uma','taiboku','ookami','sphinx','mammoth','dragon','kujaku','kujira'],
+  ['tanuki','kuma','fukurou','sasori','seiuchi','inoshishi','yagi','tako','panda'],
+  ['wata','kinoko','neko','mia','okojo','buta','karasu','kurage','hitsuji','hato','unicorn']];
+const LAST_STAGE=()=>BOARDS[BOARDS.length-1].stage;
+const allCleared=()=>BOARDS.every(B=>G.cleared.includes(B.stage));
+function showEnding(done){
+  hideOverlays(); closeSheet(); closeBuy();
+  if(G.stage!==LAST_STAGE()){G.stage=LAST_STAGE();setupStage()}
+  G.bs=[]; G.bl=[]; G.en=[]; G.obs=[]; G.zones=[]; G.fx=[]; G.parts=[]; G.rings=[]; G.texts=[]; G.banners=[]; G.fever=0;
+  const list=[], mk=(t,x,y,r,row)=>{if(!ENEMIES[t])return;const e=addEnemy(t,x,y,{born:1,flash:0,laughT:1e9,callT:1e9,parade:true});G.en.pop();e.r=r;e.row=row;e.y0=y;list.push(e)};
+  PARADE.forEach((L,row)=>{const y=[372,438,506][row], r=[16,13.5,11.5][row], gap=Math.min(41,330/L.length);L.forEach((t,i)=>mk(t,188+(i-(L.length-1)/2)*gap,y,r,row))});
+  mk('ousama',188,262,30,-1);
+  G.ending={t0:G.time,done,list,conf:[],fw:0};
+  $('ending').hidden=false; $('app').classList.add('ending-on'); sfx.ending();
+}
+function closeEnding(){const E=G.ending;$('ending').hidden=true;G.ending=null;if(E&&E.done)E.done()}
+$('ending').onclick=()=>{ensureAudio();if(G.ending&&G.time-G.ending.t0>.6)closeEnding()};
+function drawEnding(t){
+  const E=G.ending, u=t-E.t0, dt=1/60;
+  ctx.fillStyle='rgba(16,8,40,.5)'; ctx.fillRect(-40,-40,W+80,H+80);
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  for(let i=0;i<10;i++){const a=-Math.PI/2+(i-4.5)*.22+Math.sin(t*.4+i)*.03;ctx.globalAlpha=.08+.05*Math.sin(t*1.3+i);ctx.fillStyle=i%2?'#ffe9a0':'#ffd6f4';ctx.beginPath();ctx.moveTo(188,262);ctx.lineTo(188+Math.cos(a-.05)*520,262+Math.sin(a-.05)*520);ctx.lineTo(188+Math.cos(a+.05)*520,262+Math.sin(a+.05)*520);ctx.closePath();ctx.fill()}   // 光の すじ
+  ctx.globalAlpha=1; ctx.lineWidth=7; const k=Math.min(1,u*.8);
+  PASTEL.forEach((c,i)=>{ctx.strokeStyle=hexA(c,.5*k);ctx.beginPath();ctx.arc(188,560,250-i*7,Math.PI*1.08,Math.PI*(1.08+.84*k));ctx.stroke()});   // 大きな にじ
+  glow('#ffe9a0',188,262,90,.35);
+  ctx.restore();
+  // 紙ふぶき と 花火（ときどき）
+  if(E.conf.length<(reduce?30:90)&&Math.random()<.6) E.conf.push({x:Math.random()*W,y:-10,vx:(Math.random()-.5)*.6,vy:.8+Math.random()*1.2,a:Math.random()*6.28,va:(Math.random()-.5)*.2,c:PASTEL[Math.random()*6|0],s:2+Math.random()*2.5});
+  for(const q of E.conf){q.x+=q.vx+Math.sin(t*2+q.a)*.3;q.y+=q.vy;q.a+=q.va;ctx.save();ctx.translate(q.x,q.y);ctx.rotate(q.a);ctx.fillStyle=q.c;ctx.fillRect(-q.s,-q.s*.5,q.s*2,q.s);ctx.restore()}
+  E.conf=E.conf.filter(q=>q.y<H+10);
+  E.fw-=dt; if(E.fw<=0&&!reduce){E.fw=.7+Math.random()*.6;const x=50+Math.random()*260,y=90+Math.random()*120;burst(x,y,'rainbow',18);G.rings.push({x,y,R:26,c:hexA(PASTEL[Math.random()*6|0],.9),t:.5})}
+  for(const q of G.parts){q.x+=q.vx;q.y+=q.vy;q.vy+=.05;q.t-=dt} G.parts=G.parts.filter(q=>q.t>0); for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
+  ctx.globalCompositeOperation='lighter'; for(const q of G.parts) glow(q.c,q.x,q.y,5,Math.min(1,q.t*2)); ctx.globalCompositeOperation='source-over';
+  for(const r of G.rings){ctx.globalAlpha=Math.min(1,r.t*3);ctx.strokeStyle=r.c;ctx.lineWidth=2;circle(r.x,r.y,r.R*(1.2-r.t));ctx.stroke()} ctx.globalAlpha=1;
+  // おばけたち（うしろの れつから）。ぴょこぴょこ はねて、手を ふる
+  for(const e of E.list.slice().sort((a,b)=>a.y0-b.y0)){
+    const ph=e.ph, hop=Math.abs(Math.sin(u*3.2+ph))*e.r*.3, show=Math.min(1,Math.max(0,(u-(e.row<0?.2:.4+e.row*.25+((e.x*7)%10)/40))*3));
+    if(show<=0) continue;
+    e.y=e.y0-hop+(1-show)*30; e.laughT=1e9; e.oops=0; e.hurtT=0;
+    ctx.save(); ctx.globalAlpha=show; drawEnemy(e);
+    const s=(e.x>188?1:-1)*(e.row<0?1:1), wv=Math.sin(u*9+ph)*.6, hx=e.x+s*e.r*1.02, hy=e.y-e.r*.15;   // 手（白い まるい 手を ふる）
+    ctx.translate(hx,hy); ctx.rotate(s*(-.6+wv)); ctx.fillStyle='#ffffff'; ctx.strokeStyle=hexA(ENEMIES[e.t].color,.9); ctx.lineWidth=Math.max(1,e.r*.07);
+    ctx.beginPath(); ctx.ellipse(0,-e.r*.22,e.r*.2,e.r*.3,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.restore(); ctx.globalAlpha=1;
+  }
+}
+function crownSvg(){return '<svg viewBox="0 0 32 24" aria-hidden="true"><path d="M3 20 L2 6 L9 12 L16 2 L23 12 L30 6 L29 20 Z" fill="#ffd84a" stroke="#8a5a10" stroke-width="1.4" stroke-linejoin="round"/><rect x="3" y="19" width="26" height="3.4" rx="1" fill="#fff0a8" stroke="#8a5a10" stroke-width="1"/><circle cx="9.5" cy="15" r="1.8" fill="#ff6aa8"/><circle cx="16" cy="14" r="2" fill="#6ad8ff"/><circle cx="22.5" cy="15" r="1.8" fill="#7ef0a0"/></svg>'}
+function crownBar(){   // 台えらび：ぜんぶの台を クリアした しるし（タップで エンディングを もう一度）
+  const b=el('button','crownbar',`${crownSvg()}<span><b>ぜんぶの台 クリア！</b><small>タップで もう一度 みる</small></span>`);
+  b.setAttribute('aria-label','ぜんぶの台 クリア！ タップで エンディングを もう一度 みる');
+  b.onclick=()=>{ensureAudio();showEnding(()=>openHub('board'))};
+  return b;
+}
+
 
 function draw(){
   const k=scale*dpr;
@@ -8017,6 +9073,7 @@ function draw(){
   if(G.shake>0&&!reduce){sx=(Math.random()-.5)*8*G.shake*k;sy=(Math.random()-.5)*8*G.shake*k}
   ctx.drawImage(staticCv,sx,sy);
   ctx.setTransform(k,0,0,k,ox*dpr+sx,oy*dpr+sy);
+  if(G.ending){drawEnding(G.time);return}                       // エンディング（天国の区切り）
   const S=STAGES[G.stage], t=G.time, Q=G.heso, fev=G.fever>0;
   ctx.lineCap='round';
 
@@ -8131,7 +9188,7 @@ function setStrength(s){
   $('dialKnob').style.transform=`rotate(${-135+G.strength*270}deg)`;
   $('handle').setAttribute('aria-valuenow',pc);
 }
-function hideOverlays(){for(const id of ['title','result','hub']) $(id).hidden=true}
+function hideOverlays(){for(const id of ['title','result','hub','ending']) $(id).hidden=true;G.ending=null;$('app').classList.remove('ending-on')}
 function showResult(title,lines,btn,fn,btn2,fn2){
   $('resTitle').textContent=title;
   const ul=$('resLines'); ul.textContent='';
@@ -8209,7 +9266,8 @@ function stageClear(){
     if(st==='buy') lines.push(`<b class="newb">${nm}の台が買えるようになったよ</b>`,`台えらびで ${COIN}${B.price} でアンロック`);
     else{lines.push(`<b class="newb">${nm}の台が開いたよ！</b>`);const n=newItems(B.stage);if(n.length)lines.push(`お店に ${n.join('・')} がふえた`)}
   }
-  showResult(`${S.name}の台 クリア！`,lines,'台えらびへ',()=>{hallIdx=Math.min(BOARDS.length-1,(G.boardIdx??0)+(first?1:0));openHub('board')},'お店へ',()=>openHub('ball'));
+  const res=()=>showResult(`${S.name}の台 クリア！`,lines,'台えらびへ',()=>{hallIdx=Math.min(BOARDS.length-1,(G.boardIdx??0)+(first?1:0));openHub('board')},'お店へ',()=>openHub('ball'));
+  if(first&&G.stage===LAST_STAGE()) showEnding(res); else res();   // さいごの台を はじめて クリア → エンディング（タップで とじると クリアの画面）
 }
 function gameOver(){
   G.state='over'; closeSheet(); G.balls+=G.feverPay; G.feverPay=0; G.fever=0; writeSave();
@@ -8313,6 +9371,7 @@ let hallIdx=0, hallRO=null;
 function tabBoard(body){
   body.classList.add('hall');
   body.append(setStrip());
+  if(allCleared()) body.append(crownBar());   // ぜんぶの台 クリアの 王冠（天国の区切り）
   hallIdx=Math.max(0,Math.min(BOARDS.length-1,hallIdx));
   const wrap=el('div','hallwrap'), aisle=el('div','aisle');
   aisle.setAttribute('aria-label','台のならび（左右にスワイプ）');
@@ -8530,6 +9589,7 @@ function towerTags(k,T){
     if(T.comboT>0) o.push([comboOf(T.combo).name,comboOf(T.combo).color,T.comboT]);
     if(T.pow>0) o.push(['強撃','#ffb36b',T.pow]);
     if(T.rapid>0) o.push(['速射','#7ff3ff',T.rapid]);
+    if(T.bless>G.time) o.push(['しゅくふく','#ffe08a']);
     if(G.fever>0) o.push(['FEVER',GOLD]);
   }
   return o.length?'<div class="tags">'+o.map(([t,c,left])=>`<span class="tg" style="--c:${c}">${t}${left!=null?`<i style="width:${Math.max(4,Math.min(100,left/BUFF_T*100))|0}%"></i>`:''}</span>`).join('')+'</div>':'';
