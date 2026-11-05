@@ -1,5 +1,5 @@
 // 自動プレイ（キャンペーン）：草原から順に、クリアするまでくり返す。負けるたび・クリアのたびにお店で買う。
-// opts: {upTo:台の番号, tries:1台の最大回数, gm:'ari' で つけるギミックを えらぶ, shop0:true で from の台の1回目の前に お店で買う（'none'＝つけない。ギミックは全部 持っている形にして、お店で買わない。ギミックごとに分けて強さを測る）, st:{台番号:{hp:..}} で数字をためす, obj:{HONEY:{heal:.2}} で mk.py が出した入れものを上書き, log:true でウェーブごとのライフ, bt:true でボスが出てから決着までの秒（ゲーム内。終わらなければ +）, boss:true で負けたときのボスののこりHP, from:台の番号（下の説明）, deck:true で台に入るときのセットも出す}
+// opts: {upTo:台の番号, tries:1台の最大回数, gm:'ari' で つけるギミックを えらぶ, shop0:true で from の台の1回目の前に お店で買う（'none'＝つけない。ギミックは全部 持っている形にして、お店で買わない。ギミックごとに分けて強さを測る）, st:{台番号:{hp:..}} で数字をためす, obj:{HONEY:{heal:.2}} で mk.py が出した入れものを上書き, log:true でウェーブごとのライフ, bt:true でボスが出てから決着までの秒（ゲーム内。終わらなければ +）, boss:true で負けたときのボスののこりHP, from:台の番号（下の説明）, deck:true で台に入るときのセットも出す, towers:[...] で 建てる タワーの ならび（くり返す）}
 (opts)=>{
 const T=window.__T,G=T.G;
 if(opts.st) for(const i in opts.st) Object.assign(T.STAGES[i],opts.st[i]);
@@ -11,7 +11,8 @@ const avail=D=>!D.board||T.stageOpen(D.board);
 function runBoard(i){
   const c0=G.balls; T.playBoard(i); G.paused=true; G.banners=[];
   const types=Object.keys(T.TOWERS).filter(k=>G.unlocked[k]&&avail(T.TOWERS[k])&&k!=='long');
-  const pick=types.length>1?types.filter(k=>k!=='basic'):types;
+  let pick=types.length>1?types.filter(k=>k!=='basic'):types;
+  if(opts.towers){const L=opts.towers.filter(k=>G.unlocked[k]&&avail(T.TOWERS[k]));if(L.length)pick=L}   // towers:['holy','tenshi','fire'] … 建てる タワーの ならびを えらぶ（持っている物だけ。なければ ふだんの ならび）
   let n=0,t=0,act=0,lw=0,boss=null,bs=null; const dt=1/60, lives=[];
   while(G.state==='play'&&t<900){
     if(G.wave!==lw){lw=G.wave;lives.push(G.life)}
