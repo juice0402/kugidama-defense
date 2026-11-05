@@ -346,13 +346,13 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
 // 玉：タワーに当たるとバフをつける（デッキビルド）。属性弾はタワーにも敵にも属性をつける
 const BALLS={
   normal:{name:'ノーマル玉',color:'#dfe6ec',e:.5,g:.16,r:5,dmg:1,price:0,desc:'タワーに当てると経験値がたまる'},
-  fire:{name:'火炎弾',color:'#ff7a3d',el:'fire',e:.5,g:.16,r:5,dmg:1,price:45,desc:'「火」をつける。燃えた敵は少しずつダメージ'},
-  ice:{name:'氷結弾',color:'#8fe3ff',el:'ice',e:.5,g:.16,r:5,dmg:1,price:45,desc:'「氷」をつける。こおった敵はおそくなる'},
-  bolt:{name:'雷弾',color:'#ffe14f',el:'bolt',e:.5,g:.16,r:5,dmg:1,price:50,desc:'「雷」をつける。近くの敵にもとびうつる'},
-  poison:{name:'毒弾',color:'#c08bff',el:'poison',e:.5,g:.16,r:5,dmg:1,price:40,desc:'「毒」をつける。重なって長くつづく'},
-  lead:{name:'鉛玉',color:'#8e98a6',e:.28,g:.2,r:6.5,dmg:3,price:50,buff:'pow',desc:'重くて跳ねない。敵に3ダメージ。タワーの攻撃力アップ'},
-  heal:{name:'回復弾',color:'#7dffb0',e:.5,g:.16,r:5,dmg:1,price:45,heal:4,desc:'ヘソに入るとライフが4回復。ほかはノーマル玉と同じ'},
-  bb:{name:'BB弾',color:'#f4f1e8',e:.88,g:.12,r:4,dmg:.5,price:35,buff:'rapid',desc:'軽くてよく跳ねる。タワーの連射アップ'},
+  fire:{name:'火炎弾',color:'#ff7a3d',el:'fire',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「火」をつける。燃えた敵は少しずつダメージ'},
+  ice:{name:'氷結弾',color:'#8fe3ff',el:'ice',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「氷」をつける。こおった敵はおそくなる'},
+  bolt:{name:'雷弾',color:'#ffe14f',el:'bolt',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「雷」をつける。近くの敵にもとびうつる'},
+  poison:{name:'毒弾',color:'#c08bff',el:'poison',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「毒」をつける。重なって長くつづく'},
+  lead:{name:'鉛玉',color:'#8e98a6',e:.28,g:.2,r:6.5,dmg:3,price:200,buff:'pow',desc:'重くて跳ねない。敵に3ダメージ。タワーの攻撃力アップ'},
+  heal:{name:'回復弾',color:'#7dffb0',e:.5,g:.16,r:5,dmg:1,price:150,heal:4,desc:'ヘソに入るとライフが4回復。ほかはノーマル玉と同じ'},
+  bb:{name:'BB弾',color:'#f4f1e8',e:.88,g:.12,r:4,dmg:.5,price:200,buff:'rapid',desc:'軽くてよく跳ねる。タワーの連射アップ'},
 };
 // 属性。タワーの上で2つの属性が出会うと「わざ」になる
 const ELEM={
@@ -383,27 +383,27 @@ const LIFE_MAX=10;                            // ライフ（上のバー）
 const BUFF_T=10;                              // 玉でついた属性・とくしゅ効果・わざ・攻撃UP・連射UP がつづく秒数
 const TOWERS={
   basic:{name:'ふつうタワー',color:'#a6e38c',range:78,rate:.9,dmg:1,cost:30,desc:'近くの敵を自動で撃つ'},
-  fire:{name:'ほのおタワー',color:'#ff8a4a',range:74,rate:.95,dmg:1,cost:45,el:'fire',unlock:80,desc:'弾でやけど。火炎弾が当たると「ばくはつ」'},
-  ice:{name:'こおりタワー',color:'#a8dcff',range:72,rate:1,dmg:.7,cost:45,el:'ice',unlock:80,desc:'弾でおそく。氷結弾が当たると「氷の霧」'},
-  bolt:{name:'かみなりタワー',color:'#ffe14f',range:76,rate:1.1,dmg:.9,cost:50,el:'bolt',unlock:90,desc:'弾がとびうつる。雷弾が当たると「いなずま」'},
-  poison:{name:'どくタワー',color:'#c08bff',range:70,rate:1,dmg:.6,cost:40,el:'poison',unlock:70,desc:'弾でどく。毒弾が当たると「毒の沼」'},
-  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:2.2,cost:55,unlock:100,desc:'遠くまで届く。撃つのはゆっくり'},
+  fire:{name:'ほのおタワー',color:'#ff8a4a',range:74,rate:.95,dmg:1.7,cost:45,el:'fire',unlock:400,desc:'弾でやけど。火炎弾が当たると「ばくはつ」'},
+  ice:{name:'こおりタワー',color:'#a8dcff',range:72,rate:1,dmg:1.2,cost:45,el:'ice',unlock:400,desc:'弾でおそく。氷結弾が当たると「氷の霧」'},
+  bolt:{name:'かみなりタワー',color:'#ffe14f',range:76,rate:1.1,dmg:1.5,cost:50,el:'bolt',unlock:400,desc:'弾がとびうつる。雷弾が当たると「いなずま」'},
+  poison:{name:'どくタワー',color:'#c08bff',range:70,rate:1,dmg:1,cost:40,el:'poison',unlock:400,desc:'弾でどく。毒弾が当たると「毒の沼」'},
+  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:2.2,cost:55,unlock:400,desc:'遠くまで届く。撃つのはゆっくり'},
 };
 // 砲身の先（杭の半径に対する長さ）。弾はここから出る
 const MUZ={basic:1.8,long:2.4,fire:1.5,ice:1.75,bolt:1.6,poison:1.3};
 // ギミック：どの砲台にも1つつけられる（お店で解放 → 台の上で砲台をタップして、コインでつける）
 const GIMMICKS={
-  bumper:{name:'バンパー',color:'#e8f4ff',unlock:60,cost:20,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい'},
-  spinner:{name:'回転十字',color:'#cfd6e0',unlock:70,cost:25,desc:'まわりで十字がまわって、当たった玉をはじきとばす。十字に当たっても砲台に当たったことになる'},
+  bumper:{name:'バンパー',color:'#e8f4ff',unlock:300,cost:20,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい'},
+  spinner:{name:'回転十字',color:'#cfd6e0',unlock:350,cost:25,desc:'まわりで十字がまわって、当たった玉をはじきとばす。十字に当たっても砲台に当たったことになる'},
 };
 const BUMP_R=4, BUMP_K=3.2, SPIN_L=11;         // バンパーの広さ・はじく強さ、回転十字のうでの長さ（杭のふちから）
 const ENEMIES={
-  slime:{hp:3,sp:.32,r:11,color:'#e8718b',reward:3},
-  fast:{hp:2,sp:.62,r:9,color:'#f1c94e',reward:3},
-  tough:{hp:9,sp:.22,r:14,color:'#a084dc',reward:7},
+  slime:{hp:3,sp:.32,r:11,color:'#e8718b',reward:5},
+  fast:{hp:2,sp:.62,r:9,color:'#f1c94e',reward:5},
+  tough:{hp:9,sp:.22,r:14,color:'#a084dc',reward:10},
   // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）
-  mid:{hp:1500,sp:.13,r:24,color:'#ff9a4f',reward:40,boss:1,call:6,calls:['slime','slime']},
-  boss:{hp:4000,sp:.11,r:32,color:'#d65cff',reward:100,boss:2,call:5,calls:['slime','fast','tough']},
+  mid:{hp:1500,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:6,calls:['slime','slime']},
+  boss:{hp:4000,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['slime','fast','tough']},
 };
 const WAVES=10, WAVE_T=30, SPAWN_T=22, MID_WAVE=5, HP_GROW=.35, WAVE_N=[4,2.4];   // HP_GROW＝ウェーブごとに敵のHPがふえる割合。WAVE_N＝敵の数（a＋b×ウェーブ）   // 1ウェーブ30秒（1ゲーム約5分）。敵は最初の22秒で出る。倒しきると早めに次へ
 // scale＝玉・敵の大きさの倍率、range＝タワーのとどく広さの倍率
@@ -425,7 +425,7 @@ const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,
 const SAVE_KEY='kugidama-save-v1';
 const NEW_UNLOCKED=()=>({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false});
 
-const G={fx:[],fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
+const G={fx:[],fruits:[],msp:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -882,16 +882,28 @@ function waveList(stage,w){
 }
 function startWave(w){
   const q=waveList(G.stage,w); G.wave=w; G.spawnQ=G.spawnQ.concat(q); G.spawnGap=Math.max(.5,SPAWN_T/q.length); G.spawnT=2; G.waveDone=false; G.waveT=WAVE_T;
-  banner('WAVE '+w,MOON,1.6,260); sfx.wave();
+  banner('WAVE '+w,MOON,1.6,260); sfx.wave(); if(w>1) cheerRun(MOON);
+}
+// 敵が台の外（レールの上）にはみ出さないように、横の位置をおさえる
+function inArch(x,y,r){
+  x=Math.max(XI+r+4,Math.min(WALL_R-r-4,x));
+  if(y<CY){const R=RI-r-4,d=CY-y,m=d<R?Math.sqrt(R*R-d*d):0;x=Math.max(CX-m,Math.min(CX+m,x))}
+  return x;
 }
 function spawn(t,at){
   const E=ENEMIES[t], mul=E.boss?1+.45*G.stage:1+.45*G.stage+HP_GROW*(G.wave-1);
-  const x=at?Math.max(46,Math.min(330,at.x+(Math.random()-.5)*at.r*2.2)):E.boss?150+Math.random()*76:56+Math.random()*264;
-  const y=at?at.y+at.r*.4:CY-Math.sqrt(RO*RO-(x-CX)**2)-8;
-  G.en.push({id:G.eid++,t,x,y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r:E.r*G.bscale,ph:Math.random()*6.28,slow:0,flash:0,dead:false,callT:E.call||0});
+  // 敵は台の中（内レールの内がわ）の上の方に、ぽんとあらわれる。ボスはHPバーが台の上に出る高さから
+  const r=E.r*G.bscale, R=RI-r-4;
+  let x,y;
+  if(at){x=at.x+(Math.random()-.5)*at.r*2.2;y=at.y+at.r*.4}
+  else{x=E.boss?188+(Math.random()-.5)*36:CX+(Math.random()*2-1)*R*.84;y=CY-Math.sqrt(R*R-(x-CX)**2);if(E.boss)y=Math.max(y,20+r*1.62)}
+  x=inArch(x,y,r);
+  G.en.push({id:G.eid++,t,x,y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r,ph:Math.random()*6.28,slow:0,flash:0,dead:false,callT:E.call||0,born:0});
+  G.rings.push({x,y,R:r*1.9,c:hexA(E.color,.8),t:.35});
   if(E.boss){
     G.shake=.5; burst(x,y+20,E.color,30); sfx.hurt();
     banner(E.boss===2?'ボス出現！':'中ボス出現！',E.color,2,230);
+    G.alarm=2.6; G.alarmC=E.color;            // 台のまわりが警告の色で点滅
   }
 }
 
@@ -1318,7 +1330,7 @@ function update(dt){
     if(e.dead) continue;
     e.y+=e.sp*(e.stun>0?0:e.slow>0?(e.slowF||.45):1)*f;
     const E=ENEMIES[e.t];
-    e.x=Math.max(42,Math.min(336,e.x+Math.sin(G.time*1.7+e.ph)*(E.boss?.12:.28)*f));
+    e.x=inArch(e.x+Math.sin(G.time*1.7+e.ph)*(E.boss?.12:.28)*f,e.y,e.r); e.born+=dt;
     if(E.call&&e.stun<=0){e.callT-=dt;if(e.callT<=0){e.callT=E.call;for(const t of E.calls)spawn(t,e);burst(e.x,e.y,E.color,14);sfx.warp()}}
     if(e.y>=578-(E.boss?e.r*.6:0)){
       const loss=E.boss===2?G.life:E.boss===1?5:1;
@@ -1381,7 +1393,7 @@ function update(dt){
   if(G.wave>=WAVES){if(cleared){stageClear();return}}
   else{
     G.waveT-=dt;
-    if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true)}
+    if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true);cheerRun(GOLD)}
     if(G.waveDone?(G.waveGap-=dt)<=0:G.waveT<=0) startWave(G.wave+1);
   }
 }
@@ -1398,6 +1410,113 @@ function updateFx(dt){
   G.lifeShow+=(Math.max(0,G.life)-G.lifeShow)*Math.min(1,dt*(G.time-(G.trayHurtAt??-9)<.35?1:5));   // 白い所は少し待ってから追いかける
   updateFxParts(dt);
   G.banners=G.banners.filter(b=>b.t<b.dur);
+  updateMargin(dt);
+}
+
+/* ---------- 台のまわり（余白）の盛り上がり ---------- */
+// いまの場面：警告（中ボス・ボスが出た）＞ FEVER ＞ クリア ＞ ウェーブの区切り ＞ ボスがいる ＞ ピンチ（ライフ3以下）
+function cheerRun(c){G.cheer=G.cheerMax=1.1;G.cheerC=c}
+function marginMode(){
+  if(G.state!=='play'&&G.state!=='clear') return null;
+  if(G.alarm>0) return 'alarm';
+  if(G.fever>0) return 'fever';
+  if(G.state==='clear') return 'clear';
+  if(G.cheer>0) return 'cheer';
+  const B=G.en.find(e=>ENEMIES[e.t].boss); if(B){G.bossC=ENEMIES[B.t].color;return 'boss'}
+  if(G.life<=3) return 'pinch';
+  return null;
+}
+const beat=t=>Math.pow(Math.max(0,Math.sin(t*6.3)),10)+.6*Math.pow(Math.max(0,Math.sin(t*6.3-.9)),10);   // どくん、どくん
+// 台のふち（木の段）にそってならぶランプ：左下 → 左の柱 → 上のアーチ → 右の柱 → 右下
+let rimLamps=null;
+function rimPts(){
+  if(rimLamps) return rimLamps;
+  const r=RO+5, side=H-8-CY, arc=Math.PI*r, L=side*2+arc, n=Math.round(L/15), o=[];
+  for(let i=0;i<n;i++){
+    const s=(i+.5)/n*L; let x,y;
+    if(s<side){x=CX-r;y=H-8-s}
+    else if(s<side+arc){const a=Math.PI+(s-side)/r;x=CX+r*Math.cos(a);y=CY+r*Math.sin(a)}
+    else{x=CX+r;y=CY+(s-side-arc)}
+    o.push({x,y,u:s/L});
+  }
+  return rimLamps=o;
+}
+// 台の外（余白）かどうか
+function inField(x,y,m){return y<CY?Math.hypot(x-CX,y-CY)<RO+m:Math.abs(x-CX)<RO+m&&y<H+m}
+function marginPt(){const V=view();for(let k=0;k<6;k++){const x=V.x0+Math.random()*(V.x1-V.x0),y=V.y0+Math.random()*(V.y1-V.y0);if(!inField(x,y,10))return[x,y]}return null}
+function updateMargin(dt){
+  const f=dt*60;
+  G.alarm=Math.max(0,G.alarm-dt); G.cheer=Math.max(0,G.cheer-dt);
+  const mode=marginMode(), rate=mode==='fever'?36:mode==='clear'?28:mode==='alarm'?22:0;
+  for(let n=fxN(rate,dt);n>0&&G.msp.length<160;n--){
+    const p=marginPt(); if(!p) continue;
+    const c=mode==='fever'?RAINBOW[Math.random()*6|0]:mode==='clear'?(Math.random()<.5?GOLD:'#fff7d0'):G.alarmC;
+    G.msp.push({x:p[0],y:p[1],vx:(Math.random()-.5)*.3,vy:mode==='alarm'?-.7-Math.random()*.4:-.2-Math.random()*.3,c,t:.9,ph:Math.random()*6});
+  }
+  for(const q of G.msp){q.x+=q.vx*f;q.y+=q.vy*f;q.t-=dt}
+  G.msp=G.msp.filter(q=>q.t>0);
+}
+// 光のかたまり（四すみ・上・左右の柱・下）の色と明るさ
+function washOf(mode,i,t){
+  switch(mode){
+    case 'fever': return [RAINBOW[(i+Math.floor(t*6))%6],.42+.22*Math.sin(t*8+i*1.3)];
+    case 'alarm': return [G.alarmC,reduce?.45:(Math.floor(t*5)+i)%2?.68:.12];
+    case 'clear': return [i%2?GOLD:'#fff0a6',.32+.18*Math.sin(t*3+i)];
+    case 'cheer': return [G.cheerC,.34*G.cheer/G.cheerMax];
+    case 'boss': return [G.bossC,.1+.26*beat(t)];
+    case 'pinch': return ['#ff4f5e',.08+.22*beat(t)];
+  }
+  return [0,0];
+}
+// ふちのランプ1つの色と明るさ（u＝左下0 → 上のまん中.5 → 右下1）
+function lampOf(mode,u,i,t){
+  switch(mode){
+    case 'fever': return [RAINBOW[(i+Math.floor(t*14))%6],.3+.7*Math.max(0,Math.sin(u*50-t*12))];
+    case 'alarm': return [G.alarmC,reduce?.6:(Math.floor(t*5)+i)%2?.95:.08];
+    case 'clear': return [i%3?GOLD:'#ffffff',.35+.6*Math.max(0,Math.sin(u*31-t*6))];
+    case 'cheer': {const p=1-G.cheer/G.cheerMax, d=1-Math.abs(2*u-1);return [G.cheerC,Math.max(0,1-Math.abs(d-p*1.15)*6)*.95]}
+    case 'boss': {const h=(t*.28)%1, d=Math.min(Math.abs(u-h),1-Math.abs(u-h));return [G.bossC,Math.max(0,1-d*10)*.8+.3*beat(t)]}
+    case 'pinch': return ['#ff4f5e',.06+.45*beat(t)];
+  }
+  return [0,0];
+}
+function drawMargin(t){
+  const mode=marginMode();
+  if(!mode&&!G.msp.length) return;
+  const V=view();
+  ctx.save();
+  // 台の中はくりぬく（ふちの木の段から外だけ）
+  ctx.beginPath(); ctx.rect(V.x0-4,V.y0-4,V.x1-V.x0+8,V.y1-V.y0+8);
+  const r=RO+1; ctx.moveTo(CX-r,H-4); ctx.lineTo(CX-r,CY); ctx.arc(CX,CY,r,Math.PI,Math.PI*2); ctx.lineTo(CX+r,H-4); ctx.closePath();
+  ctx.clip('evenodd');
+  ctx.globalCompositeOperation='lighter';
+  if(mode){
+    const spots=[[V.x0+10,V.y0+12,110],[V.x1-10,V.y0+12,110],[CX,Math.min(-6,V.y0+16),110],[V.x0+4,300,70],[V.x1-4,300,70],[V.x0+4,470,70],[V.x1-4,470,70],[CX,H+Math.max(18,(V.y1-H)*.5),150]];
+    spots.forEach(([x,y,R],i)=>{const [c,a]=washOf(mode,i,t);if(a>.01)glow(c,x,y,R,a)});
+    rimPts().forEach((L,i)=>{
+      const [c,a]=lampOf(mode,L.u,i,t); if(a<.03) return;
+      glow(c,L.x,L.y,9,Math.min(1,a)); ctx.globalAlpha=Math.min(1,a); ctx.fillStyle=mixW(c,.6); circle(L.x,L.y,1.7); ctx.fill(); ctx.globalAlpha=1;
+    });
+  }
+  // 余白のきらきら
+  for(const q of G.msp){
+    const a=Math.min(1,q.t*2.5)*(.6+.4*Math.sin(G.time*18+q.ph));
+    glow(q.c,q.x,q.y,7,a*.8);
+    ctx.globalAlpha=a; ctx.strokeStyle=mixW(q.c,.5); ctx.lineWidth=1.1;
+    ctx.beginPath(); ctx.moveTo(q.x-3.5,q.y); ctx.lineTo(q.x+3.5,q.y); ctx.moveTo(q.x,q.y-3.5); ctx.lineTo(q.x,q.y+3.5); ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+// FEVER の虹の枠：四角ではなく、台の形（上はアーチ）にそって
+function feverFrame(t,c){
+  let st=c;
+  if(ctx.createConicGradient){const g=ctx.createConicGradient(t*2.4,CX,CY+150);RAINBOW.concat(RAINBOW[0]).forEach((col,i)=>g.addColorStop(i/6,col));st=g}
+  const path=()=>{const r=RO+3;ctx.beginPath();ctx.moveTo(CX-r,H-3);ctx.lineTo(CX-r,CY);ctx.arc(CX,CY,r,Math.PI,Math.PI*2);ctx.lineTo(CX+r,H-3);ctx.closePath()};
+  ctx.save(); ctx.lineJoin='round'; ctx.strokeStyle=st;
+  ctx.globalAlpha=.35; ctx.lineWidth=10; path(); ctx.stroke();
+  ctx.globalAlpha=1; ctx.lineWidth=3.5; path(); ctx.stroke();
+  ctx.restore();
 }
 
 /* ---------- 描く ---------- */
@@ -1578,7 +1697,15 @@ function drawTray(){
   heartPath(hx,TRAY_Y,7*beat); ctx.fillStyle='#ff4f6d'; ctx.fill();
   ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=1; ctx.stroke();
 }
+// あらわれるときは、小さい所からぽんとふくらむ
 function drawEnemy(e){
+  const b=e.born??1;
+  if(b>=.42||reduce){drawEnemyBody(e);return}
+  const p=b/.42, k=1+2.2*Math.pow(p-1,3)+1.2*Math.pow(p-1,2);
+  ctx.save(); ctx.globalAlpha=Math.min(1,p*2.5); ctx.translate(e.x,e.y); ctx.scale(k,k); ctx.translate(-e.x,-e.y);
+  drawEnemyBody(e); ctx.restore();
+}
+function drawEnemyBody(e){
   const E=ENEMIES[e.t], col=e.slow>0?'#bfe6ff':E.color, r=e.r;
   ctx.fillStyle='rgba(0,0,0,.3)'; ctx.beginPath(); ctx.ellipse(e.x+2,e.y+r*.78,r*.9,r*.35,0,0,Math.PI*2); ctx.fill();
   if(e.t==='fast'){ctx.strokeStyle=hexA(E.color,.5);ctx.lineWidth=2;for(const dx of [-r*.45,0,r*.45]){ctx.beginPath();ctx.moveTo(e.x+dx,e.y-r-4);ctx.lineTo(e.x+dx,e.y-r-12);ctx.stroke()}}
@@ -1649,6 +1776,7 @@ function draw(){
   if(fev&&Q){const c=RAINBOW[Math.floor(t*8)%6];glow(c,Q.x,Q.y+6,26,.7)}
   if(meadow) for(const fr of G.fruits) glow(fr.c,fr.x,fr.y,fr.r*(fev?6:4.6),(fev?.6:.18)+.22*Math.sin(t*1.6+fr.ph));
   ctx.globalCompositeOperation='source-over';
+  drawMargin(t);
 
   if(meadow){
     // 杭に玉が当たった・発射・ねらい（光らせずに線で見せる）
@@ -1739,8 +1867,8 @@ function draw(){
   // フィーバー
   if(fev){
     const c=RAINBOW[Math.floor(t*8)%6];
-    ctx.fillStyle=hexA(meadow?'#ffd56a':c,reduce?.03:.06); ctx.fillRect(0,0,W,H);
-    ctx.strokeStyle=c; ctx.lineWidth=4; rrPath(ctx,6,6,W-12,H-12,20); ctx.stroke();
+    ctx.fillStyle=hexA(meadow?'#ffd56a':c,reduce?.03:.06); fieldPath(ctx,RO,H-6); ctx.fill();
+    feverFrame(t,c);
     ctx.font=`500 16px ${DISPF}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(8,12,22,.9)';
     const s='FEVER '+Math.ceil(G.fever); ctx.strokeText(s,CX,44); ctx.fillStyle=c; ctx.fillText(s,CX,44);
   }
@@ -1838,7 +1966,7 @@ function playBoard(i){
   if(add>0) addText(70,40,`コイン +${add}`,GOLD,true);
 }
 function startStage(){
-  setupStage(); hideOverlays(); closeSheet();
+  setupStage(); hideOverlays(); closeSheet(); G.alarm=0; G.cheer=0; G.msp=[];
   G.state='play'; G.spawnQ=[]; startWave(1);
   const S=STAGES[G.stage]; banner(`${S.name}の台`+(S.kind?'・'+S.kind:''),S.accent,2.2,200);
 }
