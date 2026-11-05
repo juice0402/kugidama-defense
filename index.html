@@ -98,6 +98,14 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .chip.rm .rmx{color:var(--berry);font-size:10px}
 .chip.rm:disabled{opacity:.4;cursor:not-allowed}
 
+.boards{display:flex;flex-direction:column;gap:8px}
+.board{display:grid;grid-template-columns:56px 1fr auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--deep)}
+.board>div{min-width:0}
+.board .thumb{width:56px;height:56px;border-radius:10px;border:1.5px solid #7a5232;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+.board .t{font-weight:800;font-size:15px} .board .d{font-size:12px;color:var(--dim);line-height:1.45}
+.board.soon{opacity:.6} .board.soon .thumb{border-color:var(--line)}
+.badge{display:inline-block;font:800 10px var(--f-body);padding:1px 7px;border-radius:99px;background:var(--leaf);color:var(--night);margin-left:6px;vertical-align:2px}
+.buy.go{background:var(--fire);border-color:var(--fire);color:var(--night);padding:10px 14px;font-size:14px}
 .sheet{position:absolute;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:8px;z-index:6;max-width:460px;margin:0 auto;padding-bottom:env(safe-area-inset-bottom,0px)}
 .sheet-in{border:1.5px solid var(--line);border-radius:18px;background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -6px 30px rgba(0,0,0,.7)}
 .sheet-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -129,10 +137,12 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
       <ul class="rules">
         <li><span>打つ</span><span>玉は1分に50発、ずっと出続けるよ（1発でコイン1枚）。左下から打ち上がって、上のレールを回り、勢いがなくなった所で落ちる</span></li>
         <li><span>強さ</span><span>右下のハンドルを回すと強さが変わるよ。まわりの光る輪が強さで、まん中なら台のまん中、弱いと左寄り、強いと右に落ちる（上の▼が落ちる場所）</span></li>
-        <li><span>建てる</span><span>杭（くい）をタップすると、お金（コイン）を払ってタワーを建てられる</span></li>
+        <li><span>建てる</span><span>杭（くい）をタップすると、お金（コイン）を払って砲台（タワー）を建てられる。砲台は敵の方を向いて自動で撃つよ</span></li>
+        <li><span>ギミック</span><span>お店でバンパーや回転十字を買うと、砲台をタップしてつけられる。玉をはじいて、ピンボールみたいに動かせるよ</span></li>
         <li><span>育てる</span><span>タワーに玉を当てると経験値。火炎弾・氷結弾などを当てると弾に属性がつき、同じ属性が重なると「ばくはつ」などのとくしゅ効果、ちがう属性なら「わざ」が出る。敵の上でも、ちがう属性が出会えば「わざ」。鉛玉は攻撃力、BB弾は連射アップ。属性タワーはお店で</span></li>
         <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! コインがたくさん出て、タワーが強くなる</span></li>
-        <li><span>まもる</span><span>下の受け皿がライフのバー。敵がここまで来ると1つ割れるよ。5ウェーブ守ればクリア</span></li>
+        <li><span>まもる</span><span>下の受け皿がライフのバー。敵がここまで来ると減っていくよ。5ウェーブ守ればクリア</span></li>
+        <li><span>台</span><span>はじめに遊ぶ台をえらぶよ（さいしょは草原と森）。新しい台を買うと、お店に新しいタワーや玉がふえていく</span></li>
       </ul>
       <div class="btnrow">
         <button class="btn primary" id="startBtn">あそぶ</button>
@@ -152,6 +162,15 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
     </div>
   </div>
 
+  <div class="overlay" id="boards" hidden>
+    <div class="panel">
+      <h2>台をえらぶ</h2>
+      <p class="purse">お金 <i class="coin"></i><b id="boardsCoins">0</b></p>
+      <div class="boards" id="boardList"></div>
+      <button class="btn" id="boardsShop">お店へ</button>
+    </div>
+  </div>
+
   <div class="overlay" id="shop" hidden>
     <div class="panel">
       <h2>お店</h2>
@@ -159,7 +178,8 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
       <section><h3>特殊な玉をセットに足す</h3><div class="items" id="shopBallList"></div></section>
       <section><h3>玉をセットから抜く<small>1つ <i class="coin"></i>25・3つまで減らせる</small></h3><div class="chips" id="shopDeck"></div></section>
       <section><h3>タワーの種類</h3><div class="items" id="shopTowers"></div></section>
-      <button class="btn primary" id="shopNext">次の面へ</button>
+      <section><h3>ギミック<small>どの砲台にも1つつけられる</small></h3><div class="items" id="shopGimmicks"></div></section>
+      <button class="btn primary" id="shopNext">台えらびへもどる</button>
     </div>
   </div>
 
@@ -245,6 +265,14 @@ const TOWERS={
   poison:{name:'どくタワー',color:'#c08bff',range:70,rate:1,dmg:.6,cost:40,el:'poison',unlock:70,desc:'弾でどく。毒弾が当たると「毒の沼」'},
   long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:2.2,cost:55,unlock:100,desc:'遠くまで届く。撃つのはゆっくり'},
 };
+// 砲身の先（杭の半径に対する長さ）。弾はここから出る
+const MUZ={basic:1.8,long:2.4,fire:1.5,ice:1.75,bolt:1.6,poison:1.3};
+// ギミック：どの砲台にも1つつけられる（お店で解放 → 台の上で砲台をタップして、コインでつける）
+const GIMMICKS={
+  bumper:{name:'バンパー',color:'#e8f4ff',unlock:60,cost:20,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい'},
+  spinner:{name:'回転十字',color:'#cfd6e0',unlock:70,cost:25,desc:'まわりで十字がまわって、当たった玉をはじきとばす。十字に当たっても砲台に当たったことになる'},
+};
+const BUMP_R=4, BUMP_K=3.2, SPIN_L=11;         // バンパーの広さ・はじく強さ、回転十字のうでの長さ（杭のふちから）
 const ENEMIES={
   slime:{hp:3,sp:.32,r:11,color:'#e8718b',reward:3},
   fast:{hp:2,sp:.62,r:9,color:'#f1c94e',reward:3},
@@ -255,11 +283,20 @@ const STAGES=[
   {name:'草原',kind:'',style:'meadow',scale:1.3,range:1.15,accent:FIRE,layout:layoutMeadow},
   {name:'森',kind:'液晶台',style:'neon',scale:1,range:1,peg:'#ffc46b',accent:'#ff9a3e',top:'#150a2a',bot:'#0b1a14',deco:'forest',layout:layoutLcd},
 ];
+// 台えらび。stage＝STAGES の番号。price＝買う値段（0は最初から遊べる）。soon＝まだ作っていない台
+// 新しい台を買うと、その台の品（サウンドタワーなど）がお店にふえる予定
+const BOARDS=[
+  {stage:0,price:0,desc:'ネオンな夜の草原。大きな杭12本',thumb:'radial-gradient(circle at 72% 26%,#f3e6b5 0 5%,transparent 6%),linear-gradient(#141c3a 0 52%,#1d5a3c 53% 70%,#0e2a1d 71%)'},
+  {stage:1,price:0,desc:'液晶のある森の台（作りかえ前の試作のまま）',thumb:'linear-gradient(#150a2a 0 40%,#3a1f5c 41% 60%,#0b1a14 61%)'},
+  {soon:true,name:'？？？',desc:'買うと、お店に新しいタワーや玉がふえる',thumb:'repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)'},
+];
+const START_COINS=150, MIN_COINS=100;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
 const XP_NEED=[0,4,10,18];
 const START_DECK=['normal','normal','normal','normal','fire','ice'];
 const SAVE_KEY='kugidama-save-v1';
+const NEW_UNLOCKED=()=>({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false});
 
-const G={fx:[],fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,balls:150,deck:START_DECK.slice(),unlocked:{basic:true,fire:false,ice:false,bolt:false,poison:false,long:false},
+const G={fx:[],fruits:[],zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -308,6 +345,8 @@ const sfx={
   build(){tone(300,.14,'triangle',.05,2.5)},
   wave(){seq([392,587],120,.18,.035)},
   fever(){seq([523,659,784,1047,784,1047,1319],90,.14,.04)},
+  bump(){const n=performance.now();if(n-(sfx._b||0)<60)return;sfx._b=n;tone(210,.13,'sine',.06,2.6)},
+  spin(){const n=performance.now();if(n-(sfx._s||0)<70)return;sfx._s=n;tone(1400+Math.random()*300,.04,'triangle',.014,1.4)},
 };
 
 /* ---------- 釘の配置（本物の台を参考に） ---------- */
@@ -378,7 +417,7 @@ function setupStage(){
   G.lcd=L.lcd; G.frame=L.frame||null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
   G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];
-  G.life=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
+  G.life=G.lifeShow=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
   G.flies=Array.from({length:meadow?32:16},()=>({x:45+rnd()*285,y:(meadow?120:90)+rnd()*(meadow?420:430),ph:rnd()*6.28,sp:.3+rnd()*.5,bl:.8+rnd()*1.6}));
@@ -1014,6 +1053,26 @@ function dotHit(b,x,y,r,e){
   b.x=x+nx*rr; b.y=y+ny*rr;
   const vn=b.vx*nx+b.vy*ny; if(vn<0){b.vx-=(1+e)*vn*nx;b.vy-=(1+e)*vn*ny}
 }
+// 回転十字：杭のまん中からのびる4本のうでがまわる。当たった玉は、うでの動きごとはじかれる（十字に当たっても砲台に当たったことになる）
+function spinHit(b,p,T){
+  const L=p.r+SPIN_L, dx=b.x-p.x, dy=b.y-p.y, reach=L+b.r+2;
+  if(dx*dx+dy*dy>reach*reach) return;
+  const w=T.sw*T.sdir/60, cr=b.r+1.8;          // うでの回る速さ（1コマあたり）・うでの太さをたした当たりの広さ
+  for(let i=0;i<4;i++){
+    const a=T.sa+i*Math.PI/2, ux=Math.cos(a), uy=Math.sin(a);
+    const s=Math.max(0,Math.min(L,dx*ux+dy*uy)); if(s<p.r*.8) continue;   // 杭そのものは、ふつうの当たり
+    const cx=p.x+ux*s, cy=p.y+uy*s, ex=b.x-cx, ey=b.y-cy, d2=ex*ex+ey*ey; if(d2>=cr*cr) continue;
+    const d=Math.sqrt(d2)||.01, nx=ex/d, ny=ey/d;
+    b.x=cx+nx*cr; b.y=cy+ny*cr;
+    const vax=-uy*w*s, vay=ux*w*s, rvx=b.vx-vax, rvy=b.vy-vay, vn=rvx*nx+rvy*ny;
+    if(vn<0){
+      b.vx-=1.5*vn*nx; b.vy-=1.5*vn*ny;
+      const vt=-rvx*ny+rvy*nx; b.vx+=vt*ny*.3; b.vy-=vt*nx*.3;   // うでの動きに少し引っぱられる（すべる向きだけ）
+      T.sw=Math.min(14,T.sw+1.4); sfx.spin(); pegHit(p,b,-vn);
+    }
+    return;
+  }
+}
 function bound(b){
   const r=b.r;
   if(b.y<CY){
@@ -1059,12 +1118,19 @@ function stepBalls(f){
       }
       bound(b);
       for(const p of G.pegs){
-        const dy=b.y-p.y, lim=p.r+b.r; if(dy>lim||dy<-lim) continue;
-        const dx=b.x-p.x, rr=b.r+p.r, d2=dx*dx+dy*dy; if(d2>=rr*rr) continue;
+        const T=p.tower, gm=T&&T.gm;
+        if(gm==='spinner'){spinHit(b,p,T);if(b.gone)break}
+        const pr=gm==='bumper'?p.r+BUMP_R:p.r;
+        const dy=b.y-p.y, lim=pr+b.r; if(dy>lim||dy<-lim) continue;
+        const dx=b.x-p.x, rr=b.r+pr, d2=dx*dx+dy*dy; if(d2>=rr*rr) continue;
         const d=Math.sqrt(d2)||.01, nx=dx/d, ny=dy/d;
         b.x=p.x+nx*rr; b.y=p.y+ny*rr;
         const vn=b.vx*nx+b.vy*ny;
-        if(vn<0){b.vx-=(1+B.e)*vn*nx;b.vy-=(1+B.e)*vn*ny;b.vx+=(Math.random()-.5)*.35;pegHit(p,b,-vn)}
+        if(vn<0){
+          b.vx-=(1+B.e)*vn*nx;b.vy-=(1+B.e)*vn*ny;b.vx+=(Math.random()-.5)*.35;
+          if(gm==='bumper'){b.vx+=nx*BUMP_K;b.vy+=ny*BUMP_K;T.bump=.25;sfx.bump()}   // バンパー：外へボヨンとはじく
+          pegHit(p,b,-vn);
+        }
       }
       for(const m of G.mills){
         // 風車：当たると羽根の回る向きに押し出す
@@ -1124,14 +1190,19 @@ function update(dt){
   for(const p of G.pegs){
     const T=p.tower; if(!T) continue; const D=TOWERS[T.type];
     T.rapid=Math.max(0,T.rapid-dt); T.pow=Math.max(0,T.pow-dt); T.elT=Math.max(0,T.elT-dt); T.spT=Math.max(0,T.spT-dt); T.comboT=Math.max(0,T.comboT-dt);
-    T.pop=Math.max(0,T.pop-dt); T.shot=Math.max(0,T.shot-dt); T.cd-=dt;
+    T.pop=Math.max(0,T.pop-dt); T.shot=Math.max(0,T.shot-dt); T.bump=Math.max(0,T.bump-dt); T.cd-=dt;
+    if(T.gm==='spinner'){T.sw=Math.max(2.4,T.sw-dt*3);T.sa+=T.sw*T.sdir*dt}
+    // 砲身は、ねらっている敵の方へくるっと向く
+    if(T.tg&&!T.tg.dead){let da=Math.atan2(T.tg.y-p.y,T.tg.x-p.x)-T.ang;da=Math.atan2(Math.sin(da),Math.cos(da));T.ang+=Math.max(-9*dt,Math.min(9*dt,da))}
     if(T.cd<=0){
       const R=D.range*(1+.08*(T.lv-1))*G.rscale; let best=null,by=-1;
       for(const e of G.en){if(e.dead)continue;const dx=e.x-p.x,dy=e.y-p.y;if(dx*dx+dy*dy<=R*R&&e.y>by){best=e;by=e.y}}
       if(best){
         const el=curEl(T), fx=T.comboT>0?{combo:T.combo}:T.spT>0?{sp:T.sp}:el?{el,lv:1}:null;
         const c=T.comboT>0?COMBO[T.combo].color:T.spT>0?SPECIAL[T.sp].color:el?ELEM[el].color:D.color;
-        G.bl.push({x:p.x,y:p.y,tg:best,dmg:D.dmg*(1+.4*(T.lv-1))*(T.pow>0?1.7:1)*(G.fever>0?2:1),c,fx,gone:false});
+        T.tg=best; T.ang=Math.atan2(best.y-p.y,best.x-p.x);
+        const m=p.r*MUZ[T.type];
+        G.bl.push({x:p.x+Math.cos(T.ang)*m,y:p.y+Math.sin(T.ang)*m,tg:best,dmg:D.dmg*(1+.4*(T.lv-1))*(T.pow>0?1.7:1)*(G.fever>0?2:1),c,fx,gone:false});
         T.cd=D.rate*Math.pow(.85,T.lv-1)*(T.rapid>0?.5:1)*(G.fever>0?.5:1); T.shot=.08;
       }else T.cd=.12;
     }
@@ -1182,6 +1253,7 @@ function updateFx(dt){
   for(const b of G.banners) b.t+=dt;
   for(const z of G.zaps) z.t-=dt; G.zaps=G.zaps.filter(z=>z.t>0);
   for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
+  G.lifeShow+=(Math.max(0,G.life)-G.lifeShow)*Math.min(1,dt*(G.time-(G.trayHurtAt??-9)<.35?1:5));   // 白い所は少し待ってから追いかける
   updateFxParts(dt);
   G.banners=G.banners.filter(b=>b.t<b.dur);
 }
@@ -1211,9 +1283,92 @@ function drawBall(b){
   if(B.el){ctx.globalCompositeOperation='lighter';glow(B.color,b.x,b.y,r*3.2,.55);ctx.globalCompositeOperation='source-over'}
   ctx.fillStyle=g; circle(b.x,b.y,r); ctx.fill();
 }
-// タワー：杭に色のわっかと、種類のしるし（▲ふつう・＊こおり・◎ロング）。下の点がレベル
+// 砲台：どの台のスキンにもなじむように、灰色の本体に種類の色を少しだけ（台座のふち・頭のまん中）。
+// 砲身の形で種類がわかる：ふつう＝1本・ロング＝長い1本・ほのお＝ラッパの口とタンク・こおり＝2本・かみなり＝電極2本・どく＝太い筒とビン
+const GUN={b0:'#4d5566',b1:'#20252e',m0:'#eef1f5',m1:'#9aa4b2',m2:'#555f6e',dark:'rgba(12,14,20,.6)'};
+function barrel(x0,len,w,yo){
+  const g=ctx.createLinearGradient(0,yo-w/2,0,yo+w/2);
+  g.addColorStop(0,GUN.m1); g.addColorStop(.35,GUN.m0); g.addColorStop(1,GUN.m2);
+  ctx.fillStyle=g; rrPath(ctx,x0,yo-w/2,len,w,Math.min(w/2,1.6)); ctx.fill();
+  ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();
+  ctx.fillStyle='rgba(30,34,44,.5)'; ctx.fillRect(x0+len-w*.7,yo-w/2,w*.32,w);     // 先の帯
+}
+function drawGun(p,T,t){
+  const D=TOWERS[T.type], R=p.r, x=p.x, y=p.y, kick=T.shot>0?T.shot/.08:0;
+  // 台座（杭の上の丸い台。ふちに種類の色、ボルト4つ）
+  ctx.fillStyle='rgba(0,0,0,.38)'; circle(x+1.4,y+2.6,R); ctx.fill();
+  let g=ctx.createRadialGradient(x-R*.3,y-R*.4,R*.1,x,y,R);
+  g.addColorStop(0,GUN.b0); g.addColorStop(1,GUN.b1);
+  ctx.fillStyle=g; circle(x,y,R); ctx.fill();
+  ctx.strokeStyle=D.color; ctx.lineWidth=1.6; circle(x,y,R-.6); ctx.stroke();
+  ctx.fillStyle='rgba(200,210,224,.55)'; for(let i=0;i<4;i++){const a=Math.PI/4+i*Math.PI/2;circle(x+Math.cos(a)*R*.8,y+Math.sin(a)*R*.8,R*.07);ctx.fill()}
+  // 頭（敵の方へ回る。撃つと少し下がる）
+  ctx.save(); ctx.translate(x,y); ctx.rotate(T.ang); ctx.translate(-R*.22*kick,0);
+  switch(T.type){
+    case 'basic': barrel(R*.3,R*1.5,R*.4,0); break;
+    case 'long': barrel(R*.3,R*2.05,R*.28,0); ctx.fillStyle=GUN.m2; rrPath(ctx,R*2.08,-R*.23,R*.32,R*.46,1.2); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke(); break;
+    case 'fire':{
+      ctx.fillStyle=hexA(D.color,.92); circle(-R*.78,0,R*.3); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();   // 燃料のタンク
+      ctx.fillStyle='rgba(255,255,255,.45)'; circle(-R*.86,-R*.1,R*.08); ctx.fill();
+      const g2=ctx.createLinearGradient(0,-R*.36,0,R*.36); g2.addColorStop(0,GUN.m1); g2.addColorStop(.35,GUN.m0); g2.addColorStop(1,GUN.m2);
+      ctx.fillStyle=g2; ctx.beginPath(); ctx.moveTo(R*.35,-R*.2); ctx.lineTo(R*1.5,-R*.36); ctx.lineTo(R*1.5,R*.36); ctx.lineTo(R*.35,R*.2); ctx.closePath(); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();
+      ctx.fillStyle='rgba(30,20,14,.75)'; ctx.fillRect(R*1.38,-R*.32,R*.12,R*.64); break;
+    }
+    case 'ice': barrel(R*.3,R*1.45,R*.24,-R*.2); barrel(R*.3,R*1.45,R*.24,R*.2); break;
+    case 'bolt':
+      barrel(R*.3,R*1.12,R*.17,-R*.24); barrel(R*.3,R*1.12,R*.17,R*.24);
+      ctx.fillStyle=mixW(D.color,.35); for(const s of [-1,1]){circle(R*1.48,s*R*.24,R*.15);ctx.fill();ctx.strokeStyle=GUN.dark;ctx.lineWidth=.6;ctx.stroke()} break;
+    case 'poison':
+      ctx.fillStyle=hexA(D.color,.88); circle(-R*.8,0,R*.33); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.7; ctx.stroke();   // 毒のビン
+      ctx.fillStyle='rgba(255,255,255,.45)'; circle(-R*.9,-R*.12,R*.08); ctx.fill();
+      barrel(R*.25,R*1.05,R*.56,0); break;
+  }
+  // 頭：角の丸い箱。上の面に光、うしろに通気口、まん中に種類の色
+  ctx.fillStyle='rgba(0,0,0,.35)'; rrPath(ctx,-R*.6+1,-R*.52+1.6,R*1.1,R*1.04,R*.24); ctx.fill();
+  g=ctx.createLinearGradient(0,-R*.52,0,R*.52);
+  g.addColorStop(0,'#7a8498'); g.addColorStop(.45,'#4a5262'); g.addColorStop(1,'#262b35');
+  ctx.fillStyle=g; rrPath(ctx,-R*.6,-R*.52,R*1.1,R*1.04,R*.24); ctx.fill();
+  ctx.strokeStyle='rgba(12,14,20,.7)'; ctx.lineWidth=.8; ctx.stroke();
+  ctx.strokeStyle='rgba(235,240,248,.5)'; ctx.lineWidth=.8; ctx.beginPath(); ctx.moveTo(-R*.4,-R*.44); ctx.lineTo(R*.32,-R*.44); ctx.stroke();
+  ctx.strokeStyle='rgba(12,14,20,.55)'; ctx.lineWidth=.9; for(const v of [-.18,0,.18]){ctx.beginPath();ctx.moveTo(-R*.5,v*R);ctx.lineTo(-R*.36,v*R);ctx.stroke()}
+  ctx.fillStyle=D.color; circle(R*.06,0,R*.24); ctx.fill();
+  ctx.strokeStyle='rgba(12,14,20,.5)'; ctx.lineWidth=.7; ctx.stroke();
+  ctx.fillStyle='rgba(255,255,255,.6)'; circle(-R*.02,-R*.09,R*.08); ctx.fill();
+  ctx.restore();
+  // 撃った瞬間：砲身の先が光る
+  if(kick>0){
+    const m=R*MUZ[T.type], mx=x+Math.cos(T.ang)*m, my=y+Math.sin(T.ang)*m;
+    ctx.globalCompositeOperation='lighter'; glow(curEl(T)?ELEM[curEl(T)].color:'#fff3c4',mx,my,R*1.1,.95*kick); ctx.globalCompositeOperation='source-over';
+  }
+  // ほのおタワーの口の小さな火・かみなりタワーの電極のあいだのバチッ
+  if(T.type==='fire'){const m=R*1.52;ctx.globalCompositeOperation='lighter';glow('#ff9a3d',x+Math.cos(T.ang)*m,y+Math.sin(T.ang)*m,R*.45,.35+.15*Math.sin(t*20));ctx.globalCompositeOperation='source-over'}
+  if(T.type==='bolt'&&(kick>0||Math.random()<.04)){
+    const c=Math.cos(T.ang),s=Math.sin(T.ang),bx=x+c*R*1.48,by=y+s*R*1.48,o=R*.24;
+    ctx.strokeStyle=mixW(D.color,.4); ctx.lineWidth=1; ctx.beginPath(); ctx.moveTo(bx+s*o,by-c*o); ctx.lineTo(bx+c*2+(Math.random()-.5)*2,by+s*2); ctx.lineTo(bx-s*o,by+c*o); ctx.stroke();
+  }
+}
+// ギミック（砲台の下）：バンパー＝白い輪（当たるとふくらんで光る）、回転十字＝まわる4本のうで
+function drawGimmick(p,T){
+  const R=p.r, x=p.x, y=p.y;
+  if(T.gm==='bumper'){
+    const k=T.bump>0?T.bump/.25:0, rr=R+BUMP_R-1.4+k*2.2;
+    ctx.globalCompositeOperation='lighter'; glow('#dff0ff',x,y,rr*1.7,.16+.55*k); ctx.globalCompositeOperation='source-over';
+    ctx.strokeStyle='#8f9aab'; ctx.lineWidth=3.6; circle(x,y,rr); ctx.stroke();
+    ctx.strokeStyle=k>0?'#ffffff':'#dfe6ee'; ctx.lineWidth=1.6; circle(x,y,rr); ctx.stroke();
+  }else if(T.gm==='spinner'){
+    const L=R+SPIN_L;
+    ctx.lineCap='round';
+    for(let i=0;i<4;i++){
+      const a=T.sa+i*Math.PI/2, ex=x+Math.cos(a)*L, ey=y+Math.sin(a)*L;
+      ctx.strokeStyle='#5d6878'; ctx.lineWidth=4.2; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(ex,ey); ctx.stroke();
+      ctx.strokeStyle='#d9dfe7'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.moveTo(x+Math.cos(a)*R*.7,y+Math.sin(a)*R*.7); ctx.lineTo(ex,ey); ctx.stroke();
+      ctx.fillStyle='#eef1f5'; circle(ex,ey,2.4); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.8; ctx.stroke();
+    }
+  }
+}
+// タワー：杭の上に砲台。下の点がレベル
 function drawTower(p,t){
-  const T=p.tower, D=TOWERS[T.type], R=p.r, s=R*.5;
+  const T=p.tower, D=TOWERS[T.type], R=p.r;
   if(T.pop>0){ctx.strokeStyle=hexA(D.color,Math.min(1,T.pop*2.5));ctx.lineWidth=2;circle(p.x,p.y,R+4+(.3-T.pop)*30);ctx.stroke()}
   // 毒のとくしゅ効果：杭の下にぶくぶくの毒の沼
   if(T.spT>0&&T.sp==='poison'){
@@ -1222,22 +1377,17 @@ function drawTower(p,t){
     ctx.fillStyle='rgba(120,60,190,.55)'; ctx.beginPath(); ctx.ellipse(p.x,p.y+R*.55,w,w*.42,0,0,Math.PI*2); ctx.fill();
     ctx.strokeStyle='rgba(214,170,255,.6)'; ctx.lineWidth=1; ctx.stroke();
   }
-  drawStake(ctx,p.x,p.y,R);
-  ctx.strokeStyle=D.color; ctx.lineWidth=2.6; circle(p.x,p.y,R+1.5); ctx.stroke();
-  ctx.fillStyle=D.color; ctx.strokeStyle=D.color; ctx.lineWidth=Math.max(1.4,R*.15);
-  if(T.type==='basic'){ctx.beginPath();ctx.moveTo(p.x,p.y-s);ctx.lineTo(p.x+s*.87,p.y+s*.55);ctx.lineTo(p.x-s*.87,p.y+s*.55);ctx.closePath();ctx.fill()}
-  else if(T.type==='ice'){for(let i=0;i<3;i++){const a=i*Math.PI/3+Math.PI/2;ctx.beginPath();ctx.moveTo(p.x-Math.cos(a)*s,p.y-Math.sin(a)*s);ctx.lineTo(p.x+Math.cos(a)*s,p.y+Math.sin(a)*s);ctx.stroke()}}
-  else if(T.type==='fire'){ctx.beginPath();ctx.moveTo(p.x,p.y-s*1.15);ctx.quadraticCurveTo(p.x+s*1.05,p.y+s*.1,p.x,p.y+s*.85);ctx.quadraticCurveTo(p.x-s*1.05,p.y+s*.1,p.x,p.y-s*1.15);ctx.fill()}
-  else if(T.type==='bolt'){ctx.beginPath();ctx.moveTo(p.x+s*.35,p.y-s*1.1);ctx.lineTo(p.x-s*.45,p.y+s*.1);ctx.lineTo(p.x+s*.2,p.y+s*.1);ctx.lineTo(p.x-s*.35,p.y+s*1.1);ctx.stroke()}
-  else if(T.type==='poison'){for(const [dx,dy,r] of [[-.45,.3,.42],[.45,.3,.42],[0,-.45,.48]]){circle(p.x+dx*s,p.y+dy*s,r*s);ctx.fill()}}
-  else{circle(p.x,p.y,s*.75);ctx.stroke();ctx.beginPath();ctx.moveTo(p.x-s*1.1,p.y);ctx.lineTo(p.x+s*1.1,p.y);ctx.moveTo(p.x,p.y-s*1.1);ctx.lineTo(p.x,p.y+s*1.1);ctx.stroke()}
-  if(T.lv<4){const a=XP_NEED[T.lv-1], b=XP_NEED[T.lv], fr=(T.xp-a)/(b-a);ctx.strokeStyle=MOON;ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,R+5,-Math.PI/2,-Math.PI/2+fr*Math.PI*2);ctx.stroke()}
-  ctx.fillStyle=MOON;
-  for(let i=0;i<T.lv;i++){const a=Math.PI/2+(i-(T.lv-1)/2)*.38;circle(p.x+Math.cos(a)*(R+9),p.y+Math.sin(a)*(R+9),2);ctx.fill()}
-  // 属性・わざ：色の光と、のこり時間の弧
+  // 属性・わざの光は砲台の下に（砲台の形が光でうもれないように）
   const el=curEl(T), big=T.comboT>0||T.spT>0, col=T.comboT>0?COMBO[T.combo].color:T.spT>0?SPECIAL[T.sp].color:el?ELEM[el].color:null;
+  if(col){ctx.globalCompositeOperation='lighter'; glow(col,p.x,p.y,R*(big?3.2:2.2)+(big?Math.sin(t*8)*3:0),big?.5:.4); ctx.globalCompositeOperation='source-over'}
+  drawStake(ctx,p.x,p.y,R);
+  drawGimmick(p,T);
+  drawGun(p,T,t);
+  if(T.lv<4){const a=XP_NEED[T.lv-1], b=XP_NEED[T.lv], fr=(T.xp-a)/(b-a);ctx.strokeStyle=MOON;ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,R+5+(T.gm==='bumper'?2.5:0),-Math.PI/2,-Math.PI/2+fr*Math.PI*2);ctx.stroke()}
+  ctx.fillStyle=MOON;
+  for(let i=0;i<T.lv;i++){const a=Math.PI/2+(i-(T.lv-1)/2)*.38;circle(p.x+Math.cos(a)*(R+9+(T.gm==='bumper'?2:0)),p.y+Math.sin(a)*(R+9+(T.gm==='bumper'?2:0)),2);ctx.fill()}
+  // 属性・わざ：色の光と、のこり時間の弧
   if(col){
-    ctx.globalCompositeOperation='lighter'; glow(col,p.x,p.y,R*(big?3.2:2.2)+(big?Math.sin(t*8)*3:0),big?.5:.4); ctx.globalCompositeOperation='source-over';
     const left=T.comboT>0?T.comboT/BUFF_T:T.spT>0?T.spT/BUFF_T:T.elT>0?T.elT/BUFF_T:1;
     ctx.strokeStyle=col; ctx.lineWidth=big?3:2;
     ctx.beginPath(); ctx.arc(p.x,p.y,R+13,-Math.PI/2,-Math.PI/2+left*Math.PI*2); ctx.stroke();
@@ -1254,7 +1404,7 @@ function drawTower(p,t){
   if(T.pow>0){ctx.fillStyle=BALLS.lead.color;for(const dx of [-1,1]){const x=p.x+dx*(R+11),y=p.y+2;ctx.beginPath();ctx.moveTo(x,y-5);ctx.lineTo(x+4,y+2);ctx.lineTo(x-4,y+2);ctx.closePath();ctx.fill()}}
   if(T.rapid>0){ctx.setLineDash([3,4]);ctx.lineDashOffset=-t*30;ctx.strokeStyle=hexA('#f4f1e8',.9);ctx.lineWidth=1.6;circle(p.x,p.y,R+8);ctx.stroke();ctx.setLineDash([]);ctx.lineDashOffset=0}
 }
-// 受け皿＝ライフのバー（10目もり）。敵がここまで来ると右から1つずつ割れる
+// 受け皿＝ライフのバー（目もりなしの1本）。敵がここまで来ると、なめらかに減る（へった所は一瞬白く光る）
 const TRAY_Y=580, TRAY_X0=XI+22, TRAY_X1=W-22;
 function heartPath(x,y,s){
   ctx.beginPath(); ctx.moveTo(x,y+s*.62);
@@ -1262,23 +1412,21 @@ function heartPath(x,y,s){
   ctx.bezierCurveTo(x+s*.62,y-s*1.05,x+s*1.25,y-s*.08,x,y+s*.62); ctx.closePath();
 }
 function drawTray(){
-  const n=LIFE_MAX, gap=2.5, w=(TRAY_X1-TRAY_X0-gap*(n-1))/n, h=7, y=TRAY_Y-h/2, life=Math.max(0,G.life), fr=life/n;
+  const h=7, y=TRAY_Y-h/2, Wd=TRAY_X1-TRAY_X0, fr=Math.max(0,G.life)/LIFE_MAX, show=Math.max(0,Math.min(1,G.lifeShow/LIFE_MAX));
   const col=fr>.5?'#7be36a':fr>.25?'#ffd24a':'#ff4f6d';
   const hurt=Math.max(0,1-(G.time-(G.trayHurtAt??-9))/.5);
   // 台
-  ctx.fillStyle='rgba(8,6,16,.72)'; rrPath(ctx,TRAY_X0-3,y-2.5,TRAY_X1-TRAY_X0+6,h+5,6); ctx.fill();
+  ctx.fillStyle='rgba(8,6,16,.72)'; rrPath(ctx,TRAY_X0-3,y-2.5,Wd+6,h+5,6); ctx.fill();
   ctx.strokeStyle=hurt>0?hexA('#ff4f6d',.35+.6*hurt):'rgba(255,255,255,.2)'; ctx.lineWidth=hurt>0?1+1.6*hurt:1; ctx.stroke();
-  // 目もり
-  for(let i=0;i<n;i++){
-    const x=TRAY_X0+i*(w+gap);
-    if(i<life){
-      ctx.globalCompositeOperation='lighter'; glow(col,x+w/2,TRAY_Y,w*.9,.35); ctx.globalCompositeOperation='source-over';
-      ctx.fillStyle=col; rrPath(ctx,x,y,w,h,3); ctx.fill();
-      ctx.fillStyle='rgba(255,255,255,.4)'; ctx.fillRect(x+2,y+1.2,w-4,1.4);
-    }else{
-      ctx.strokeStyle='rgba(255,255,255,.14)'; ctx.lineWidth=1; rrPath(ctx,x+.5,y+.5,w-1,h-1,3); ctx.stroke();
-      if(i===life&&hurt>0){ctx.fillStyle=`rgba(255,255,255,${.85*hurt})`;rrPath(ctx,x,y,w,h,3);ctx.fill()}
-    }
+  // へったばかりの所（白く光って、追いかけて減る）
+  if(show>fr){ctx.fillStyle=`rgba(255,255,255,${.35+.5*hurt})`;rrPath(ctx,TRAY_X0,y,Wd*show,h,3.5);ctx.fill()}
+  // のこり
+  if(fr>0){
+    const w=Wd*fr;
+    ctx.globalCompositeOperation='lighter'; for(let x=TRAY_X0+8;x<TRAY_X0+w;x+=22) glow(col,x,TRAY_Y,16,.22); ctx.globalCompositeOperation='source-over';
+    const g=ctx.createLinearGradient(0,y,0,y+h); g.addColorStop(0,mixW(col,.35)); g.addColorStop(.5,col); g.addColorStop(1,shade(col,.7));
+    ctx.fillStyle=g; rrPath(ctx,TRAY_X0,y,w,h,3.5); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.4)'; if(w>6) ctx.fillRect(TRAY_X0+3,y+1.2,w-6,1.4);
   }
   // ハート（のこりが少ないとどきどき）
   const hx=XI+11, beat=fr<=.3&&!reduce?1+.12*Math.max(0,Math.sin(G.time*9)):1;
@@ -1467,7 +1615,7 @@ function setStrength(s){
   $('dialKnob').style.transform=`rotate(${-135+G.strength*270}deg)`;
   $('handle').setAttribute('aria-valuenow',pc);
 }
-function hideOverlays(){for(const id of ['title','result','shop']) $(id).hidden=true}
+function hideOverlays(){for(const id of ['title','result','shop','boards']) $(id).hidden=true}
 function showResult(title,lines,btn,fn,btn2,fn2){
   $('resTitle').textContent=title;
   const ul=$('resLines'); ul.textContent='';
@@ -1484,56 +1632,86 @@ function itemRow(color,name,desc,price,enabled,onBuy,owned){
   if(onBuy) b.onclick=onBuy; row.append(b); return row;
 }
 
-/* ---------- セーブ（面クリアのときにこの端末へ保存） ---------- */
-function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:1,cleared:G.stage,balls:G.balls,deck:G.deck,unlocked:G.unlocked,kills:G.kills}))}catch(_){}}
+/* ---------- セーブ（台えらび・お店・台のクリアのときに、この端末へ保存） ---------- */
+// 台の中では保存しない。ゲームオーバーのときは、台に入る前の保存にもどる
+function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.balls,deck:G.deck,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,kills:G.kills}))}catch(_){}}
 function readSave(){
   try{
     const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
-    if(s&&typeof s.cleared==='number'&&s.cleared<STAGES.length-1&&Array.isArray(s.deck)){
-      const old={bounce:'bb',big:'lead'}; s.deck=s.deck.map(k=>old[k]||k).filter(k=>BALLS[k]); if(s.deck.length) return s;
-    }
+    if(!s||!Array.isArray(s.deck)) return null;
+    const old={bounce:'bb',big:'lead'}; s.deck=s.deck.map(k=>old[k]||k).filter(k=>BALLS[k]); if(!s.deck.length) return null;
+    if(s.v!==2) s.cleared=typeof s.cleared==='number'?Array.from({length:s.cleared+1},(_,i)=>i):[];   // 前の形（○面クリア後）からのひきつぎ
+    s.cleared=(s.cleared||[]).filter(i=>STAGES[i]);
+    return s;
   }catch(_){}
   return null;
 }
-function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(_){}}
-const saveLabel=s=>`つづきから（${s.cleared+1}面クリア後のお店）`;
-function updateContinue(){const s=readSave(),b=$('contBtn');b.hidden=!s;if(s)b.textContent=saveLabel(s)}
-function continueRun(){
-  const s=readSave(); if(!s){newRun();return}
-  G.stage=s.cleared; G.balls=Math.max(0,s.balls|0); G.deck=s.deck.slice();
-  G.unlocked=Object.assign({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false},s.unlocked||{}); G.kills=s.kills|0;
-  setupStage(); closeSheet(true); openShop();
+function loadSave(){
+  const s=readSave(); if(!s) return false;
+  G.balls=Math.max(0,s.balls|0); G.deck=s.deck.slice(); G.unlocked=Object.assign(NEW_UNLOCKED(),s.unlocked||{});
+  G.gimmicks=Object.assign({bumper:false,spinner:false},s.gimmicks||{}); G.cleared=s.cleared.slice(); G.kills=s.kills|0;
+  return true;
 }
+function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(_){}}
+let confirmNew=false;
+function updateContinue(){
+  const s=readSave(); confirmNew=false;
+  $('startBtn').innerHTML=s?`つづきから（お金 ${COIN}${Math.max(0,s.balls|0)}）`:'あそぶ';
+  $('contBtn').hidden=!s; $('contBtn').textContent='はじめから';
+}
+function continueRun(){if(!loadSave()){newRun();return} openBoards()}
 
-/* ---------- 流れ ---------- */
+/* ---------- 流れ：タイトル → 台えらび → 台であそぶ → クリアで台えらびへ（お店は台えらびから） ---------- */
 function newRun(){
-  G.stage=0; G.balls=150; G.deck=START_DECK.slice(); G.unlocked={basic:true,fire:false,ice:false,bolt:false,poison:false,long:false}; G.kills=0;
-  startStage();
+  G.balls=START_COINS; G.deck=START_DECK.slice(); G.unlocked=NEW_UNLOCKED(); G.gimmicks={bumper:false,spinner:false}; G.cleared=[]; G.kills=0;
+  openBoards();
+}
+const boardName=b=>b.soon?b.name:STAGES[b.stage].name;
+function openBoards(){
+  G.state='boards'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; closeSheet();
+  writeSave(); renderBoards(); hideOverlays(); $('boards').hidden=false;
+}
+function renderBoards(){
+  $('boardsCoins').textContent=G.balls;
+  const L=$('boardList'); L.textContent='';
+  BOARDS.forEach((B,i)=>{
+    const row=document.createElement('div'); row.className='board'+(B.soon?' soon':'');
+    const done=!B.soon&&G.cleared.includes(B.stage);
+    row.innerHTML=`<span class="thumb" style="background:${B.thumb}"></span><div><div class="t">${boardName(B)}の台${done?'<span class="badge">クリア</span>':''}</div><div class="d">${B.desc}</div></div>`;
+    const b=document.createElement('button');
+    if(B.soon){b.className='buy';b.textContent='近日';b.disabled=true}
+    else{b.className='buy go';b.textContent='あそぶ';b.onclick=()=>{ensureAudio();playBoard(i)}}
+    row.append(b); L.append(row);
+  });
+}
+function playBoard(i){
+  G.stage=BOARDS[i].stage; G.boardIdx=i;
+  const add=Math.max(0,MIN_COINS-G.balls); G.balls+=add;      // 打てなくならないように、少ないときは足す
+  writeSave(); startStage();
+  if(add>0) addText(70,40,`コイン +${add}`,GOLD,true);
 }
 function startStage(){
-  setupStage(); hideOverlays(); closeSheet(true);
+  setupStage(); hideOverlays(); closeSheet();
   G.state='play'; startWave(1);
-  const S=STAGES[G.stage]; banner(`${G.stage+1}面 ${S.name}`+(S.kind?'・'+S.kind:''),S.accent,2.2,200);
+  const S=STAGES[G.stage]; banner(`${S.name}の台`+(S.kind?'・'+S.kind:''),S.accent,2.2,200);
 }
 function stageClear(){
   G.state='clear'; G.fever=0; G.bs=[]; G.bl=[];
   const bonus=30+G.life*3; G.balls+=bonus; sfx.fever(); burst(188,300,'rainbow',30);
-  const S=STAGES[G.stage];
-  if(G.stage<STAGES.length-1){
-    writeSave();
-    showResult(`${G.stage+1}面 ${S.name} クリア！`,[`のこりライフ ${G.life}`,`クリアボーナス ${COIN}+${bonus}`,`お金 ${COIN}${G.balls}`,'ここまでセーブしたよ'],'お店へ',openShop);
-  }else{
-    clearSave();
-    showResult(`${G.stage+1}面までクリア！`,['試作はここまで',`倒した敵 ${G.kills}`,`お金 ${COIN}${G.balls}`],'1面からもう一度',newRun);
-  }
+  const S=STAGES[G.stage], first=!G.cleared.includes(G.stage);
+  if(first) G.cleared.push(G.stage);
+  writeSave();
+  showResult(`${S.name}の台 クリア！`,[`のこりライフ ${G.life}`,`クリアボーナス ${COIN}+${bonus}`,`お金 ${COIN}${G.balls}`,'ここまでセーブしたよ'],'台えらびへ',openBoards,'お店へ',openShop);
 }
 function gameOver(){
-  G.state='over'; closeSheet(true);
-  const s=readSave();
-  showResult('ゲームオーバー',[`${G.stage+1}面 WAVE ${G.wave} まで守った`,`倒した敵 ${G.kills}`],'1面からやりなおす',newRun,s?saveLabel(s):null,continueRun);
+  G.state='over'; closeSheet();
+  const S=STAGES[G.stage], i=G.boardIdx??0;
+  showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,'お金と玉のセットは、この台に入る前にもどるよ'],
+    'もう一度この台',()=>{loadSave();playBoard(i)},'台えらびへ',()=>{loadSave();openBoards()});
 }
 function openShop(){G.state='shop';renderShop();hideOverlays();$('shop').hidden=false}
 function renderShop(){
+  writeSave();
   $('shopBalls').textContent=G.balls;
   const L=$('shopBallList'); L.textContent='';
   for(const k of ['fire','ice','bolt','poison','lead','bb']){
@@ -1554,10 +1732,15 @@ function renderShop(){
     if(G.unlocked[k]) T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${COIN}${t.cost}`,'持ってる',false,null,true));
     else T.append(itemRow(t.color,t.name,`${t.desc}。建てるのは ${COIN}${t.cost}`,t.unlock,G.balls>=t.unlock,()=>{G.balls-=t.unlock;G.unlocked[k]=true;sfx.lv();renderShop()}));
   }
-  const n=STAGES[G.stage+1];
-  $('shopNext').textContent=n?`${G.stage+2}面 ${n.name}へ`:'次へ';
+  const M=$('shopGimmicks'); M.textContent='';
+  for(const k of Object.keys(GIMMICKS)){
+    const g=GIMMICKS[k], d=`${g.desc}。つけるのは ${COIN}${g.cost}`;
+    if(G.gimmicks[k]) M.append(itemRow(g.color,g.name,d,'持ってる',false,null,true));
+    else M.append(itemRow(g.color,g.name,d,g.unlock,G.balls>=g.unlock,()=>{G.balls-=g.unlock;G.gimmicks[k]=true;sfx.lv();renderShop()}));
+  }
 }
-$('shopNext').onclick=()=>{ensureAudio();G.stage++;startStage()};
+$('shopNext').onclick=()=>{ensureAudio();openBoards()};
+$('boardsShop').onclick=()=>{ensureAudio();openShop()};
 
 /* ---------- 釘をタップ ---------- */
 function openBuild(p){
@@ -1568,7 +1751,8 @@ function openBuild(p){
     const t=TOWERS[k];
     if(G.unlocked[k]){
       body.append(itemRow(t.color,t.name,`${t.desc}（とどく広さ ${t.range}）`,t.cost,G.balls>=t.cost,()=>{
-        G.balls-=t.cost; p.tower={type:k,lv:1,xp:0,cd:.3,rapid:0,pow:0,el:null,elT:0,sp:null,spT:0,combo:null,comboT:0,pop:.3,shot:0}; p.r=Math.max(p.r,7);
+        G.balls-=t.cost; p.tower={type:k,lv:1,xp:0,cd:.3,rapid:0,pow:0,el:null,elT:0,sp:null,spT:0,combo:null,comboT:0,pop:.3,shot:0,
+          ang:-Math.PI/2,tg:null,gm:null,bump:0,sa:0,sw:2.4,sdir:p.x<180?-1:1};   // ang＝砲身の向き（はじめは上）。gm＝ギミック。回転十字は左半分なら左回り（下のうでがまん中へ動く） p.r=Math.max(p.r,7);
         buildStatic(); burst(p.x,p.y,t.color,16); sfx.build(); closeSheet();
       }));
     }else{
@@ -1592,7 +1776,20 @@ function openInfo(p){
   info.innerHTML=(T.lv<4?`経験値 <b class="num">${T.xp} / ${XP_NEED[T.lv]}</b>`:'<b>レベル最大</b>')+
     (now.length?'<br>'+now.join('<br>'):'')+
     `<br>${D.desc}。玉を当てると経験値。同じ属性が重なるとくしゅ効果、ちがう属性で「わざ」`;
-  body.append(info); $('sheet').hidden=false;
+  body.append(info);
+  // ギミック：お店で解放したものを、この砲台につける（1つだけ。つけかえもできる）
+  if(Object.keys(GIMMICKS).some(k=>G.gimmicks[k])){
+    const h=document.createElement('h3'); h.textContent='ギミックをつける'; h.style.margin='4px 0 0'; body.append(h);
+    for(const k of Object.keys(GIMMICKS)){
+      const M=GIMMICKS[k];
+      if(T.gm===k) body.append(itemRow(M.color,M.name,M.desc,'ついてる',false,null,true));
+      else if(G.gimmicks[k]) body.append(itemRow(M.color,M.name,M.desc+(T.gm?'（いまのギミックと入れかえ）':''),M.cost,G.balls>=M.cost,()=>{
+        G.balls-=M.cost; T.gm=k; T.bump=.25; T.sw=8; burst(p.x,p.y,'#e8f4ff',14); sfx.build(); closeSheet();
+      }));
+      else{const row=itemRow(M.color,M.name,'お店で手に入るよ','—',false);row.classList.add('locked');body.append(row)}
+    }
+  }else info.innerHTML+='<br>お店で<b>ギミック</b>（バンパー・回転十字）を買うと、この砲台につけられるよ';
+  $('sheet').hidden=false;
 }
 function closeSheet(){$('sheet').hidden=true;G.sel=null;G.paused=false}
 $('sheetClose').onclick=()=>closeSheet();
@@ -1634,8 +1831,12 @@ handle.addEventListener('keydown',e=>{
 });
 
 $('mute').onclick=()=>{muted=!muted;$('mute').setAttribute('aria-pressed',String(!muted));$('mute').setAttribute('aria-label',muted?'音 OFF':'音 ON');if(!muted)ensureAudio()};
-$('startBtn').onclick=()=>{ensureAudio();newRun()};
-$('contBtn').onclick=()=>{ensureAudio();continueRun()};
+$('startBtn').onclick=()=>{ensureAudio();readSave()?continueRun():newRun()};
+$('contBtn').onclick=()=>{
+  ensureAudio();
+  if(!confirmNew){confirmNew=true;$('contBtn').textContent='セーブを消して はじめから？（もう一度おしてね）';return}
+  clearSave(); newRun();
+};
 
 /* ---------- ループ ---------- */
 let last=performance.now();
