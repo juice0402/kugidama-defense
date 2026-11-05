@@ -47,13 +47,13 @@ G.balls=150;G.deck=['normal','normal','normal','fire','ice'];G.owned={fire:1,ice
 for(const k in G.unlocked) G.unlocked[k]=k==='basic'; for(const k in G.gimmicks) G.gimmicks[k]=false;
 const out={};
 // from:台の番号 … その前の台はクリアずみ・その台はコインで買ったところから始める（前の台までの品は1つずつ持っている。自動プレイのキャンペーンと同じく、その台の品はまだ買っていない）
-// coins:はじめのコイン（なければ 200〜800 のどれか）、deckStart:はじめのセット（なければ キャンペーンでなる形）
+// coins:はじめのコイン（数か [下,上]。なければ 200〜800 のどれか。キャンペーンで砂漠に入るときは 300〜2000 くらい）、deckStart:はじめのセット（なければ キャンペーンでなる形）
 if(opts.from){const s0=opts.from, old=D=>(D.board||0)<s0;
-  G.cleared=[...Array(s0).keys()]; G.bought=[s0];
+  G.cleared=[...Array(s0).keys()]; G.bought=[...Array(s0+1).keys()];   // コインで買う前の台（洋館など）も買ってある（前は その台だけで、洋館の品が使えなかった）
   for(const k in T.TOWERS) if(old(T.TOWERS[k])) G.unlocked[k]=true;
   for(const k in T.GIMMICKS) if(old(T.GIMMICKS[k])) G.gimmicks[k]=true;
   for(const k in T.BALLS){const D=T.BALLS[k];if((D.el||k==='lead')&&old(D))G.owned[k]=1}
-  G.deck=(opts.deckStart||['water','vine','bolt','fire','ice']).slice(); G.balls=opts.coins??Math.round(200+Math.random()*600);
+  G.deck=(opts.deckStart||['water','vine','bolt','fire','ice']).slice(); const cn=opts.coins; G.balls=Array.isArray(cn)?Math.round(cn[0]+Math.random()*(cn[1]-cn[0])):cn??Math.round(200+Math.random()*600);   // coins:[300,2000] で その間のどれか
 }
 for(let s=opts.from||0;s<=upTo;s++){
   const res=[]; out[T.STAGES[s].name]=res;

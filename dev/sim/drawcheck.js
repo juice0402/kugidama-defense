@@ -1,6 +1,6 @@
 (()=>{   // 全部の台 × 全部のおばけ × いろいろな状態（しびれ・ねむり・こおり・根っこ・こんらん・がまん…）で update と draw を動かして、エラーがないか見る。使い方：python3 shot.py out.png "$(cat drawcheck.js)"（先に mk.py）。台の担当は states に自分の状態を足してよい
 const T=window.__T,G=T.G,errs=[];let n=0;
-const states=[{},{stun:2},{sleep:2},{freeze:1,stun:1,slow:2,slowF:.3},{root:1,vineT:3},{conf:1,dark:3},{burn:3,burnD:1},{psnT:5,psnD:1},{wet:4},{noteT:3,flinch:.5},{shock:2},{guard:2.5,holdT:0},{guard:1,stun:1,sleep:1},{holdT:2.4,stun:1},{ghost:1},{oops:.5},{hurtT:.3},{fear:2,rush:2},{thorn:2}];
+const states=[{},{stun:2},{sleep:2},{freeze:1,stun:1,slow:2,slowF:.3},{root:1,vineT:3},{conf:1,dark:3},{burn:3,burnD:1},{psnT:5,psnD:1},{wet:4},{noteT:3,flinch:.5},{shock:2},{guard:2.5,holdT:0},{guard:1,stun:1,sleep:1},{holdT:2.4,stun:1},{ghost:1},{oops:.5},{hurtT:.3},{fear:2,rush:2},{thorn:2},{sandT:2,blind:1,sink:1,mud:1},{windT:2},{mp:'dig',mt:.2},{mp:'under',mt:1,ghost:1},{dash:.5,tail:false},{knot:true},{drink:.5},{aim:.5},{clawStop:1},{shield:2,shHit:.1},{crack:.4}];
 for(let s=0;s<T.STAGES.length;s++){
   try{T.playBoard(T.BOARDS.findIndex(b=>b.stage===s));G.paused=true}catch(x){errs.push('play'+s+':'+x.message);continue}
   for(const t of Object.keys(T.ENEMIES)){
