@@ -422,12 +422,23 @@ const ENEMIES={
   // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）
   mid:{hp:1000,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:6,calls:['slime','slime']},
   boss:{hp:2200,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['slime','fast','tough']},
+  // 草原のおばけ（イタズラ好きの白いおばけに動物の耳。gh＝おばけの絵）
+  wata:{gh:1,hp:2.4,sp:.32,r:11,color:'#f4e27c',reward:5,split:'wata2'},        // わたげおばけ（ふつう）：倒すと小さいわたげ2つに分かれる
+  wata2:{gh:1,hp:.4,sp:.4,r:7,color:'#f4e27c',reward:2},                       // 分かれた小さいわたげ
+  usagi:{gh:1,hp:2,sp:.62,r:9,color:'#ff9ac8',reward:5,hop:1},                // うさぎおばけ（はやい）：ぴょんぴょん前へ
+  kakashi:{gh:1,hp:9,sp:.22,r:14,color:'#f0b85a',reward:10,hat:1},            // かかしおばけ（かたい）：近くの砲台に麦わら帽子をかぶせる
+  tanuki:{gh:1,hp:900,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:6,calls:['wata','wata'],dorn:12},              // 中ボス：葉っぱで化けて分身
+  uma:{gh:1,hp:1700,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['wata','usagi','kakashi'],dash:10},    // ボス：すけすけになって猛ダッシュ
 };
+// おばけのいたずら
+const HAT_T=5, HAT_R=85;          // かかしの帽子：かぶった砲台は撃てない秒数・投げる届く広さ（玉が当たると取れる）
+const FAKE_HP=20;                   // たぬきの分身：タワーの弾ならこのくらいで消える（玉なら1発）
+const DASH_K=2, DASH_D=1.5;       // 馬の猛ダッシュ：速さの倍率・つづく秒数（その間はすけすけで、砲台にねらわれない）
 const WAVES=10, WAVE_T=30, SPAWN_T=22, MID_WAVE=5, HP_GROW=.35, WAVE_N=[4,2.4];   // HP_GROW＝ウェーブごとに敵のHPがふえる割合。WAVE_N＝敵の数（a＋b×ウェーブ）   // 1ウェーブ30秒（1ゲーム約5分）。敵は最初の22秒で出る。倒しきると早めに次へ
 // scale＝玉・敵の大きさの倍率、range＝タワーのとどく広さの倍率
 const STAGES=[
-  {name:'草原',kind:'',style:'meadow',scale:1.3,range:1.15,accent:FIRE,layout:layoutMeadow},
-  {name:'森',kind:'液晶台',style:'neon',scale:1,range:1,peg:'#ffc46b',accent:'#ff9a3e',top:'#150a2a',bot:'#0b1a14',deco:'forest',layout:layoutLcd},
+  {name:'草原',kind:'',style:'meadow',scale:1.3,range:1.15,accent:FIRE,layout:layoutMeadow,foes:['wata','usagi','kakashi','tanuki','uma']},
+  {name:'森',kind:'液晶台',style:'neon',scale:1,range:1,peg:'#ffc46b',accent:'#ff9a3e',top:'#150a2a',bot:'#0b1a14',deco:'forest',layout:layoutLcd,foes:['slime','fast','tough','mid','boss']},
 ];
 // 台えらび。stage＝STAGES の番号。price＝買う値段（0は最初から遊べる）。soon＝まだ作っていない台
 // 新しい台を買うと、その台の品（サウンドタワーなど）がお店にふえる予定
@@ -444,7 +455,7 @@ const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,
 const SAVE_KEY='kugidama-save-v1';
 const NEW_UNLOCKED=()=>({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false});
 
-const G={fx:[],fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
+const G={fx:[],hats:[],hatFly:[],fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -497,6 +508,11 @@ const sfx={
   fever(){seq([523,659,784,1047,784,1047,1319],90,.14,.04)},
   bump(){const n=performance.now();if(n-(sfx._b||0)<60)return;sfx._b=n;tone(210,.13,'sine',.06,2.6)},
   spin(){const n=performance.now();if(n-(sfx._s||0)<70)return;sfx._s=n;tone(1400+Math.random()*300,.04,'triangle',.014,1.4)},
+  dorn(){tone(240,.28,'triangle',.05,.5);setTimeout(()=>tone(700,.16,'sine',.035,1.6),120)},     // ドロン
+  toss(){tone(900,.18,'sine',.025,.6)},                                                          // 帽子をぽいっ
+  hat(){tone(260,.12,'triangle',.05,.8)},                                                        // 帽子がすぽっ
+  dash(){tone(140,.5,'sawtooth',.03,2.8)},                                                       // 猛ダッシュ
+  oops(){seq([1200,900],60,.08,.03)},                                                            // びっくり
 };
 
 /* ---------- 釘の配置（本物の台を参考に） ---------- */
@@ -566,7 +582,7 @@ function setupStage(){
   G.mills=L.mills.map(m=>({...m,ang:0,spin:2.2}));
   G.lcd=L.lcd; G.frame=L.frame||null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
-  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.pend=[];G.portals=[];G.fw=[];G.conf=[];
+  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.hats=[];G.hatFly=[];
   G.life=G.lifeShow=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
@@ -893,11 +909,12 @@ const view=()=>({x0:-ox/scale,y0:-oy/scale,x1:(VW-ox)/scale,y1:(VH-oy)/scale});
 
 /* ---------- ウェーブ ---------- */
 function waveList(stage,w){
-  const boss=w===MID_WAVE?'mid':w===WAVES?'boss':null;
+  const F=STAGES[stage].foes;   // ふつう・はやい・かたい・中ボス・ボス
+  const boss=w===MID_WAVE?F[3]:w===WAVES?F[4]:null;
   const n=Math.round((WAVE_N[0]+w*WAVE_N[1]+stage*3)*(boss?.6:1)), list=boss?[boss]:[];
   for(let i=0;i<n;i++){
     const r=Math.random();
-    list.push(w>=3&&r<.2?'tough':w>=2&&r<.45?'fast':'slime');
+    list.push(w>=3&&r<.2?F[2]:w>=2&&r<.45?F[1]:F[0]);
   }
   return list;
 }
@@ -929,12 +946,48 @@ function spawn(t,at){
     G.alarm=2.6; G.alarmC=E.color;            // 台のまわりが警告の色で点滅
   }else if(!at) sfx.gate();
 }
+// 敵をその場に出す（o で中身を上書き）
+function addEnemy(t,x,y,o){
+  const E=ENEMIES[t], mul=E.boss?1+.45*G.stage:1+.45*G.stage+HP_GROW*(G.wave-1), r=E.r*G.bscale;
+  const e={id:G.eid++,t,x:inArch(x,y,r),y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r,ph:Math.random()*6.28,slow:0,flash:.12,dead:false,callT:E.call||0,born:0,
+    vx:0,dornT:(E.dorn||0)*.55,dashT:E.dash?5:0,ghost:0,trail:[],leaf:!!E.dorn,hatGone:false};
+  Object.assign(e,o); G.en.push(e); return e;
+}
 function popOut(p){
-  const t=p.t, E=ENEMIES[t], mul=E.boss?1+.45*G.stage:1+.45*G.stage+HP_GROW*(G.wave-1), r=E.r*G.bscale, x=p.x, y=p.y;
-  G.en.push({id:G.eid++,t,x,y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r,ph:Math.random()*6.28,slow:0,flash:.12,dead:false,callT:E.call||0,born:0});
+  const t=p.t, E=ENEMIES[t], e=addEnemy(t,p.x,p.y), x=e.x, y=e.y, r=e.r;
   G.rings.push({x,y,R:r*2.7,c:hexA(E.color,.9),t:.45},{x,y,R:r*1.7,c:'rgba(255,255,255,.85)',t:.3});
   burst(x,y,E.color,E.boss?30:9); sfx.pop();
   if(E.boss){G.shake=.6;G.flash=Math.max(G.flash,.22)}
+}
+/* ---------- おばけのいたずら ---------- */
+// ドロン：白いけむりと葉っぱ
+function dornFx(x,y,r){
+  for(let i=0;i<5;i++) fxMist(x,y,r*1.6,'#f4f1ff',true);
+  for(let i=0;i<(reduce?3:8);i++){const a=Math.random()*6.28,s=1+Math.random()*2;G.parts.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-1.4,t:.6+Math.random()*.4,c:Math.random()<.5?'#7ee36a':'#b8f06a'})}
+  G.rings.push({x,y,R:r*1.9,c:'rgba(255,255,255,.8)',t:.35});
+}
+// たぬき（中ボス）：葉っぱで化けて、にせもの2つ。3つの場所を入れかえるので、どれが本物かわからなくなる（にせものは頭に葉っぱ）
+function doDorn(e){
+  for(const o of G.en) if(o.fake&&o.real===e&&!o.dead){o.dead=true;dornFx(o.x,o.y,o.r)}
+  const d=e.r*2.3, spots=[[e.x,e.y],[e.x-d,e.y+6],[e.x+d,e.y+6]];
+  for(let i=spots.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[spots[i],spots[j]]=[spots[j],spots[i]]}
+  e.x=inArch(spots[0][0],spots[0][1],e.r); e.y=spots[0][1]; e.leaf=false; e.flash=0;
+  for(let i=1;i<3;i++) addEnemy(e.t,spots[i][0],spots[i][1],{fake:true,real:e,hp:FAKE_HP,max:FAKE_HP,sp:e.sp,ph:e.ph,born:1,flash:0,leaf:true,callT:0,dornT:0});
+  for(const [x,y] of spots) dornFx(x,y,e.r);
+  G.shake=Math.max(G.shake,.15); sfx.dorn();
+}
+function vanishFake(o){o.dead=true;dornFx(o.x,o.y,o.r);sfx.pop()}
+// かかし：近くの砲台に麦わら帽子を投げる（1つだけ）
+function throwHat(e){
+  let best=null,bd=HAT_R*HAT_R;
+  for(const p of G.pegs){const T=p.tower;if(!T||T.hat>0||G.hats.some(h=>h.p===p))continue;const d=(p.x-e.x)**2+(p.y-e.y)**2;if(d<bd){bd=d;best=p}}
+  if(!best) return;
+  e.hatGone=true; G.hats.push({x0:e.x,y0:e.y-e.r*.95,p:best,t:0,dur:.75,s:e.r/14}); sfx.toss();
+}
+function knockHat(p){
+  const T=p.tower; T.hat=0;
+  G.hatFly.push({x:p.x,y:p.y-p.r*1.4,vx:(Math.random()-.5)*3,vy:-3.2,rot:0,vr:(Math.random()<.5?-1:1)*9,t:1.1,s:1.15});
+  burst(p.x,p.y-6,'#f0d27a',8); sfx.pop();
 }
 
 /* ---------- 遊びの中身 ---------- */
@@ -1084,6 +1137,7 @@ function pegHit(p,b,impact){
 const curEl=T=>T.elT>0?T.el:(TOWERS[T.type].el||null);
 function towerHit(p,b){
   const T=p.tower, D=TOWERS[T.type], B=BALLS[b.t];
+  if(T.hat>0) knockHat(p);                                  // かかしの帽子は、玉が当たるとすぽっと取れる
   T.xp++; T.pop=.3;
   if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,D.color,14);sfx.lv()}
   if(B.buff==='pow'){if(T.pow<=0)addText(p.x,p.y-16,'攻撃UP',B.color);T.pow=BUFF_T}
@@ -1111,8 +1165,12 @@ function hurtEnemy(e,d,dot){
   if(e.dead) return;
   e.hp-=d; if(!dot) e.flash=.1;
   if(e.hp<=0){
-    e.dead=true; const r=ENEMIES[e.t].reward; G.balls+=r; G.kills++;
-    addText(e.x,e.y,'+'+r,GOLD); burst(e.x,e.y,ENEMIES[e.t].color,12); sfx.kill();
+    if(e.fake){vanishFake(e);return}                       // たぬきのにせもの：ドロンと消えるだけ
+    const E=ENEMIES[e.t];
+    e.dead=true; const r=E.reward; G.balls+=r; G.kills++;
+    addText(e.x,e.y,'+'+r,GOLD); burst(e.x,e.y,E.color,12); sfx.kill();
+    if(E.split) for(const s of [-1,1]) addEnemy(E.split,e.x+s*e.r*.5,e.y,{vx:s*1.3,born:.15});   // わたげ：ふわっと2つに分かれる
+    if(E.dorn) for(const o of G.en) if(o.fake&&o.real===e&&!o.dead) vanishFake(o);              // 本物を倒すと、にせものも消える
   }
 }
 // 属性を敵につける（lv 1〜3）
@@ -1123,13 +1181,13 @@ function applyEl(e,el,lv,dmg){
   else if(el==='bolt') zapFrom(e,lv,(dmg||1)*.6);
   else if(el==='poison'){e.psnT=6;e.psnD=Math.min(.9*lv,(e.psnT>0?e.psnD||0:0)+.25*lv)}
 }
-function around(e,R,fn){for(const o of G.en){if(o.dead)continue;const dx=o.x-e.x,dy=o.y-e.y;if(dx*dx+dy*dy<=R*R)fn(o)}}
+function around(e,R,fn){for(const o of G.en){if(o.dead||o.ghost>0)continue;const dx=o.x-e.x,dy=o.y-e.y;if(dx*dx+dy*dy<=R*R)fn(o)}}
 // 雷：近い敵に n 体までとびうつる
 function zapFrom(e,n,dmg,extra){
   const hit=new Set([e]); let from=e;
   for(let i=0;i<n;i++){
     let best=null,bd=75*75;
-    for(const o of G.en){if(o.dead||hit.has(o))continue;const d=(o.x-from.x)**2+(o.y-from.y)**2;if(d<bd){bd=d;best=o}}
+    for(const o of G.en){if(o.dead||o.ghost>0||hit.has(o))continue;const d=(o.x-from.x)**2+(o.y-from.y)**2;if(d<bd){bd=d;best=o}}
     if(!best) break;
     hit.add(best); G.zaps.push({x1:from.x,y1:from.y,x2:best.x,y2:best.y,t:.22});
     hurtEnemy(best,dmg); if(extra) extra(best); from=best;
@@ -1327,7 +1385,12 @@ function stepBalls(f){
         b.x=e.x+nx*rr; b.y=e.y+ny*rr;
         const vn=b.vx*nx+b.vy*ny; if(vn<0){b.vx-=1.6*vn*nx;b.vy-=1.6*vn*ny}
         const key='e'+e.id;
-        if(G.time-(b.hit[key]??-9)>.3){b.hit[key]=G.time;hurtEnemy(e,B.dmg*(G.fever>0?2:1));if(B.el)ballElOnEnemy(e,B.el,B.dmg)}
+        if(G.time-(b.hit[key]??-9)>.3){
+          b.hit[key]=G.time;
+          if(e.fake){vanishFake(e);continue}                 // たぬきのにせものは玉1発で消える
+          if(e.ghost>0){e.ghost=0;e.stun=Math.max(e.stun||0,.9);e.oops=.8;G.rings.push({x:e.x,y:e.y,R:e.r*1.6,c:'#ffffff',t:.35});sfx.oops()}   // すけすけの馬は、玉が当たるとびっくりして止まる
+          hurtEnemy(e,B.dmg*(G.fever>0?2:1));if(B.el)ballElOnEnemy(e,B.el,B.dmg)
+        }
       }
       for(const q of G.pockets){
         const hw=pocketHW(q); if(hw<=0) continue;
@@ -1362,10 +1425,22 @@ function update(dt){
     if(e.psnT>0){e.psnT-=rd;hurtEnemy(e,e.psnD*dt,true)}
     if(e.dead) continue;
     const sf=e.slowF||.45, slowK=E.boss?1-(1-sf)*(1-BOSS_RES):sf;   // おそくなる強さも弱め
-    e.y+=e.sp*(e.stun>0?0:e.slow>0?slowK:1)*f;
+    let mv=1;
+    if(E.hop){const q=(e.born*1.25+e.ph)%1;mv=q<.4?2.2:.2;e.hopY=q<.4?Math.sin(q/.4*Math.PI):0}   // うさぎ：ぴょんと進んで、ひと休み（ならすと同じ速さ）
+    e.oops=Math.max(0,(e.oops||0)-dt);
+    if(E.dash){   // 馬：ときどき すけすけになって猛ダッシュ（うしろに残像）
+      if(e.ghost>0){e.ghost-=dt;mv*=DASH_K;e.trailT=(e.trailT||0)-dt;if(e.trailT<=0){e.trailT=.07;e.trail.push({x:e.x,y:e.y,a:.5})}}
+      else if(e.stun<=0){e.dashT-=dt;if(e.dashT<=0){e.dashT=E.dash;e.ghost=DASH_D;sfx.dash();G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:hexA(E.color,.8),t:.4})}}
+      for(const q of e.trail) q.a-=dt*1.6; e.trail=e.trail.filter(q=>q.a>0);
+    }
+    e.y+=e.sp*mv*(e.stun>0?0:e.slow>0?slowK:1)*f;
+    if(e.vx){e.x+=e.vx*f;e.vx*=Math.pow(.93,f);if(Math.abs(e.vx)<.02)e.vx=0}
     e.x=inArch(e.x+Math.sin(G.time*1.7+e.ph)*(E.boss?.12:.28)*f,e.y,e.r); e.born+=dt;
-    if(E.call&&e.stun<=0){e.callT-=dt;if(e.callT<=0){e.callT=E.call;for(const t of E.calls)spawn(t,e);burst(e.x,e.y,E.color,14);sfx.warp()}}
+    if(E.call&&!e.fake&&e.stun<=0){e.callT-=dt;if(e.callT<=0){e.callT=E.call;for(const t of E.calls)spawn(t,e);burst(e.x,e.y,E.color,14);sfx.warp()}}
+    if(E.dorn&&!e.fake&&e.stun<=0){e.dornT-=dt;if(e.dornT<=0){e.dornT=E.dorn;doDorn(e)}}
+    if(E.hat&&!e.hatGone&&e.born>1&&e.stun<=0) throwHat(e);
     if(e.y>=578-(E.boss?e.r*.6:0)){
+      if(e.fake){vanishFake(e);continue}                     // にせものは受け皿に来てもドロンと消えるだけ
       const loss=E.boss===2?G.life:E.boss===1?5:1;
       e.dead=true; G.life-=loss; G.shake=E.boss?.8:.35; G.trayHurtAt=G.time; G.trayX=e.x;
       addText(e.x,562,'ライフ -'+loss,BERRY,true); burst(e.x,580,BERRY,E.boss?30:10); sfx.hurt();
@@ -1377,11 +1452,12 @@ function update(dt){
     T.rapid=Math.max(0,T.rapid-dt); T.pow=Math.max(0,T.pow-dt); T.elT=Math.max(0,T.elT-dt); T.spT=Math.max(0,T.spT-dt); T.comboT=Math.max(0,T.comboT-dt);
     T.pop=Math.max(0,T.pop-dt); T.shot=Math.max(0,T.shot-dt); T.bump=Math.max(0,T.bump-dt); T.cd-=dt;
     if(T.gm==='spinner'){T.sw=Math.max(2.4,T.sw-dt*3);T.sa+=T.sw*T.sdir*dt}
+    if(T.hat>0){T.hat-=dt;if(T.hat<=0)knockHat(p);continue}   // かかしの帽子をかぶっている間は撃てない
     // 砲身は、ねらっている敵の方へくるっと向く
     if(T.tg&&!T.tg.dead){let da=Math.atan2(T.tg.y-p.y,T.tg.x-p.x)-T.ang;da=Math.atan2(Math.sin(da),Math.cos(da));T.ang+=Math.max(-9*dt,Math.min(9*dt,da))}
     if(T.cd<=0){
       const R=D.range*(1+.08*(T.lv-1))*G.rscale; let best=null,by=-1;
-      for(const e of G.en){if(e.dead)continue;const dx=e.x-p.x,dy=e.y-p.y;if(dx*dx+dy*dy<=R*R&&e.y>by){best=e;by=e.y}}
+      for(const e of G.en){if(e.dead||e.ghost>0)continue;const dx=e.x-p.x,dy=e.y-p.y;if(dx*dx+dy*dy<=R*R&&e.y>by){best=e;by=e.y}}   // すけすけの敵はねらえない
       if(best){
         const el=curEl(T), fx=T.comboT>0?{combo:T.combo}:T.spT>0?{sp:T.sp}:el?{el,lv:1}:null;
         const c=T.comboT>0?COMBO[T.combo].color:T.spT>0?SPECIAL[T.sp].color:el?ELEM[el].color:D.color;
@@ -1394,6 +1470,7 @@ function update(dt){
   }
   for(const u of G.bl){
     if(u.tg.dead){u.gone=true;continue}
+    if(u.tg.ghost>0){u.gone=true;burst(u.x,u.y,'#ffffff',3);continue}   // すけすけになった敵には当たらない
     const dx=u.tg.x-u.x, dy=u.tg.y-u.y, d=Math.hypot(dx,dy), sp=7*f;
     if(d<=sp+u.tg.r*.5){
       const tg=u.tg; hurtEnemy(tg,u.dmg);
@@ -1410,6 +1487,12 @@ function update(dt){
       else{e.psnD=Math.max(e.psnT>0?e.psnD||0:0,.7);e.psnT=Math.max(e.psnT||0,1.2)}}
   }
   G.zones=G.zones.filter(z=>z.t>0);
+  // かかしの帽子：ふわっと飛んで、砲台にすぽっ
+  for(const h of G.hats){
+    h.t+=dt; if(h.t<h.dur) continue;
+    const T=h.p.tower; if(T&&!(T.hat>0)){T.hat=HAT_T;T.hatT=0;burst(h.p.x,h.p.y-8,'#f0d27a',6);sfx.hat()}
+  }
+  G.hats=G.hats.filter(h=>h.t<h.dur);
   G.en=G.en.filter(e=>!e.dead);
   emitFx(dt);
   // フィーバー
@@ -1441,6 +1524,7 @@ function updateFx(dt){
   for(const z of G.zaps) z.t-=dt; G.zaps=G.zaps.filter(z=>z.t>0);
   for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
   for(const p of G.portals) p.age+=dt; G.portals=G.portals.filter(p=>p.age<p.dur);
+  for(const h of G.hatFly){h.x+=h.vx*f;h.y+=h.vy*f;h.vy+=.12*f;h.rot+=h.vr*dt;h.t-=dt} G.hatFly=G.hatFly.filter(h=>h.t>0);
   G.lifeShow+=(Math.max(0,G.life)-G.lifeShow)*Math.min(1,dt*(G.time-(G.trayHurtAt??-9)<.35?1:5));   // 白い所は少し待ってから追いかける
   updateFxParts(dt);
   G.banners=G.banners.filter(b=>b.t<b.dur);
@@ -1772,6 +1856,7 @@ function drawTower(p,t){
   drawStake(ctx,p.x,p.y,R);
   drawGimmick(p,T);
   drawGun(p,T,t);
+  if(T.hat>0){const end=T.hat<1.5?Math.sin(t*30)*.12:0;drawStrawHat(ctx,p.x,p.y-R*.6,R/8.5,-.15+Math.sin(t*2+p.id)*.06+end,1)}   // かかしの帽子をかぶって撃てない（とれる前はぷるぷる）
   if(T.lv<4){const a=XP_NEED[T.lv-1], b=XP_NEED[T.lv], fr=(T.xp-a)/(b-a);ctx.strokeStyle=MOON;ctx.lineWidth=2;ctx.beginPath();ctx.arc(p.x,p.y,R+5+(T.gm==='bumper'?2.5:0),-Math.PI/2,-Math.PI/2+fr*Math.PI*2);ctx.stroke()}
   ctx.fillStyle=MOON;
   for(let i=0;i<T.lv;i++){const a=Math.PI/2+(i-(T.lv-1)/2)*.38;circle(p.x+Math.cos(a)*(R+9+(T.gm==='bumper'?2:0)),p.y+Math.sin(a)*(R+9+(T.gm==='bumper'?2:0)),2);ctx.fill()}
@@ -1853,11 +1938,153 @@ function drawPortals(t){
 }
 // あらわれるときは、出口から ぽんと飛び出す（大きめにはずんで、少し上へとびはねる）
 function drawEnemy(e){
-  const b=e.born??1, D=.5;
-  if(b>=D||reduce){drawEnemyBody(e);return}
+  const b=e.born??1, D=.5, body=ENEMIES[e.t].gh?drawGhost:drawEnemyBody;
+  if(b>=D||reduce){body(e);return}
   const p=b/D, s=2.6, k=1+(s+1)*Math.pow(p-1,3)+s*Math.pow(p-1,2), q=Math.sin(p*Math.PI);
   ctx.save(); ctx.globalAlpha=Math.min(1,p*3); ctx.translate(e.x,e.y-e.r*.7*q); ctx.scale(k*(1-.14*q),k*(1+.18*q)); ctx.translate(-e.x,-e.y);
-  drawEnemyBody(e); ctx.restore();
+  body(e); ctx.restore();
+}
+/* ---------- おばけの絵：白いふわふわのおばけ＋動物の耳。イタズラ顔 ---------- */
+// 体の形：まるい頭と、3つにゆれるすそ（まん中あたりが e.y）
+function ghostPath(c,r,t,ph){
+  const w=r*.94, top=-r*.14, bot=r*.52, n=3, xR=w*1.12, seg=xR*2/n, sw=Math.sin(t*3+ph)*r*.05;
+  c.beginPath(); c.moveTo(-w,top); c.arc(0,top,w,Math.PI,0);
+  c.quadraticCurveTo(w*1.04,bot*.6,xR+sw,bot);
+  for(let i=0;i<n;i++){const xa=xR-seg*i, xb=xa-seg, wob=Math.sin(t*5+ph+i*1.9)*r*.1;c.quadraticCurveTo((xa+xb)/2+wob+sw,bot+r*.64,xb+sw,bot)}
+  c.quadraticCurveTo(-w*1.04,bot*.6,-w,top); c.closePath();
+}
+// 麦わら帽子（かかしの頭・砲台にかぶせた所・飛んでいる所で同じ絵）
+function drawStrawHat(c,x,y,s,rot,a=1){
+  c.save(); c.translate(x,y); c.rotate(rot); c.scale(s,s); c.globalAlpha*=a;
+  c.strokeStyle='#9c6d27'; c.lineWidth=1.1;
+  c.fillStyle='#efc566'; c.beginPath(); c.ellipse(0,0,13,4.2,0,0,Math.PI*2); c.fill(); c.stroke();
+  c.fillStyle='#f7d77f'; c.beginPath(); c.moveTo(-7.2,.4); c.bezierCurveTo(-7.4,-10,7.4,-10,7.2,.4); c.closePath(); c.fill(); c.stroke();
+  c.fillStyle='#e0524f'; c.beginPath(); c.moveTo(-7.3,-.6); c.lineTo(7.3,-.6); c.lineTo(7.1,-3.2); c.lineTo(-7.1,-3.2); c.closePath(); c.fill();
+  c.strokeStyle='rgba(156,109,39,.55)'; c.lineWidth=.6;
+  for(const k of [-9,-4.5,4.5,9]){c.beginPath();c.moveTo(k,-1.6);c.lineTo(k*1.25,1.8);c.stroke()}
+  c.restore();
+}
+function ghostEye(x,y,r,wink){
+  if(wink){ctx.strokeStyle='#2b2140';ctx.lineWidth=Math.max(1,r*.06);ctx.beginPath();ctx.moveTo(x-r*.12,y+r*.02);ctx.quadraticCurveTo(x,y-r*.12,x+r*.12,y+r*.02);ctx.stroke();return}
+  ctx.fillStyle='#2b2140'; ctx.beginPath(); ctx.ellipse(x,y,r*.12,r*.16,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff'; circle(x-r*.04,y-r*.06,r*.05); ctx.fill();
+}
+function drawGhost(e){
+  const E=ENEMIES[e.t], r=e.r, t=G.time, k=Math.min(1,(e.flash||0)/.1), hop=(e.hopY||0)*r*.55, ink='#2b2140';
+  const tint=e.slow>0?'#d6f1ff':mixW(E.color,e.t==='tanuki'?.82:.88);
+  // 影（体はうかんでいる）
+  ctx.fillStyle='rgba(0,0,0,.26)'; ctx.beginPath(); ctx.ellipse(e.x+2,e.y+r*1.08,r*.72*(1-hop/r*.3),r*.2,0,0,Math.PI*2); ctx.fill();
+  // 馬の残像
+  if(e.trail&&e.trail.length){for(const q of e.trail){ctx.save();ctx.translate(q.x,q.y);ctx.globalAlpha=q.a*.45;ghostPath(ctx,r,t,e.ph);ctx.fillStyle=hexA(E.color,.6);ctx.fill();ctx.restore()}}
+  const ga=ctx.globalAlpha*(e.ghost>0?.3+.08*Math.sin(t*30):1);   // glow は透明度を1にもどすので、そのあとで ga にもどす
+  ctx.save(); ctx.translate(e.x,e.y-hop);
+  if(k>0) ctx.scale(1+.12*k,1-.1*k);
+  ctx.globalCompositeOperation='lighter'; glow(E.color,0,-r*.1,r*(E.boss?2.3:2),(E.boss?.3+.1*Math.sin(t*4):.2)*ga); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=ga;
+  const lw=Math.max(1.2,r*.075), line=hexA(E.color,.9);
+  // ---- 体のうしろの部品 ----
+  if(e.t==='usagi'){
+    const fl=(e.hopY||0)*.3;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.36,-r*.92);ctx.rotate(s*(.18+fl));
+      ctx.fillStyle=tint;ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.ellipse(0,-r*.5,r*.22,r*.62,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#ffb6d3';ctx.beginPath();ctx.ellipse(0,-r*.46,r*.1,r*.42,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+  }else if(e.t==='kakashi'){
+    ctx.strokeStyle='#8a5a2b'; ctx.lineWidth=r*.16; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(-r*1.45,r*.12); ctx.lineTo(r*1.45,r*.12); ctx.stroke();
+    ctx.strokeStyle='#f2cf6e'; ctx.lineWidth=Math.max(1,r*.06);
+    for(const s of [-1,1]) for(const a of [-.5,0,.5]){ctx.beginPath();ctx.moveTo(s*r*1.42,r*.12);ctx.lineTo(s*r*1.42+s*Math.cos(a)*r*.32,r*.12+Math.sin(a)*r*.32);ctx.stroke()}
+  }else if(e.t==='tanuki'){
+    ctx.save(); ctx.translate(r*.95,r*.42); ctx.rotate(-.65+Math.sin(t*3+e.ph)*.12);
+    ctx.beginPath(); ctx.ellipse(r*.25,0,r*.55,r*.27,0,0,Math.PI*2); ctx.fillStyle='#b97c46'; ctx.fill(); ctx.save(); ctx.clip();
+    ctx.fillStyle='#5b3a22'; for(const x of [r*.12,r*.42]) ctx.fillRect(x,-r*.4,r*.12,r*.8); ctx.fillRect(r*.66,-r*.4,r*.3,r*.8); ctx.restore();
+    ctx.strokeStyle=line; ctx.lineWidth=lw; ctx.stroke(); ctx.restore();
+    for(const s of [-1,1]){ctx.fillStyle='#b97c46';circle(s*r*.6,-r*.86,r*.27);ctx.fill();ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.stroke();ctx.fillStyle='#5b3a22';circle(s*r*.6,-r*.84,r*.13);ctx.fill()}
+  }else if(e.t==='uma'){
+    // たてがみ：頭のてっぺんから右へ流れて、右がわをなびく
+    ctx.save(); ctx.globalCompositeOperation='lighter'; glow('#d65cff',r*.7,-r*.3,r*1.3,.45*ga); ctx.globalCompositeOperation='source-over'; ctx.lineCap='round'; ctx.globalAlpha=ga;
+    for(let i=0;i<6;i++){
+      const a=-1.95+i*.26, x0=Math.cos(a)*r*.86, y0=-r*.14+Math.sin(a)*r*.86, sw=Math.sin(t*4+i*1.1+e.ph)*r*.14;
+      ctx.strokeStyle=i%2?'#f06bd8':'#c94cf2'; ctx.lineWidth=r*.2;
+      ctx.beginPath(); ctx.moveTo(x0,y0); ctx.quadraticCurveTo(x0+r*.95,y0-r*.25+sw,r*1.12+sw*.6,y0+r*.75+i*r*.12+sw); ctx.stroke();
+    }
+    ctx.restore(); ctx.globalAlpha=ga;
+    for(const s of [-1,1]){ctx.fillStyle=tint;ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(s*r*.22,-r*.86);ctx.lineTo(s*r*.62,-r*.8);ctx.lineTo(s*r*.5,-r*1.38);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.fillStyle='#ffb6d3';ctx.beginPath();ctx.moveTo(s*r*.33,-r*.86);ctx.lineTo(s*r*.54,-r*.84);ctx.lineTo(s*r*.48,-r*1.18);ctx.closePath();ctx.fill()}
+  }
+  // ---- 体 ----
+  const g=ctx.createRadialGradient(-r*.3,-r*.5,r*.08,0,-r*.1,r*1.45);
+  g.addColorStop(0,'#ffffff'); g.addColorStop(.62,'#fbfcff'); g.addColorStop(.86,tint); g.addColorStop(1,mixW(e.slow>0?'#9fd8ff':E.color,.66));
+  ghostPath(ctx,r,t,e.ph); ctx.fillStyle=g; ctx.fill();
+  ctx.strokeStyle=line; ctx.lineWidth=lw; if(e.ghost>0){ctx.setLineDash([3,3]);ctx.lineDashOffset=-t*20} ctx.stroke(); ctx.setLineDash([]);
+  // 状態（体の中だけ色をかえる）
+  if(e.psnT>0||k>0){ctx.save();ghostPath(ctx,r,t,e.ph);ctx.clip();
+    if(e.psnT>0){ctx.fillStyle='rgba(150,80,230,.32)';ctx.fillRect(-r*1.2,-r*1.2,r*2.4,r*2.4)}
+    if(k>0){ctx.fillStyle=hexA(E.color,.38*k);ctx.fillRect(-r*1.2,-r*1.2,r*2.4,r*2.4)}
+    ctx.restore()}
+  // ---- 顔と前の部品 ----
+  const ey=e.t==='uma'?-r*.28:-r*.2;
+  if(e.t==='tanuki'){ctx.fillStyle='rgba(122,80,48,.92)';for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.33,-r*.16,r*.26,r*.19,s*.45,0,Math.PI*2);ctx.fill()}}
+  ghostEye(-r*.32,ey,r,e.t==='usagi'); ghostEye(r*.32,ey,r,false);
+  ctx.fillStyle='rgba(255,130,165,.5)'; for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.58,ey+r*.2,r*.14,r*.08,0,0,Math.PI*2);ctx.fill()}
+  ctx.strokeStyle=ink; ctx.lineWidth=Math.max(1,r*.06); ctx.lineCap='round';
+  if(e.t==='wata'||e.t==='wata2'){ctx.beginPath();ctx.arc(-r*.08,ey+r*.24,r*.08,.1,Math.PI-.1);ctx.arc(r*.08,ey+r*.24,r*.08,.1,Math.PI-.1);ctx.stroke()}   // ω
+  else if(e.t==='usagi'){ctx.beginPath();ctx.arc(0,ey+r*.2,r*.13,.15,Math.PI-.15);ctx.stroke();ctx.fillStyle='#ff6f9a';ctx.beginPath();ctx.ellipse(r*.03,ey+r*.36,r*.08,r*.1,0,0,Math.PI*2);ctx.fill()}   // べー
+  else if(e.t==='kakashi'){const y=ey+r*.32;ctx.beginPath();ctx.moveTo(-r*.24,y);ctx.lineTo(r*.24,y);ctx.stroke();ctx.lineWidth=Math.max(.8,r*.04);for(const x of [-.15,0,.15]){ctx.beginPath();ctx.moveTo(x*r,y-r*.07);ctx.lineTo(x*r,y+r*.07);ctx.stroke()}
+    ctx.save();ctx.translate(r*.34,r*.36);ctx.rotate(.2);ctx.fillStyle='#9fd3ff';ctx.fillRect(-r*.17,-r*.15,r*.34,r*.3);ctx.setLineDash([1.5,1.5]);ctx.strokeStyle='#4d6f95';ctx.lineWidth=.8;ctx.strokeRect(-r*.13,-r*.11,r*.26,r*.22);ctx.setLineDash([]);ctx.restore()}
+  else if(e.t==='tanuki'){ctx.fillStyle=ink;ctx.beginPath();ctx.ellipse(0,ey+r*.2,r*.09,r*.065,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(-r*.2,ey+r*.33);ctx.quadraticCurveTo(r*.02,ey+r*.48,r*.24,ey+r*.26);ctx.stroke()}   // にやり
+  else if(e.t==='uma'){ctx.beginPath();ctx.moveTo(-r*.26,ey+r*.3);ctx.quadraticCurveTo(0,ey+r*.52,r*.26,ey+r*.3);ctx.closePath();ctx.fillStyle='#5a2747';ctx.fill();ctx.stroke();   // ニッ（大きな前歯）
+    ctx.fillStyle='#fff';ctx.fillRect(-r*.1,ey+r*.31,r*.09,r*.09);ctx.fillRect(r*.01,ey+r*.31,r*.09,r*.09)}
+  // 頭の上
+  if(e.t==='wata'||e.t==='wata2'){
+    const cx=r*.14, cy=-r*1.62, R=r*.52;
+    ctx.strokeStyle='#a9d46a'; ctx.lineWidth=Math.max(1,r*.07); ctx.beginPath(); ctx.moveTo(0,-r*1.02); ctx.quadraticCurveTo(-r*.02,-r*1.3,cx,cy+R*.2); ctx.stroke();
+    ctx.globalCompositeOperation='lighter'; glow('#fff3b0',cx,cy,R*2.3,.45*ga); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=ga;
+    ctx.strokeStyle='rgba(255,255,255,.92)'; ctx.lineWidth=Math.max(.7,r*.035); ctx.fillStyle='#ffffff';
+    for(let i=0;i<12;i++){const a=i/12*6.28+Math.sin(t*2+e.ph)*.12, x=cx+Math.cos(a)*R, y=cy+Math.sin(a)*R;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();circle(x,y,Math.max(.8,r*.06));ctx.fill()}
+    ctx.fillStyle=E.color; circle(cx,cy,R*.22); ctx.fill();
+  }else if(e.t==='kakashi'){
+    if(!e.hatGone) drawStrawHat(ctx,0,-r*.88,r/11,-.12,1);
+    else{ctx.strokeStyle='#f2cf6e';ctx.lineWidth=Math.max(1,r*.07);for(const a of [-.5,0,.45]){ctx.beginPath();ctx.moveTo(a*r*.3,-r*1.0);ctx.quadraticCurveTo(a*r*.6,-r*1.3,a*r*.9,-r*1.32);ctx.stroke()}}
+  }else if(e.t==='tanuki'&&e.leaf){
+    ctx.save(); ctx.translate(r*.06,-r*1.12); ctx.rotate(-.5+Math.sin(t*2.4+e.ph)*.15);
+    ctx.globalCompositeOperation='lighter'; glow('#7ee36a',0,-r*.2,r*.7,.35*ga); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=ga;
+    ctx.fillStyle='#7ee36a'; ctx.strokeStyle='#3c8c3a'; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.bezierCurveTo(-r*.3,-r*.15,-r*.22,-r*.55,0,-r*.68); ctx.bezierCurveTo(r*.22,-r*.55,r*.3,-r*.15,0,0); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(0,r*.05); ctx.lineTo(0,-r*.6); ctx.stroke(); ctx.restore();
+  }else if(e.t==='uma'){
+    ctx.save(); ctx.lineCap='round'; ctx.lineWidth=r*.15; ctx.globalAlpha=ga;
+    for(const [dx,c] of [[-.08,'#c94cf2'],[.1,'#f06bd8']]){const sw=Math.sin(t*4+dx*9+e.ph)*r*.06;ctx.strokeStyle=c;ctx.beginPath();ctx.moveTo(dx*r,-r*1.0);ctx.quadraticCurveTo(dx*r+r*.25+sw,-r*.8,dx*r+r*.12+sw,-r*.55);ctx.stroke()}
+    ctx.restore(); ctx.globalAlpha=ga;
+    ctx.save(); ctx.translate(-r*.3,-r*1.0); ctx.rotate(-.3);
+    const w=r*.34; ctx.fillStyle='#ffd84a'; ctx.strokeStyle='#8a5a00'; ctx.lineWidth=1.2;
+    ctx.beginPath(); ctx.moveTo(-w,0); ctx.lineTo(-w,-r*.32); ctx.lineTo(-w*.5,-r*.14); ctx.lineTo(0,-r*.4); ctx.lineTo(w*.5,-r*.14); ctx.lineTo(w,-r*.32); ctx.lineTo(w,0); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#ff5fd2'; circle(0,-r*.1,r*.06); ctx.fill(); ctx.restore();
+  }
+  ctx.restore();
+  // 状態のまわりの光（やけど・しびれ）
+  if(e.burn>0){ctx.globalCompositeOperation='lighter';glow('#ff7a3d',e.x,e.y-hop,r*1.6,.32+.12*Math.sin(t*14+e.ph));ctx.globalCompositeOperation='source-over'}
+  if(e.slow>0){ctx.strokeStyle='rgba(225,248,255,.55)';ctx.lineWidth=1;ctx.save();ctx.translate(e.x,e.y-hop);ctx.scale(1.08,1.08);ghostPath(ctx,r,t,e.ph);ctx.stroke();ctx.restore()}
+  if(e.stun>0||e.shock>0){ctx.globalCompositeOperation='lighter';glow('#ffe14f',e.x,e.y-hop,r*1.5,.25+.25*Math.random());ctx.globalCompositeOperation='source-over'}
+  // びっくり（すけすけの馬に玉が当たった）
+  if(e.oops>0){const y=e.y-r*1.55-Math.sin((.8-e.oops)*14)*3;ctx.font=`900 ${Math.round(r*.7)}px "M PLUS Rounded 1c",sans-serif`;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#2b2140';ctx.strokeText('!',e.x+r*.7,y);ctx.fillStyle='#ffe14f';ctx.fillText('!',e.x+r*.7,y)}
+  // HP（ボスは上のバー、ほかはまわりの輪）。たぬきのにせものは本物の残りを見せる
+  const src=e.fake&&e.real?e.real:e, fr=Math.max(0,src.hp/src.max), hc=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a';
+  if(E.boss){
+    const bw=r*2.2, by=e.y-r*1.62-8;
+    ctx.globalAlpha=e.ghost>0?.4:1;
+    ctx.fillStyle='rgba(0,0,0,.6)'; rrPath(ctx,e.x-bw/2-1.5,by-1.5,bw+3,8,4); ctx.fill();
+    ctx.fillStyle=hc; rrPath(ctx,e.x-bw/2,by,bw*fr,5,2.5); ctx.fill(); ctx.globalAlpha=1;
+  }else{
+    const cy=e.y-hop-r*.1, R=r*1.1+3;
+    ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=3.2; circle(e.x,cy,R); ctx.stroke();
+    ctx.strokeStyle=hc; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(e.x,cy,R,-Math.PI/2,-Math.PI/2+fr*Math.PI*2); ctx.stroke();
+  }
+}
+// 飛んでいる帽子・砲台から落ちる帽子
+function drawHats(){
+  for(const h of G.hats){
+    const u=Math.min(1,h.t/h.dur), x=h.x0+(h.p.x-h.x0)*u, y=h.y0+(h.p.y-h.p.r*1.25-h.y0)*u-46*(1-(2*u-1)**2);
+    drawStrawHat(ctx,x,y,h.s*.9,u*Math.PI*4,1);
+  }
+  for(const h of G.hatFly) drawStrawHat(ctx,h.x,h.y,h.s,h.rot,Math.min(1,h.t*2));
 }
 function drawEnemyBody(e){
   const E=ENEMIES[e.t], col=e.slow>0?'#bfe6ff':E.color, r=e.r;
@@ -1992,6 +2219,7 @@ function draw(){
   for(const p of G.pegs) if(p.tower) drawTower(p,t);
   drawPortals(t);
   for(const e of G.en) drawEnemy(e);
+  drawHats();
   // タワーの弾
   for(const u of G.bl){ctx.fillStyle=u.c;circle(u.x,u.y,2.8);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1;ctx.stroke()}
   drawFx();
@@ -2145,10 +2373,11 @@ const inSet=k=>G.deck.filter(x=>x===k).length;
 
 /* ---------- ロビー（夜のゲームセンター）：下のタブで 台・玉・タワー・ギミック・セット ---------- */
 const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',gimmick:'お店・ギミック',set:'玉のセット'};
-const SHOP_BALLS=['lead','bb','heal','fire','ice','bolt','poison'],   // 無属性弾 → 回復弾 → 属性弾 SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
+const SHOP_BALLS=['lead','bb','heal','fire','ice','bolt','poison'];   // 無属性弾 → 回復弾 → 属性弾
+const SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
 let hubTab='board', toastT=0;
 function openHub(tab){
-  G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; G.pend=[]; G.portals=[]; G.fw=[]; G.conf=[]; closeSheet(); closeBuy();
+  G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; G.pend=[]; G.portals=[]; G.hats=[]; G.hatFly=[]; G.fw=[]; G.conf=[]; closeSheet(); closeBuy();
   writeSave(); hideOverlays(); $('hub').classList.remove('sitting'); $('hub').hidden=false; showTab(tab||hubTab);
 }
 function showTab(tab){
