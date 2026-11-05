@@ -145,7 +145,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .stamp{position:absolute;z-index:1;top:10px;right:12px;padding:3px 10px 2px;border:2px solid #5fff8a;border-radius:8px;color:#d9ffe4;font:400 13px var(--f-arc);letter-spacing:.08em;transform:rotate(-7deg);text-shadow:0 0 8px #5fff8a;box-shadow:0 0 10px rgba(95,255,138,.5)}
 /* 台のタブ＝パチンコ屋さんのホール：台が目の前に並び、左右にスワイプで台をかえる。イス（座る）をタップで台へ */
 .hub-body>*{flex:none}
-.hub-body.hall{overflow:hidden;padding-inline:0;padding-block:10px 8px;gap:8px}
+.hub-body.hall{overflow:hidden;padding-inline:0;padding-block:10px 12px;gap:10px}
 .hub-body.hall>.setstrip{margin-left:max(16px,env(safe-area-inset-left,0px));margin-right:max(16px,env(safe-area-inset-right,0px));padding:7px 10px}
 .hub-body.hall>.hallwrap{flex:1 1 auto;min-height:0}
 .hallwrap{--cw:200px;--gap:20px;position:relative;display:flex;flex-direction:column}
@@ -179,17 +179,6 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .cface::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.15) 0 16%,transparent 32%,transparent 68%,rgba(255,255,255,.07) 76%,transparent 84%)}
 .shutter{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#5d5580;
   font:400 calc(var(--cw)*.09)/1.3 var(--f-arc);letter-spacing:.08em;background:repeating-linear-gradient(180deg,#25213a 0 18px,#17142a 18px 21px)}
-.ctray{position:relative;display:flex;align-items:center;gap:6%;height:calc(var(--cw)*.2);margin-top:3px;padding:0 7%;border-radius:6px 6px 14px 14px;
-  background:linear-gradient(#3a3550,#16121f);box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 0 0 1.5px rgba(255,255,255,.06)}
-.trough{position:relative;flex:1;height:52%;border-radius:99px;background:linear-gradient(#06040b,#1d1830);box-shadow:inset 0 2px 5px #000}
-.trough::before{content:"";position:absolute;left:9%;top:50%;width:62%;height:calc(var(--cw)*.07);transform:translateY(-50%);
-  background:radial-gradient(circle at 45% 40%,#fff 0 9%,#d6d8e2 26%,#7a7c8c 56%,transparent 62%) 0 0/calc(var(--cw)*.07) 100% repeat-x}
-.cdial{position:relative;flex:none;width:calc(var(--cw)*.13);height:calc(var(--cw)*.13);border-radius:50%;border:2px solid #7a5232;
-  background:radial-gradient(circle at 40% 32%,#6a4a2e,#3a2616 72%);box-shadow:0 0 0 2px rgba(0,0,0,.45),0 0 9px var(--ng)}
-.cdial::after{content:"";position:absolute;left:50%;top:14%;width:2px;height:36%;margin-left:-1px;border-radius:2px;background:var(--moon)}
-.hdots{display:flex;align-items:center;justify-content:center;gap:9px;height:10px}
-.hdots i{width:7px;height:7px;border-radius:50%;background:#3a3358;transition:background .2s,box-shadow .2s}
-.hdots i.on{background:var(--neon-p);box-shadow:0 0 8px var(--neon-p)}
 .hallwrap.sit .slot.cur{transform:scale(1.3) translateY(6%);transition:transform .5s cubic-bezier(.55,0,.8,.3)}
 .hallwrap.sit .slot:not(.cur){opacity:0}
 .hub.sitting::after{content:"";position:absolute;inset:0;z-index:30;background:#05030b;opacity:0;animation:fadein .42s .14s forwards}
@@ -422,7 +411,7 @@ const STAGES=[
 const BOARDS=[
   {stage:0,price:0,desc:'ネオンな夜の草原。大きな杭12本',thumb:'radial-gradient(circle at 72% 26%,#f3e6b5 0 5%,transparent 6%),linear-gradient(#141c3a 0 52%,#1d5a3c 53% 70%,#0e2a1d 71%)'},
   {stage:1,price:0,desc:'液晶のある森の台（作りかえ前の試作のまま）',thumb:'linear-gradient(#150a2a 0 40%,#3a1f5c 41% 60%,#0b1a14 61%)'},
-  {soon:true,name:'？？？',desc:'買うと、お店に新しいタワーや玉がふえる',thumb:'repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)'},
+  {soon:true,name:'？？？',price:500,desc:'買うと、お店に新しいタワーや玉がふえる',thumb:'repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)'},
 ];
 const START_COINS=150, MIN_COINS=100;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
 const XP_NEED=[0,4,10,18];
@@ -1928,32 +1917,30 @@ function tabBoard(body){
   body.classList.add('hall');
   body.append(setStrip());
   hallIdx=Math.max(0,Math.min(BOARDS.length-1,hallIdx));
-  const wrap=el('div','hallwrap'), aisle=el('div','aisle'), nav=el('div','hdots');
+  const wrap=el('div','hallwrap'), aisle=el('div','aisle');
   aisle.setAttribute('aria-label','台のならび（左右にスワイプ）');
-  const dots=[];
   const slots=BOARDS.map((B,i)=>{
     const nc=B.soon?'#5a5278':STAGES[B.stage].accent, done=!B.soon&&G.cleared.includes(B.stage), face=boardFace(B);
     const s=el('div','slot'+(B.soon?' soon':'')); s.style.setProperty('--nc',nc); s.style.setProperty('--ng',hexA(nc,B.soon?.12:.45));
     const cab=el('button','cab');
-    cab.setAttribute('aria-label',B.soon?'まだ遊べない台':`${boardName(B)}の台に座る`); if(B.soon) cab.setAttribute('aria-disabled','true');
+    cab.setAttribute('aria-label',B.soon?`まだ遊べない台（アンロック ${B.price}コイン）`:`${boardName(B)}の台に座る`);
     cab.innerHTML=`<span class="topper"><span class="tno">NO.${i+1}</span><span class="tname"><b>${B.soon?'？？？':boardName(B)+'<small>の台</small>'}</b></span>${done?'<span class="stamp">CLEAR</span>':''}</span>`+
-      `<span class="cframe"><span class="cface" style="background:${face?`url(${face})`:B.thumb}">${B.soon?'<span class="shutter">COMING<br>SOON</span>':''}</span></span>`+
-      `<span class="ctray"><span class="trough"></span><span class="cdial"></span></span>`;
-    const go=()=>{ensureAudio(); if(i!==hallIdx){goSlot(i,true);return} if(!B.soon) sit(i)};
+      `<span class="cframe"><span class="cface" style="background:${face?`url(${face})`:B.thumb}">${B.soon?'<span class="shutter">COMING<br>SOON</span>':''}</span></span>`;
+    const go=()=>{ensureAudio(); if(i!==hallIdx){goSlot(i,true);return} if(B.soon) openBoardBuy(i); else sit(i)};
     cab.onclick=go;
     s.append(cab); aisle.append(s);
-    const d=el('i'); dots.push(d); return s;
+    return s;
   });
-  nav.append(...dots); wrap.append(aisle); body.append(wrap,nav);
+  wrap.append(aisle); body.append(wrap);
   const center=i=>slots[i].offsetLeft+slots[i].offsetWidth/2-aisle.clientWidth/2;
   function mark(){
-    slots.forEach((s,j)=>s.classList.toggle('cur',j===hallIdx)); dots.forEach((d,j)=>d.classList.toggle('on',j===hallIdx));
+    slots.forEach((s,j)=>s.classList.toggle('cur',j===hallIdx));
   }
   function goSlot(i,smooth){hallIdx=i; mark(); aisle.scrollTo({left:center(i),behavior:smooth?'smooth':'auto'})}
   // 台の大きさ：ホールの高さいっぱいに（となりの台が少し見える幅まで）
   function layout(){
     const h=aisle.clientHeight, w=aisle.clientWidth; if(!h||!w) return;
-    const cw=Math.round(Math.max(90,Math.min((h-10)/2.02,w*.78,440)));
+    const cw=Math.round(Math.max(90,Math.min((h-6)/1.82,w*.82,480)));
     wrap.style.setProperty('--cw',cw+'px'); wrap.style.setProperty('--gap',Math.round(cw*.05)+'px');
     aisle.scrollLeft=center(hallIdx);
   }
@@ -2047,6 +2034,23 @@ function openBuy(kind,k){
   if(own){y.disabled=true;y.textContent=k==='basic'?'さいしょから持ってる':'持ってる';buyFn=null}
   else{y.disabled=G.balls<price;y.innerHTML=G.balls<price?'コインがたりない':`${COIN}${price} で買う`;buyFn=()=>buy(kind,k,price)}
   $('buy').hidden=false; (own?$('buyNo'):y).focus();
+}
+// まだできていない台：値段と「アンロックしますか？」を出す（中身ができるまでボタンは押せない）
+let soonIco=null;
+function openBoardBuy(i){
+  const B=BOARDS[i]; paint($('buyIn'),'#ff4fd8');
+  if(!soonIco){
+    const c=document.createElement('canvas'); c.width=c.height=160; const g=c.getContext('2d');
+    g.shadowColor='#ff4fd8'; g.shadowBlur=14; g.strokeStyle='#ff8ae6'; g.lineWidth=5; g.lineJoin='round';
+    g.beginPath(); g.moveTo(40,140); g.lineTo(40,62); g.arc(80,62,40,Math.PI,0); g.lineTo(120,140); g.closePath(); g.stroke();
+    g.shadowBlur=10; g.fillStyle='#fff'; g.font='bold 54px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('?',80,92);
+    soonIco=c.toDataURL();
+  }
+  $('buyIco').src=soonIco; $('buyKind').textContent='BOARD NO.'+(i+1); $('buyName').textContent=B.name+'の台';
+  $('buyDesc').textContent='この台をアンロックしますか？ '+B.desc;
+  $('buyNote').textContent='まだ準備中。できたらアンロックできるようになるよ';
+  const y=$('buyYes'); y.disabled=true; y.innerHTML=`${COIN}${B.price} でアンロック`; buyFn=null;
+  $('buy').hidden=false; $('buyNo').focus();
 }
 function closeBuy(){$('buy').hidden=true;buyFn=null}
 function buy(kind,k,price){
