@@ -74,9 +74,10 @@ canvas{position:absolute;inset:0;display:block;touch-action:none}
 .logo{font-family:var(--f-disp);font-weight:500;line-height:1;text-align:center;margin:6px 0 0}
 .logo .a{display:block;font-size:clamp(44px,15vw,64px);color:var(--moon);text-shadow:0 0 24px rgba(216,242,106,.35)}
 .logo .b{display:block;font-size:clamp(20px,7vw,30px);color:var(--leaf);letter-spacing:.12em;margin-top:8px}
-.rules{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:7px;font-size:13px;line-height:1.55}
-.rules li{display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:start}
-.rules li>span:first-child{font:700 11px var(--f-body);color:var(--night);background:var(--leaf);border-radius:6px;padding:1px 6px;margin-top:2px}
+#title .panel{max-width:340px;gap:30px;padding:34px 22px 26px}
+#startBtn{font-size:20px;padding:15px 16px;letter-spacing:.25em;animation:startGlow 1.8s ease-in-out infinite}
+@keyframes startGlow{50%{box-shadow:0 0 26px rgba(216,242,106,.55)}}
+@media (prefers-reduced-motion:reduce){#startBtn{animation:none}}
 .btnrow{display:flex;flex-direction:column;gap:8px}
 .btn{font:800 16px var(--f-body);padding:12px 16px;border-radius:14px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
 .btn.primary{background:var(--fire);border-color:var(--fire);color:var(--night);box-shadow:0 4px 14px rgba(216,242,106,.22)}
@@ -248,21 +249,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
   <div class="overlay" id="title">
     <div class="panel">
       <h1 class="logo"><span class="a">くぎだま</span><span class="b">ディフェンス</span></h1>
-      <ul class="rules">
-        <li><span>打つ</span><span>玉は1分に50発、ずっと出続けるよ（1発でコイン1枚）。左下から打ち上がって、上のレールを回り、勢いがなくなった所で落ちる</span></li>
-        <li><span>強さ</span><span>右下のハンドルを回すと強さが変わるよ。まわりの光る輪が強さで、まん中なら台のまん中、弱いと左寄り、強いと右に落ちる（上の▼が落ちる場所）</span></li>
-        <li><span>建てる</span><span>杭（くい）をタップすると、お金（コイン）を払って砲台（タワー）を建てられる。砲台は敵の方を向いて自動で撃つよ</span></li>
-        <li><span>ギミック</span><span>お店でバンパーや回転十字を買うと、砲台をタップしてつけられる。玉をはじいて、ピンボールみたいに動かせるよ</span></li>
-        <li><span>育てる</span><span>タワーに玉を当てると経験値。火炎弾・氷結弾などを当てると弾に属性がつき、同じ属性が重なると「ばくはつ」などのとくしゅ効果、ちがう属性なら「わざ」が出る。敵の上でも、ちがう属性が出会えば「わざ」。鉛玉は攻撃力、BB弾は連射アップ。属性タワーはお店で</span></li>
-        <li><span>大当たり</span><span>下のまん中の「ヘソ」に入ると FEVER!! コインがたくさん出て、タワーが強くなる</span></li>
-        <li><span>まもる</span><span>下の受け皿がライフのバー。敵がここまで来ると減っていくよ。10ウェーブ守ればクリア。5ウェーブ目に中ボス、10ウェーブ目にボス（受け皿まで来たらゲームオーバー）</span></li>
-        <li><span>台</span><span>はじめに遊ぶ台をえらぶよ（さいしょは草原と森）。新しい台を買うと、お店に新しいタワーや玉がふえていく</span></li>
-        <li><span>セット</span><span>台で出る玉は5つのセットから。お店で買った玉は「持ち玉」にずっと残って、セットはいつでも無料で入れかえられるよ</span></li>
-      </ul>
-      <div class="btnrow">
-        <button class="btn primary" id="startBtn">あそぶ</button>
-        <button class="btn" id="contBtn" hidden>つづきから</button>
-      </div>
+      <button class="btn primary" id="startBtn">スタート</button>
     </div>
   </div>
 
@@ -2081,13 +2068,6 @@ function loadSave(){
   G.owned={...s.owned}; G.deck=s.deck.slice();
   return true;
 }
-function clearSave(){try{localStorage.removeItem(SAVE_KEY)}catch(_){}}
-let confirmNew=false;
-function updateContinue(){
-  const s=readSave(); confirmNew=false;
-  $('startBtn').innerHTML=s?`つづきから（お金 ${COIN}${Math.max(0,s.balls|0)}）`:'あそぶ';
-  $('contBtn').hidden=!s; $('contBtn').textContent='はじめから';
-}
 function continueRun(){if(!loadSave()){newRun();return} openHub('board')}
 
 /* ---------- 流れ：タイトル → ロビー（台えらび）→ 台であそぶ → クリアでロビーへ ---------- */
@@ -2459,12 +2439,8 @@ handle.addEventListener('keydown',e=>{
 });
 
 $('mute').onclick=()=>{muted=!muted;$('mute').setAttribute('aria-pressed',String(!muted));$('mute').setAttribute('aria-label',muted?'音 OFF':'音 ON');if(!muted)ensureAudio()};
+// スタート：セーブがあればそのつづき、なければはじめから。どちらも台えらびの画面へ
 $('startBtn').onclick=()=>{ensureAudio();readSave()?continueRun():newRun()};
-$('contBtn').onclick=()=>{
-  ensureAudio();
-  if(!confirmNew){confirmNew=true;$('contBtn').textContent='セーブを消して はじめから？（もう一度おしてね）';return}
-  clearSave(); newRun();
-};
 
 /* ---------- ループ ---------- */
 let last=performance.now();
@@ -2477,7 +2453,7 @@ function loop(now){
   requestAnimationFrame(loop);
 }
 setStrength(.5);
-setupStage(); resize(); updateContinue();
+setupStage(); resize();
 try{new ResizeObserver(resize).observe($('app'))}catch(_){window.addEventListener('resize',resize)}
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(buildStatic).catch(()=>{});
 requestAnimationFrame(t=>{last=t;loop(t)});
