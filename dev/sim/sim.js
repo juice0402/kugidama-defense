@@ -1,5 +1,5 @@
 // 自動プレイ（キャンペーン）：草原から順に、クリアするまでくり返す。負けるたび・クリアのたびにお店で買う。
-// opts: {upTo:台の番号, tries:1台の最大回数, st:{台番号:{hp:..}} で数字をためす, obj:{HONEY:{heal:.2}} で mk.py が出した入れものを上書き, log:true でウェーブごとのライフ, boss:true で負けたときのボスののこりHP, from:台の番号（下の説明）, deck:true で台に入るときのセットも出す}
+// opts: {upTo:台の番号, tries:1台の最大回数, st:{台番号:{hp:..}} で数字をためす, obj:{HONEY:{heal:.2}} で mk.py が出した入れものを上書き, log:true でウェーブごとのライフ, bt:true でボスが出てから決着までの秒（ゲーム内。終わらなければ +）, boss:true で負けたときのボスののこりHP, from:台の番号（下の説明）, deck:true で台に入るときのセットも出す}
 (opts)=>{
 const T=window.__T,G=T.G;
 if(opts.st) for(const i in opts.st) Object.assign(T.STAGES[i],opts.st[i]);
@@ -12,10 +12,10 @@ function runBoard(i){
   const c0=G.balls; T.playBoard(i); G.paused=true; G.banners=[];
   const types=Object.keys(T.TOWERS).filter(k=>G.unlocked[k]&&avail(T.TOWERS[k])&&k!=='long');
   const pick=types.length>1?types.filter(k=>k!=='basic'):types;
-  let n=0,t=0,act=0,lw=0,boss=null; const dt=1/60, lives=[];
+  let n=0,t=0,act=0,lw=0,boss=null,bs=null; const dt=1/60, lives=[];
   while(G.state==='play'&&t<900){
     if(G.wave!==lw){lw=G.wave;lives.push(G.life)}
-    {const b=G.en.find(e=>!e.dead&&T.ENEMIES[e.t].boss===2&&!e.fake);if(b)boss=b.hp/b.max}   // ボスののこりHP
+    {const b=G.en.find(e=>!e.dead&&T.ENEMIES[e.t].boss===2&&!e.fake);if(b){boss=b.hp/b.max;if(bs==null)bs=t}}   // ボスののこりHP・ボスが出た時間
     T.update(dt); G.time+=dt; t+=dt; act-=dt;
     if(act<=0){act=.5;
       const free=order().filter(p=>!p.tower), k=pick[n%pick.length];
@@ -24,7 +24,7 @@ function runBoard(i){
         if(gk){const p=G.pegs.find(p=>p.tower&&!p.tower.gm),M=T.GIMMICKS[gk];if(p&&G.balls>=M.cost+30){G.balls-=M.cost;p.tower.gm=gk}}}
     }
   }
-  return {c0,clear:G.state==='clear',wave:G.wave,life:G.life,lives,boss};
+  return {c0,clear:G.state==='clear',wave:G.wave,life:G.life,lives,boss,bt:bs==null?null:Math.round(t-bs)+(G.state==='play'?'+':'')};
 }
 function shop(){
   const items=[];
@@ -61,7 +61,7 @@ for(let s=opts.from||0;s<=upTo;s++){
   for(let w=0;w<20&&!buyBoard(s);w++){const r=runBoard(s-1);res.push('稼ぎ'+(r.clear?'C':r.wave));shop()}
   if(!T.stageOpen(s)){res.push('開かない');break}
   if(opts.deck&&res.length>1) res.push('set:'+G.deck.join(','));
-  for(let k=0;k<tries&&!G.cleared.includes(s);k++){const r=runBoard(T.BOARDS.findIndex(b=>b.stage===s));res.push((r.clear?'C'+r.life:'w'+r.wave+(opts.boss&&r.boss!=null?'('+r.boss.toFixed(2)+')':''))+'@'+r.c0+(opts.log?'['+r.lives.join(',')+']':''));shop()}
+  for(let k=0;k<tries&&!G.cleared.includes(s);k++){const r=runBoard(T.BOARDS.findIndex(b=>b.stage===s));res.push((r.clear?'C'+r.life:'w'+r.wave+(opts.boss&&r.boss!=null?'('+r.boss.toFixed(2)+')':''))+'@'+r.c0+(opts.bt&&r.bt!=null?'/b'+r.bt:'')+(opts.log?'['+r.lives.join(',')+']':''));shop()}
   if(!G.cleared.includes(s)) break;
   shop();
 }
