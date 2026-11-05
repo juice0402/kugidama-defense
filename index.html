@@ -387,7 +387,7 @@ const TOWERS={
   ice:{name:'こおりタワー',color:'#a8dcff',range:72,rate:1,dmg:1.2,cost:45,el:'ice',unlock:400,desc:'弾でおそく。氷結弾が当たると「氷の霧」'},
   bolt:{name:'かみなりタワー',color:'#ffe14f',range:76,rate:1.1,dmg:1.5,cost:50,el:'bolt',unlock:400,desc:'弾がとびうつる。雷弾が当たると「いなずま」'},
   poison:{name:'どくタワー',color:'#c08bff',range:70,rate:1,dmg:1,cost:40,el:'poison',unlock:400,desc:'弾でどく。毒弾が当たると「毒の沼」'},
-  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:2.2,cost:55,unlock:400,desc:'遠くまで届く。撃つのはゆっくり'},
+  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:2.2,cost:55,unlock:300,desc:'遠くまで届く。撃つのはゆっくり'},
 };
 // 砲身の先（杭の半径に対する長さ）。弾はここから出る
 const MUZ={basic:1.8,long:2.4,fire:1.5,ice:1.75,bolt:1.6,poison:1.3};
@@ -416,7 +416,7 @@ const STAGES=[
 const BOARDS=[
   {stage:0,price:0,desc:'ネオンな夜の草原。大きな杭12本',thumb:'radial-gradient(circle at 72% 26%,#f3e6b5 0 5%,transparent 6%),linear-gradient(#141c3a 0 52%,#1d5a3c 53% 70%,#0e2a1d 71%)'},
   {stage:1,price:0,desc:'液晶のある森の台（作りかえ前の試作のまま）',thumb:'linear-gradient(#150a2a 0 40%,#3a1f5c 41% 60%,#0b1a14 61%)'},
-  {soon:true,name:'？？？',price:500,desc:'買うと、お店に新しいタワーや玉がふえる',thumb:'repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)'},
+  {soon:true,name:'？？？',price:1500,desc:'買うと、お店に新しいタワーや玉がふえる',thumb:'repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)'},
 ];
 const START_COINS=150, MIN_COINS=100;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
 const XP_NEED=[0,4,10,18];
