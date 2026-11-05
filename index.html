@@ -468,7 +468,7 @@ const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,
 const SAVE_KEY='kugidama-save-v1';
 const NEW_UNLOCKED=()=>({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false});
 
-const G={fx:[],hats:[],hatFly:[],nuts:[],nutT:4,fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
+const G={fx:[],hats:[],hatFly:[],nuts:[],nutT:4,poofs:[],fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -597,7 +597,7 @@ function setupStage(){
   G.mills=L.mills.map(m=>({...m,ang:0,spin:2.2}));
   G.lcd=L.lcd; G.frame=L.frame||null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
-  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.hats=[];G.hatFly=[];G.nuts=[];G.nutT=4;
+  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.hats=[];G.hatFly=[];G.nuts=[];G.nutT=4;G.poofs=[];
   G.life=G.lifeShow=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
@@ -987,7 +987,8 @@ function doDorn(e){
   const d=e.r*2.3, spots=[[e.x,e.y],[e.x-d,e.y+6],[e.x+d,e.y+6]];
   for(let i=spots.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[spots[i],spots[j]]=[spots[j],spots[i]]}
   e.x=inArch(spots[0][0],spots[0][1],e.r); e.y=spots[0][1]; e.leaf=false; e.flash=0;
-  for(let i=1;i<3;i++) addEnemy(e.t,spots[i][0],spots[i][1],{fake:true,real:e,hp:FAKE_HP,max:FAKE_HP,sp:e.sp,ph:e.ph,born:1,flash:0,leaf:true,callT:0,dornT:0});
+  e.laughT=1.2;
+  for(let i=1;i<3;i++) addEnemy(e.t,spots[i][0],spots[i][1],{fake:true,real:e,hp:FAKE_HP,max:FAKE_HP,sp:e.sp,ph:e.ph,born:1,flash:0,leaf:true,callT:0,dornT:0,laughT:1.2});
   for(const [x,y] of spots) dornFx(x,y,e.r);
   G.shake=Math.max(G.shake,.15); sfx.dorn();
 }
@@ -997,7 +998,7 @@ function throwHat(e){
   let best=null,bd=HAT_R*HAT_R;
   for(const p of G.pegs){const T=p.tower;if(!T||T.hat>0||G.hats.some(h=>h.p===p))continue;const d=(p.x-e.x)**2+(p.y-e.y)**2;if(d<bd){bd=d;best=p}}
   if(!best) return;
-  e.hatGone=true; G.hats.push({x0:e.x,y0:e.y-e.r*.95,p:best,t:0,dur:.75,s:e.r/14}); sfx.toss();
+  e.hatGone=true; G.hats.push({x0:e.x,y0:e.y-e.r*.95,p:best,t:0,dur:.75,s:e.r/14,from:e}); sfx.toss();
 }
 /* ---------- 草原：光る木の実が落ちる ---------- */
 function dropNut(){
@@ -1122,6 +1123,7 @@ function emitFx(dt){
   }
   for(const e of G.en){
     if(e.dead) continue;
+    if(ENEMIES[e.t].gh) for(let i=fxN(e.ghost>0?8:2.2,dt);i--;) {const a=Math.PI+Math.random()*Math.PI;fxAdd({k:'wisp',x:e.x+Math.cos(a)*e.r*.95,y:e.y-e.r*.1+Math.sin(a)*e.r*.95,vx:Math.cos(a)*.15,vy:-(.1+Math.random()*.18),max:.8+Math.random()*.5,s:e.r*(.1+Math.random()*.1),ph:Math.random()*6.28,c:ENEMIES[e.t].color})}
     if(e.burn>0) for(let i=fxN(12,dt);i--;) fxEl('fire',e.x,e.y-e.r*.35,e.r*.75,false);
     if(e.slow>0) for(let i=fxN(5,dt);i--;) fxEl('ice',e.x,e.y,e.r*1.05,false);
     if(e.psnT>0) for(let i=fxN(7,dt);i--;) fxEl('poison',e.x,e.y-e.r*.2,e.r*.8,false);
@@ -1139,6 +1141,7 @@ function updateFxParts(dt){
     else if(q.k==='frost'){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.95;q.vy=q.vy*.95+.006*f;q.rot+=q.vr*dt}
     else if(q.k==='bubble'){q.x+=q.vx*f+Math.sin(G.time*7+q.ph)*.15*f;q.y+=q.vy*f;q.vx*=.92;q.vy=q.vy*.97-.004*f}
     else if(q.k==='mist'){q.x+=q.vx*f;q.y+=q.vy*f}
+    else if(q.k==='wisp'){q.x+=q.vx*f+Math.sin(G.time*3+q.ph)*.12*f;q.y+=q.vy*f}
   }
   G.fx=G.fx.filter(q=>q.t<q.max);
 }
@@ -1152,6 +1155,7 @@ function drawFx(){
     else if(q.k==='frost') glow(q.c||'#8fe3ff',q.x,q.y,q.s*2.2,a*.45);
     else if(q.k==='spark') glow(q.c||'#ffe14f',q.x,q.y,q.len*.9,a*.5);
     else if(q.k==='mist') glow(q.c||'#e6f6ff',q.x,q.y,q.s*(1+k*.7),.3*a*Math.min(1,k*5));
+    else if(q.k==='wisp') glow(q.c,q.x,q.y,q.s*3.2,a*.4*Math.min(1,k*6));
   }
   ctx.globalCompositeOperation='source-over';
   // かたち
@@ -1170,6 +1174,8 @@ function drawFx(){
       const x2=q.x+Math.cos(q.a)*q.len, y2=q.y+Math.sin(q.a)*q.len, mx=(q.x+x2)/2+(Math.random()-.5)*5, my=(q.y+y2)/2+(Math.random()-.5)*5;
       ctx.globalAlpha=Math.min(1,a*1.6); ctx.strokeStyle=q.c?mixW(q.c,.35):'#fff6a8'; ctx.lineWidth=1.4;
       ctx.beginPath(); ctx.moveTo(q.x,q.y); ctx.lineTo(mx,my); ctx.lineTo(x2,y2); ctx.stroke();
+    }else if(q.k==='wisp'){
+      ctx.globalAlpha=a*.55*Math.min(1,k*6); ctx.fillStyle='#ffffff'; circle(q.x,q.y,q.s*(1-k*.5)); ctx.fill();
     }else if(q.k==='bubble'){
       const pop=k>.82, s=pop?q.s*(1+(k-.82)*6):q.s;
       ctx.globalAlpha=pop?a*2.5:Math.min(1,k*6)*.9; ctx.strokeStyle=q.c||'#c08bff'; ctx.lineWidth=pop?.8:1.2;
@@ -1220,12 +1226,14 @@ function towerHit(p,b){
 }
 function hurtEnemy(e,d,dot){
   if(e.dead) return;
-  e.hp-=d; if(!dot) e.flash=.1;
+  e.hp-=d; if(!dot){e.flash=.1;e.hurtT=.35} e.hpVis=2.5;
   if(e.hp<=0){
     if(e.fake){vanishFake(e);return}                       // たぬきのにせもの：ドロンと消えるだけ
     const E=ENEMIES[e.t];
     e.dead=true; const r=E.reward; G.balls+=r; G.kills++;
     addText(e.x,e.y,'+'+r,GOLD); burst(e.x,e.y,E.color,12); sfx.kill();
+    if(E.gh){G.poofs.push({e:Object.assign({},e,{dying:true,flash:0,hurtT:0,ghost:0,trail:[],oops:0,burn:0,stun:0,shock:0,slow:0,psnT:0}),t:0,dir:Math.random()<.5?-1:1});
+      for(let i=0;i<(E.boss?5:2);i++) fxAdd({k:'wisp',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*.3,vx:(Math.random()-.5)*.4,vy:-(.6+Math.random()*.5),max:1.1+Math.random()*.5,s:e.r*(.22+Math.random()*.12),ph:Math.random()*6.28,c:'#ffffff'})}   // たましいが ふわっと上へ
     if(E.split) for(const s of [-1,1]) addEnemy(E.split,e.x+s*e.r*.5,e.y,{vx:s*1.3,born:.15});   // わたげ：ふわっと2つに分かれる
     if(E.dorn) for(const o of G.en) if(o.fake&&o.real===e&&!o.dead) vanishFake(o);              // 本物を倒すと、にせものも消える
   }
@@ -1485,7 +1493,8 @@ function update(dt){
     const sf=e.slowF||.45, slowK=E.boss?1-(1-sf)*(1-BOSS_RES):sf;   // おそくなる強さも弱め
     let mv=1;
     if(E.hop){const q=(e.born*1.25+e.ph)%1;mv=q<.4?2.2:.2;e.hopY=q<.4?Math.sin(q/.4*Math.PI):0}   // うさぎ：ぴょんと進んで、ひと休み（ならすと同じ速さ）
-    e.oops=Math.max(0,(e.oops||0)-dt);
+    e.oops=Math.max(0,(e.oops||0)-dt); e.hurtT=Math.max(0,(e.hurtT||0)-dt); e.hpVis=Math.max(0,(e.hpVis||0)-dt); e.laughT=Math.max(0,(e.laughT||0)-dt);
+    e.hpLag=Math.max(e.hp/e.max,(e.hpLag??1)-dt*.5*(e.hurtT>0?0:1));   // 減った所の白は、少し待ってからおいかける
     if(E.dash){   // 馬：ときどき すけすけになって猛ダッシュ（うしろに残像）
       if(e.ghost>0){e.ghost-=dt;mv*=DASH_K;e.trailT=(e.trailT||0)-dt;if(e.trailT<=0){e.trailT=.07;e.trail.push({x:e.x,y:e.y,a:.5})}}
       else if(e.stun<=0){e.dashT-=dt;if(e.dashT<=0){e.dashT=E.dash;e.ghost=DASH_D;sfx.dash();G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:hexA(E.color,.8),t:.4})}}
@@ -1548,7 +1557,7 @@ function update(dt){
   // かかしの帽子：ふわっと飛んで、砲台にすぽっ
   for(const h of G.hats){
     h.t+=dt; if(h.t<h.dur) continue;
-    const T=h.p.tower; if(T&&!(T.hat>0)){T.hat=HAT_T;T.hatT=0;burst(h.p.x,h.p.y-8,'#f0d27a',6);sfx.hat()}
+    const T=h.p.tower; if(T&&!(T.hat>0)){T.hat=HAT_T;T.hatT=0;burst(h.p.x,h.p.y-8,'#f0d27a',6);sfx.hat();if(h.from&&!h.from.dead)h.from.laughT=1.4}   // かかしは大よろこび
   }
   G.hats=G.hats.filter(h=>h.t<h.dur);
   G.en=G.en.filter(e=>!e.dead);
@@ -1582,6 +1591,7 @@ function updateFx(dt){
   for(const z of G.zaps) z.t-=dt; G.zaps=G.zaps.filter(z=>z.t>0);
   for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
   for(const p of G.portals) p.age+=dt; G.portals=G.portals.filter(p=>p.age<p.dur);
+  for(const q of G.poofs) q.t+=dt; G.poofs=G.poofs.filter(q=>q.t<.5);
   for(const h of G.hatFly){h.x+=h.vx*f;h.y+=h.vy*f;h.vy+=.12*f;h.rot+=h.vr*dt;h.t-=dt} G.hatFly=G.hatFly.filter(h=>h.t>0);
   G.lifeShow+=(Math.max(0,G.life)-G.lifeShow)*Math.min(1,dt*(G.time-(G.trayHurtAt??-9)<.35?1:5));   // 白い所は少し待ってから追いかける
   updateFxParts(dt);
@@ -2027,16 +2037,86 @@ function ghostEye(x,y,r,wink){
   ctx.fillStyle='#2b2140'; ctx.beginPath(); ctx.ellipse(x,y,r*.12,r*.16,0,0,Math.PI*2); ctx.fill();
   ctx.fillStyle='#fff'; circle(x-r*.04,y-r*.06,r*.05); ctx.fill();
 }
+// おばけの気分（顔とゆれ方がかわる）。強いものから1つ
+function ghostMood(e){
+  if(e.dying) return 'dead';
+  if(e.oops>0) return 'wow';
+  if(e.stun>0||e.shock>0) return 'dizzy';
+  if(e.hurtT>0) return 'ouch';
+  if(e.burn>0) return 'hot';
+  if(e.slow>0) return 'cold';
+  if(e.laughT>0) return 'laugh';
+  if(e.ghost>0) return 'dash';
+  const s=e.fake&&e.real?e.real:e;
+  return s.hp<s.max*.3?'scared':'idle';
+}
+function star(x,y,s,c){ctx.fillStyle=c;ctx.beginPath();for(let i=0;i<10;i++){const a=-Math.PI/2+i*Math.PI/5,rr=i%2?s*.45:s;ctx.lineTo(x+Math.cos(a)*rr,y+Math.sin(a)*rr)}ctx.closePath();ctx.fill()}
+// 顔：目・ほっぺ・口が気分でかわる（ふだんの口は種類ごと）。まばたきもする
+function ghostFace(e,r,ey,mood){
+  const ink='#2b2140', T=G.time, lw=Math.max(1,r*.065);
+  ctx.strokeStyle=ink; ctx.fillStyle=ink; ctx.lineWidth=lw; ctx.lineCap='round'; ctx.lineJoin='round';
+  const blink=(mood==='idle'||mood==='scared'||mood==='dash')&&((T+e.ph*1.7)%3.3)<.13;
+  for(const s of [-1,1]){
+    const x=s*r*.32;
+    ctx.strokeStyle=ink; ctx.fillStyle=ink; ctx.lineWidth=lw;
+    if(mood==='ouch'){ctx.beginPath();ctx.moveTo(x-s*r*.1,ey-r*.1);ctx.lineTo(x+s*r*.07,ey);ctx.lineTo(x-s*r*.1,ey+r*.1);ctx.stroke()}   // ＞＜
+    else if(mood==='dead'){const d=r*.09;ctx.beginPath();ctx.moveTo(x-d,ey-d);ctx.lineTo(x+d,ey+d);ctx.moveTo(x+d,ey-d);ctx.lineTo(x-d,ey+d);ctx.stroke()}   // ××
+    else if(mood==='dizzy'){ctx.beginPath();for(let i=0;i<=24;i++){const a=i/24*Math.PI*4+T*8*s,rr=r*.015+i/24*r*.12,px=x+Math.cos(a)*rr,py=ey+Math.sin(a)*rr;i?ctx.lineTo(px,py):ctx.moveTo(px,py)}ctx.lineWidth=Math.max(.8,r*.045);ctx.stroke()}   // ぐるぐる
+    else if(mood==='hot'||mood==='wow'){ctx.fillStyle='#fff';ctx.beginPath();ctx.ellipse(x,ey,r*.15,r*.18,0,0,Math.PI*2);ctx.fill();ctx.lineWidth=Math.max(.8,r*.04);ctx.stroke();ctx.fillStyle=ink;circle(x+(mood==='hot'?Math.sin(T*20)*r*.03:0),ey+r*.02,r*.055);ctx.fill()}   // 目をまるく
+    else if(mood==='cold'){ctx.beginPath();ctx.moveTo(x-r*.11,ey+r*.02);ctx.lineTo(x+r*.11,ey-r*.01);ctx.stroke()}
+    else if(mood==='laugh'){ctx.beginPath();ctx.moveTo(x-r*.11,ey+r*.04);ctx.quadraticCurveTo(x,ey-r*.15,x+r*.11,ey+r*.04);ctx.stroke()}   // ＾＾
+    else if(blink){ctx.beginPath();ctx.moveTo(x-r*.11,ey+r*.01);ctx.quadraticCurveTo(x,ey+r*.06,x+r*.11,ey+r*.01);ctx.stroke()}
+    else{
+      ghostEye(x,ey,r,e.t==='usagi'&&s<0&&mood==='idle');
+      if(mood==='dash'){ctx.strokeStyle=ink;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(x-s*r*.16,ey-r*.27);ctx.lineTo(x+s*r*.1,ey-r*.18);ctx.stroke()}   // きりっ
+    }
+  }
+  ctx.fillStyle=mood==='cold'?'rgba(140,200,255,.55)':mood==='hot'||mood==='laugh'?'rgba(255,100,130,.65)':'rgba(255,130,165,.5)';
+  for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.58,ey+r*.2,r*.14,r*.08,0,0,Math.PI*2);ctx.fill()}
+  ctx.strokeStyle=ink; ctx.fillStyle=ink; ctx.lineWidth=lw;
+  const my=ey+r*.28;
+  if(mood==='ouch'||mood==='dizzy'||mood==='scared'){ctx.beginPath();for(let i=0;i<=4;i++){const x=-r*.16+i*r*.08,y=my+(i%2?-r*.04:r*.03);i?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.stroke()}
+  else if(mood==='hot'){ctx.beginPath();ctx.ellipse(0,my+r*.04,r*.1,r*.13+Math.sin(T*18)*r*.02,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ff6f9a';ctx.beginPath();ctx.ellipse(0,my+r*.11,r*.06,r*.04,0,0,Math.PI*2);ctx.fill()}
+  else if(mood==='wow'||mood==='dead'){ctx.beginPath();ctx.ellipse(0,my+r*.02,r*.06,r*.075,0,0,Math.PI*2);ctx.stroke()}
+  else if(mood==='cold'){const j=Math.sin(T*40)*r*.02;ctx.fillStyle='#fff';rrPath(ctx,-r*.15,my-r*.04+j,r*.3,r*.12,r*.03);ctx.fill();ctx.lineWidth=Math.max(.8,r*.04);ctx.stroke();for(const x of [-.05,.05]){ctx.beginPath();ctx.moveTo(x*r,my-r*.04+j);ctx.lineTo(x*r,my+r*.08+j);ctx.stroke()}}   // ガチガチ
+  else if(mood==='laugh'){ctx.beginPath();ctx.moveTo(-r*.2,my-r*.04);ctx.quadraticCurveTo(0,my+r*.34,r*.2,my-r*.04);ctx.closePath();ctx.fill();ctx.fillStyle='#ff6f9a';ctx.beginPath();ctx.ellipse(0,my+r*.12,r*.08,r*.05,0,0,Math.PI*2);ctx.fill()}
+  else if(e.t==='wata'||e.t==='wata2'){ctx.beginPath();ctx.arc(-r*.08,ey+r*.24,r*.08,.1,Math.PI-.1);ctx.arc(r*.08,ey+r*.24,r*.08,.1,Math.PI-.1);ctx.stroke()}   // ω
+  else if(e.t==='usagi'){ctx.beginPath();ctx.arc(0,ey+r*.2,r*.13,.15,Math.PI-.15);ctx.stroke();ctx.fillStyle='#ff6f9a';ctx.beginPath();ctx.ellipse(r*.03,ey+r*.36+Math.sin(T*6+e.ph)*r*.02,r*.08,r*.1,0,0,Math.PI*2);ctx.fill()}   // べー
+  else if(e.t==='kakashi'){const y=ey+r*.32;ctx.beginPath();ctx.moveTo(-r*.24,y);ctx.lineTo(r*.24,y);ctx.stroke();ctx.lineWidth=Math.max(.8,r*.04);for(const x of [-.15,0,.15]){ctx.beginPath();ctx.moveTo(x*r,y-r*.07);ctx.lineTo(x*r,y+r*.07);ctx.stroke()}}
+  else if(e.t==='tanuki'){ctx.beginPath();ctx.moveTo(-r*.2,ey+r*.33);ctx.quadraticCurveTo(r*.02,ey+r*.48,r*.24,ey+r*.26);ctx.stroke()}   // にやり
+  else if(e.t==='uma'){ctx.beginPath();ctx.moveTo(-r*.26,ey+r*.3);ctx.quadraticCurveTo(0,ey+r*.52,r*.26,ey+r*.3);ctx.closePath();ctx.fillStyle='#5a2747';ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.fillRect(-r*.1,ey+r*.31,r*.09,r*.09);ctx.fillRect(r*.01,ey+r*.31,r*.09,r*.09)}   // ニッ
+}
+// 気分のしるし（あせ・ぐるぐる星・♪・いたっ）。Canvaの絵にも出す
+function ghostEmote(e,r,mood){
+  const T=G.time;
+  if(mood==='hot'||mood==='scared'){const y=-r*.5+((T*1.4+e.ph)%1)*r*.3;ctx.fillStyle='rgba(160,220,255,.95)';ctx.strokeStyle='#4d86c9';ctx.lineWidth=Math.max(.7,r*.035);ctx.beginPath();ctx.moveTo(r*.86,y-r*.22);ctx.quadraticCurveTo(r*1.02,y,r*.86,y+r*.07);ctx.quadraticCurveTo(r*.7,y,r*.86,y-r*.22);ctx.fill();ctx.stroke()}
+  if(mood==='dizzy') for(let i=0;i<3;i++){const a=T*5+i*2.09;star(Math.cos(a)*r*.75,-r*1.08+Math.sin(a)*r*.18,r*.14,'#ffe14f')}
+  if(mood==='laugh'){const u=(T*1.2+e.ph)%1;ctx.save();ctx.globalAlpha*=1-u;ctx.font=`900 ${Math.round(r*.6)}px sans-serif`;ctx.textAlign='center';ctx.fillStyle='#ffe9a8';ctx.fillText('♪',r*.95,-r*.7-u*r*.6);ctx.restore()}
+  if(mood==='ouch'){ctx.strokeStyle='#ffe9a8';ctx.lineWidth=Math.max(1,r*.06);for(const a of [-1,-.55,-.1]){ctx.beginPath();ctx.moveTo(r*.78+Math.cos(a)*r*.18,-r*.72+Math.sin(a)*r*.18);ctx.lineTo(r*.78+Math.cos(a)*r*.42,-r*.72+Math.sin(a)*r*.42);ctx.stroke()}}
+}
 function drawGhost(e){
-  const E=ENEMIES[e.t], r=e.r, t=G.time, k=Math.min(1,(e.flash||0)/.1), hop=(e.hopY||0)*r*.55, ink='#2b2140';
+  const E=ENEMIES[e.t], r=e.r, t=G.time, ph=e.ph, k=Math.min(1,(e.flash||0)/.1), ink='#2b2140', mood=ghostMood(e), B=E.boss?.55:1;
   const tint=e.slow>0?'#d6f1ff':mixW(E.color,e.t==='tanuki'?.82:.88);
-  // 影（体はうかんでいる）
-  ctx.fillStyle='rgba(0,0,0,.26)'; ctx.beginPath(); ctx.ellipse(e.x+2,e.y+r*1.08,r*.72*(1-hop/r*.3),r*.2,0,0,Math.PI*2); ctx.fill();
+  // うごき：ふわふわ浮く・ゆれに合わせて体をかたむける・呼吸・ときどき くるっと一回転（いたずら）。気分でもゆれ方がかわる
+  const hop=(e.hopY||0)*r*.55, bob=Math.sin(t*2.4+ph)*r*.1*B;
+  let rot=Math.cos(t*1.7+ph)*.1*B, sx=1+Math.sin(t*3.1+ph)*.035, sy=1-Math.sin(t*3.1+ph)*.045, jx=0, lift=0;
+  const trick=(t*.13+ph*.37)%1;
+  if(mood==='idle'&&!E.boss&&!e.dying&&trick<.05){const u=trick/.05;rot+=u*Math.PI*2;lift=Math.sin(u*Math.PI)*r*.35}
+  if(mood==='ouch') jx=Math.sin(t*70)*r*.08*Math.min(1,e.hurtT/.2);
+  if(mood==='dizzy') rot+=Math.sin(t*9)*.2;
+  if(mood==='cold') jx+=Math.sin(t*90)*r*.035;
+  if(mood==='laugh'){const q=Math.abs(Math.sin(t*16));sy*=1+q*.07;sx*=1-q*.04;rot+=Math.sin(t*16)*.05}
+  if(mood==='wow'){sy*=1.08;sx*=.94}
+  if(e.ghost>0){sy*=1.12;sx*=.9}
+  if(E.hop){const q=(e.born*1.25+ph)%1;if(q>=.4&&q<.55){const u=Math.sin((q-.4)/.15*Math.PI);sx*=1+.2*u;sy*=1-.18*u}else if(q<.4){const u=Math.sin(q/.4*Math.PI);sy*=1+.1*u;sx*=1-.06*u}}
+  if(k>0){sx*=1+.12*k;sy*=1-.1*k}
+  const cy=e.y-hop-lift+bob, high=(hop+lift-bob)/r;
+  // 影（体はうかんでいる。高いほど小さく）
+  ctx.fillStyle='rgba(0,0,0,.26)'; ctx.beginPath(); ctx.ellipse(e.x+2,e.y+r*1.08,r*.72*Math.max(.5,1-high*.3),r*.2,0,0,Math.PI*2); ctx.fill();
   // 馬の残像
   if(e.trail&&e.trail.length){for(const q of e.trail){ctx.save();ctx.translate(q.x,q.y);ctx.globalAlpha=q.a*.45;ghostPath(ctx,r,t,e.ph);ctx.fillStyle=hexA(E.color,.6);ctx.fill();ctx.restore()}}
   const ga=ctx.globalAlpha*(e.ghost>0?.3+.08*Math.sin(t*30):1);   // glow は透明度を1にもどすので、そのあとで ga にもどす
-  ctx.save(); ctx.translate(e.x,e.y-hop);
-  if(k>0) ctx.scale(1+.12*k,1-.1*k);
+  ctx.save(); ctx.translate(e.x+jx,cy); ctx.rotate(rot); ctx.scale(sx,sy);
   ctx.globalCompositeOperation='lighter'; glow(E.color,0,-r*.1,r*(E.boss?2.3:2),(E.boss?.3+.1*Math.sin(t*4):.2)*ga); ctx.globalCompositeOperation='source-over'; ctx.globalAlpha=ga;
   const lw=Math.max(1.2,r*.075), line=hexA(E.color,.9), S=SPR[E.spr||e.t];
   if(S){
@@ -2089,16 +2169,9 @@ function drawGhost(e){
   // ---- 顔と前の部品 ----
   const ey=e.t==='uma'?-r*.28:-r*.2;
   if(e.t==='tanuki'){ctx.fillStyle='rgba(122,80,48,.92)';for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.33,-r*.16,r*.26,r*.19,s*.45,0,Math.PI*2);ctx.fill()}}
-  ghostEye(-r*.32,ey,r,e.t==='usagi'); ghostEye(r*.32,ey,r,false);
-  ctx.fillStyle='rgba(255,130,165,.5)'; for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.58,ey+r*.2,r*.14,r*.08,0,0,Math.PI*2);ctx.fill()}
-  ctx.strokeStyle=ink; ctx.lineWidth=Math.max(1,r*.06); ctx.lineCap='round';
-  if(e.t==='wata'||e.t==='wata2'){ctx.beginPath();ctx.arc(-r*.08,ey+r*.24,r*.08,.1,Math.PI-.1);ctx.arc(r*.08,ey+r*.24,r*.08,.1,Math.PI-.1);ctx.stroke()}   // ω
-  else if(e.t==='usagi'){ctx.beginPath();ctx.arc(0,ey+r*.2,r*.13,.15,Math.PI-.15);ctx.stroke();ctx.fillStyle='#ff6f9a';ctx.beginPath();ctx.ellipse(r*.03,ey+r*.36,r*.08,r*.1,0,0,Math.PI*2);ctx.fill()}   // べー
-  else if(e.t==='kakashi'){const y=ey+r*.32;ctx.beginPath();ctx.moveTo(-r*.24,y);ctx.lineTo(r*.24,y);ctx.stroke();ctx.lineWidth=Math.max(.8,r*.04);for(const x of [-.15,0,.15]){ctx.beginPath();ctx.moveTo(x*r,y-r*.07);ctx.lineTo(x*r,y+r*.07);ctx.stroke()}
-    ctx.save();ctx.translate(r*.34,r*.36);ctx.rotate(.2);ctx.fillStyle='#9fd3ff';ctx.fillRect(-r*.17,-r*.15,r*.34,r*.3);ctx.setLineDash([1.5,1.5]);ctx.strokeStyle='#4d6f95';ctx.lineWidth=.8;ctx.strokeRect(-r*.13,-r*.11,r*.26,r*.22);ctx.setLineDash([]);ctx.restore()}
-  else if(e.t==='tanuki'){ctx.fillStyle=ink;ctx.beginPath();ctx.ellipse(0,ey+r*.2,r*.09,r*.065,0,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.moveTo(-r*.2,ey+r*.33);ctx.quadraticCurveTo(r*.02,ey+r*.48,r*.24,ey+r*.26);ctx.stroke()}   // にやり
-  else if(e.t==='uma'){ctx.beginPath();ctx.moveTo(-r*.26,ey+r*.3);ctx.quadraticCurveTo(0,ey+r*.52,r*.26,ey+r*.3);ctx.closePath();ctx.fillStyle='#5a2747';ctx.fill();ctx.stroke();   // ニッ（大きな前歯）
-    ctx.fillStyle='#fff';ctx.fillRect(-r*.1,ey+r*.31,r*.09,r*.09);ctx.fillRect(r*.01,ey+r*.31,r*.09,r*.09)}
+  if(e.t==='kakashi'){ctx.save();ctx.translate(r*.34,r*.36);ctx.rotate(.2);ctx.fillStyle='#9fd3ff';ctx.fillRect(-r*.17,-r*.15,r*.34,r*.3);ctx.setLineDash([1.5,1.5]);ctx.strokeStyle='#4d6f95';ctx.lineWidth=.8;ctx.strokeRect(-r*.13,-r*.11,r*.26,r*.22);ctx.setLineDash([]);ctx.restore()}   // つぎあて
+  ghostFace(e,r,ey,mood);
+  if(e.t==='tanuki'){ctx.fillStyle=ink;ctx.beginPath();ctx.ellipse(0,ey+r*.2,r*.09,r*.065,0,0,Math.PI*2);ctx.fill()}   // 鼻
   // 頭の上
   if(e.t==='wata'||e.t==='wata2'){
     const cx=r*.14, cy=-r*1.62, R=r*.52;
@@ -2126,24 +2199,35 @@ function drawGhost(e){
     ctx.fillStyle='#ff5fd2'; circle(0,-r*.1,r*.06); ctx.fill(); ctx.restore();
   }
   }
+  ghostEmote(e,r,mood);
   ctx.restore();
   // 状態のまわりの光（やけど・しびれ）
-  if(e.burn>0){ctx.globalCompositeOperation='lighter';glow('#ff7a3d',e.x,e.y-hop,r*1.6,.32+.12*Math.sin(t*14+e.ph));ctx.globalCompositeOperation='source-over'}
-  if(e.slow>0&&!S){ctx.strokeStyle='rgba(225,248,255,.55)';ctx.lineWidth=1;ctx.save();ctx.translate(e.x,e.y-hop);ctx.scale(1.08,1.08);ghostPath(ctx,r,t,e.ph);ctx.stroke();ctx.restore()}
-  if(e.stun>0||e.shock>0){ctx.globalCompositeOperation='lighter';glow('#ffe14f',e.x,e.y-hop,r*1.5,.25+.25*Math.random());ctx.globalCompositeOperation='source-over'}
+  if(e.burn>0){ctx.globalCompositeOperation='lighter';glow('#ff7a3d',e.x,cy,r*1.6,.32+.12*Math.sin(t*14+ph));ctx.globalCompositeOperation='source-over'}
+  if(e.stun>0||e.shock>0){ctx.globalCompositeOperation='lighter';glow('#ffe14f',e.x,cy,r*1.5,.25+.25*Math.random());ctx.globalCompositeOperation='source-over'}
   // びっくり（すけすけの馬に玉が当たった）
-  if(e.oops>0){const y=e.y-r*1.55-Math.sin((.8-e.oops)*14)*3;ctx.font=`900 ${Math.round(r*.7)}px "M PLUS Rounded 1c",sans-serif`;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#2b2140';ctx.strokeText('!',e.x+r*.7,y);ctx.fillStyle='#ffe14f';ctx.fillText('!',e.x+r*.7,y)}
-  // HP（ボスは上のバー、ほかはまわりの輪）。たぬきのにせものは本物の残りを見せる
-  const src=e.fake&&e.real?e.real:e, fr=Math.max(0,src.hp/src.max), hc=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a';
+  if(e.oops>0){const y=cy-r*1.55-Math.sin((.8-e.oops)*14)*3;ctx.font=`900 ${Math.round(r*.7)}px "M PLUS Rounded 1c",sans-serif`;ctx.textAlign='center';ctx.lineWidth=4;ctx.strokeStyle='#2b2140';ctx.strokeText('!',e.x+r*.7,y);ctx.fillStyle='#ffe14f';ctx.fillText('!',e.x+r*.7,y)}
+  if(e.dying) return;
+  // HP：ボスは上のバー。ほかは、ダメージを受けたときだけ足もとに うすいバー（2.5秒で消える）。減った所は白く残ってからおいかける
+  const src=e.fake&&e.real?e.real:e, fr=Math.max(0,src.hp/src.max), lag=Math.max(fr,src.hpLag??fr), hc=fr>.5?'#8ee07a':fr>.25?'#ffd56a':'#ff7a6a';
   if(E.boss){
-    const bw=r*2.2, by=e.y-r*1.62-8;
-    ctx.globalAlpha=e.ghost>0?.4:1;
-    ctx.fillStyle='rgba(0,0,0,.6)'; rrPath(ctx,e.x-bw/2-1.5,by-1.5,bw+3,8,4); ctx.fill();
+    const bw=r*2.2, by=e.y-r*1.62-8, a=e.ghost>0?.4:.88;
+    ctx.globalAlpha=a; ctx.fillStyle='rgba(10,8,28,.5)'; rrPath(ctx,e.x-bw/2-1.5,by-1.5,bw+3,8,4); ctx.fill();
+    ctx.strokeStyle=hexA(E.color,.7); ctx.lineWidth=1; ctx.stroke();
+    ctx.fillStyle='rgba(255,255,255,.7)'; rrPath(ctx,e.x-bw/2,by,bw*lag,5,2.5); ctx.fill();
     ctx.fillStyle=hc; rrPath(ctx,e.x-bw/2,by,bw*fr,5,2.5); ctx.fill(); ctx.globalAlpha=1;
-  }else{
-    const cy=e.y-hop-r*.1, R=r*1.1+3;
-    ctx.strokeStyle='rgba(0,0,0,.4)'; ctx.lineWidth=3.2; circle(e.x,cy,R); ctx.stroke();
-    ctx.strokeStyle=hc; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(e.x,cy,R,-Math.PI/2,-Math.PI/2+fr*Math.PI*2); ctx.stroke();
+  }else if(src.hpVis>0&&fr<1){
+    const a=Math.min(1,src.hpVis*2)*.8, bw=r*1.7, bx=e.x-bw/2, by=e.y+r*1.32;
+    ctx.globalAlpha=a; ctx.fillStyle='rgba(10,8,28,.55)'; rrPath(ctx,bx-1,by-1,bw+2,5,2.5); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.75)'; rrPath(ctx,bx,by,bw*lag,3,1.5); ctx.fill();
+    ctx.fillStyle=hc; rrPath(ctx,bx,by,bw*fr,3,1.5); ctx.fill(); ctx.globalAlpha=1;
+  }
+}
+// やられたおばけ：××の顔で ぽわんとふくらんで、くるっと回りながら上へ消える
+function drawPoofs(){
+  for(const q of G.poofs){
+    const u=q.t/.5, e=q.e, s=(1+.25*Math.sin(Math.min(1,u*2)*Math.PI))*(1-u*.65);
+    ctx.save(); ctx.globalAlpha=Math.max(0,1-u); ctx.translate(e.x,e.y-u*e.r*1.4); ctx.rotate(u*1.6*q.dir); ctx.scale(s,s); ctx.translate(-e.x,-e.y);
+    drawGhost(e); ctx.restore();
   }
 }
 // 飛んでいる帽子・砲台から落ちる帽子
@@ -2287,7 +2371,7 @@ function draw(){
   for(const p of G.pegs) if(p.tower) drawTower(p,t);
   drawPortals(t);
   for(const e of G.en) drawEnemy(e);
-  drawHats(); drawNuts(t);
+  drawPoofs(); drawHats(); drawNuts(t);
   // タワーの弾
   for(const u of G.bl){ctx.fillStyle=u.c;circle(u.x,u.y,2.8);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1;ctx.stroke()}
   drawFx();
@@ -2445,7 +2529,7 @@ const SHOP_BALLS=['lead','bb','heal','fire','ice','bolt','poison'];   // 無属�
 const SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
 let hubTab='board', toastT=0;
 function openHub(tab){
-  G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; G.pend=[]; G.portals=[]; G.hats=[]; G.hatFly=[]; G.nuts=[]; G.fw=[]; G.conf=[]; closeSheet(); closeBuy();
+  G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; G.pend=[]; G.portals=[]; G.hats=[]; G.hatFly=[]; G.nuts=[]; G.poofs=[]; G.fw=[]; G.conf=[]; closeSheet(); closeBuy();
   writeSave(); hideOverlays(); $('hub').classList.remove('sitting'); $('hub').hidden=false; showTab(tab||hubTab);
 }
 function showTab(tab){
