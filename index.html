@@ -93,6 +93,27 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .item>div{min-width:0}
 .item .t{font-weight:800} .item .d{font-size:12px;color:var(--dim);line-height:1.45}
 .item.locked{opacity:.55}
+.trow{grid-template-columns:44px 1fr auto;padding:7px 10px 8px 6px}
+.tico{width:44px;height:44px}
+.tinfo{display:flex;flex-direction:column;gap:10px}
+.gauges{display:flex;flex-direction:column;gap:6px}
+.gauges.mini{flex-direction:row;flex-wrap:wrap;gap:3px 7px;margin-top:3px}
+.gg{display:flex;align-items:center;gap:8px}
+.gl{font:800 12px var(--f-body);color:var(--dim);white-space:nowrap}
+.pips{display:flex;gap:4px}
+.pips i{width:13px;height:13px;border-radius:50%;border:1.5px solid rgba(255,255,255,.28);box-sizing:border-box}
+.pips i.on{background:var(--tc);border-color:var(--tc);box-shadow:0 0 6px var(--tc)}
+.pips i.up{background:#ffd84a;border-color:#fff3b0;box-shadow:0 0 7px #ffd84a}
+.mini .gg{gap:4px} .mini .gl{font-size:10px} .mini .pips{gap:2px} .mini .pips i{width:7px;height:7px;border-width:1px}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tg{position:relative;overflow:hidden;padding:3px 10px 4px;border-radius:99px;border:1.5px solid var(--c);color:#fff;font:800 12px var(--f-body);background:color-mix(in srgb,var(--c) 22%,transparent);box-shadow:0 0 8px color-mix(in srgb,var(--c) 45%,transparent)}
+.tg i{position:absolute;left:0;bottom:0;height:2px;background:var(--c)}
+.trow .tags{margin-top:4px} .trow .tg{padding:1px 8px 2px;font-size:10px}
+.xpbar{display:flex;align-items:center;gap:8px}
+.xpbar .bar{flex:1;height:8px;border-radius:99px;background:rgba(255,255,255,.1);overflow:hidden}
+.xpbar .bar i{display:block;height:100%;border-radius:99px;background:var(--tc);box-shadow:0 0 8px var(--tc)}
+.xpbar b{font:800 11px var(--f-body);color:var(--ink);white-space:nowrap}
+.hint{margin:0;font-size:12px;color:var(--dim)} .hint b{color:var(--ink)}
 .buy{font:700 13px var(--f-body);padding:8px 10px;border-radius:10px;border:1.5px solid var(--moon);color:var(--moon);background:transparent;white-space:nowrap;cursor:pointer}
 .buy:disabled{opacity:.35;cursor:not-allowed}
 .buy.owned{border-color:var(--line);color:var(--dim);opacity:1}
@@ -105,7 +126,6 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .hub-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px 8px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sign{display:flex;flex-direction:column;gap:5px;line-height:1;min-width:0}
-.sign small{font:400 11px var(--f-arc);letter-spacing:.3em;color:var(--neon-c);text-shadow:0 0 6px rgba(62,242,255,.8)}
 .sign b{font:500 27px var(--f-disp);color:#fff;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 10px var(--neon-p),0 0 22px var(--neon-p),0 0 40px rgba(255,79,216,.55)}
 .wallet{flex:none;display:flex;align-items:center;gap:7px;padding:6px 13px 6px 8px;border-radius:99px;background:#07050f;border:1.5px solid rgba(255,216,74,.6);
   box-shadow:0 0 12px rgba(255,216,74,.25),inset 0 0 10px rgba(255,216,74,.12)}
@@ -123,6 +143,17 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .lead b{color:#fff}
 .sect{font:400 12px var(--f-arc);letter-spacing:.22em;color:var(--neon-c);text-shadow:0 0 6px rgba(62,242,255,.6);margin:4px 0 -4px}
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.list{display:flex;flex-direction:column;gap:10px}
+.card:not(.row) .mid{display:contents}
+.card.row{flex-direction:row;align-items:center;gap:12px;padding:9px 12px 9px 9px;text-align:left;background:linear-gradient(90deg,var(--cs),rgba(10,8,22,.94) 42%)}
+.card.row:active{transform:scale(.98)}
+.card.row .ico{flex:none;width:64px;aspect-ratio:1}
+.card.row .ico img{width:92%}
+.card.row .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.card.row .ds{min-height:0}
+.card.row .price,.card.row .tagown{flex:none;margin:0}
+.card.row .tagown{padding:4px 10px;font-size:11px}
+.card.row .cnt{top:auto;bottom:5px;right:auto;left:44px}
 .card{--c:#ff4fd8;--cg:rgba(255,79,216,.35);--cs:rgba(255,79,216,.14);position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;
   padding:8px 9px 12px;border-radius:16px;border:1.5px solid var(--c);background:linear-gradient(180deg,var(--cs),rgba(10,8,22,.94) 58%);
   box-shadow:0 0 14px var(--cg),inset 0 0 0 1px rgba(255,255,255,.04);color:var(--ink);font:inherit;text-align:center;cursor:pointer;transition:transform .1s}
@@ -153,7 +184,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .hallwrap::before{content:"";position:absolute;left:50%;top:-10px;bottom:0;width:calc(var(--cw)*2.4);max-width:100%;transform:translateX(-50%);pointer-events:none;
   background:radial-gradient(ellipse 50% 78% at 50% 0,rgba(255,236,190,.17),rgba(255,236,190,.05) 55%,transparent 72%)}
 .hallwrap::after{content:"";position:absolute;left:0;right:0;bottom:0;height:16%;pointer-events:none;background:linear-gradient(transparent,rgba(0,0,0,.5))}
-.aisle{position:relative;z-index:1;flex:1;min-height:0;display:flex;align-items:flex-end;gap:var(--gap);overflow-x:auto;overflow-y:hidden;
+.aisle{position:relative;z-index:1;flex:1;min-height:0;display:flex;align-items:flex-end;gap:var(--gap);overflow-x:auto;overflow-y:hidden;padding-bottom:18px;
   scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;overscroll-behavior-x:contain}
 .aisle::-webkit-scrollbar{display:none}
 .aisle::before,.aisle::after{content:"";flex:0 0 max(0px,calc(50% - var(--cw)/2 - var(--gap)))}
@@ -266,7 +297,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 
   <div class="hub" id="hub" hidden>
     <header class="hub-top">
-      <div class="sign"><small id="hubSub">BOARDS</small><b id="hubTitle">台えらび</b></div>
+      <div class="sign"><b id="hubTitle">台えらび</b></div>
       <div class="wallet" id="wallet" role="img" aria-label="お金"><i class="coin"></i><b id="hubCoins">0</b></div>
     </header>
     <div class="bulbs" aria-hidden="true"></div>
@@ -2113,7 +2144,7 @@ function fitDeck(deck,owned){
 const inSet=k=>G.deck.filter(x=>x===k).length;
 
 /* ---------- ロビー（夜のゲームセンター）：下のタブで 台・玉・タワー・ギミック・セット ---------- */
-const TABS={board:['BOARDS','台えらび'],ball:['SHOP','お店・玉'],tower:['SHOP','お店・タワー'],gimmick:['SHOP','お店・ギミック'],set:['MY SET','玉のセット']};
+const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',gimmick:'お店・ギミック',set:'玉のセット'};
 const SHOP_BALLS=['fire','ice','bolt','poison','lead','bb','heal'], SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
 let hubTab='board', toastT=0;
 function openHub(tab){
@@ -2123,7 +2154,7 @@ function openHub(tab){
 function showTab(tab){
   hubTab=tab;
   for(const b of $('tabs').children){const on=b.dataset.tab===tab;b.classList.toggle('on',on);b.setAttribute('aria-selected',String(on))}
-  $('hubSub').textContent=TABS[tab][0]; $('hubTitle').textContent=TABS[tab][1];
+  $('hubTitle').textContent=TABS[tab];
   $('toast').hidden=true; renderTab(); $('hubBody').scrollTop=0;
 }
 for(const b of $('tabs').children) b.onclick=()=>{ensureAudio();sfx.tick();showTab(b.dataset.tab)};
@@ -2142,7 +2173,8 @@ function paint(e,color){e.style.setProperty('--c',color);e.style.setProperty('--
 // カード：アイコン・名前・説明・値段（または「持ってる」）。タップで買う前のシート
 function card(o){
   const c=el('button','card'); paint(c,o.color);
-  c.innerHTML=`<span class="ico"><img alt="" src="${o.icon}"></span>${o.cnt?`<span class="cnt">${o.cnt}</span>`:''}<span class="nm">${o.name}</span><span class="ds">${o.desc}</span>`+
+  if(o.row) c.classList.add('row');
+  c.innerHTML=`<span class="ico"><img alt="" src="${o.icon}"></span>${o.cnt?`<span class="cnt">${o.cnt}</span>`:''}<span class="mid"><span class="nm">${o.name}</span><span class="ds">${o.desc}</span></span>`+
     (o.own?`<span class="tagown">${o.own}</span>`:o.price!=null?`<span class="price${G.balls<o.price?' short':''}">${COIN}${o.price}</span>`:'');
   c.onclick=()=>{ensureAudio();o.tap()}; return c;
 }
@@ -2220,7 +2252,7 @@ function tabBoard(body){
   // 台の大きさ：ホールの高さいっぱいに（となりの台が少し見える幅まで）
   function layout(){
     const h=aisle.clientHeight, w=aisle.clientWidth; if(!h||!w) return;
-    const cw=Math.round(Math.max(90,Math.min((h-6)/1.82,w*.82,480)));
+    const cw=Math.round(Math.max(90,Math.min((h-18-12)/1.82,w*.82,480)));   // 下に18pxのすきま（ネオンの光が下まで見えるように）
     wrap.style.setProperty('--cw',cw+'px'); wrap.style.setProperty('--gap',Math.round(cw*.05)+'px');
     aisle.scrollLeft=center(hallIdx);
   }
@@ -2242,30 +2274,30 @@ function tabBoard(body){
 // 玉のタブ
 function tabBall(body){
   body.append(el('p','lead','買った玉は<b>持ち玉</b>にずっと残るよ。セットのあいている所（ノーマル玉）に自動で入って、あとは「セット」でいつでも入れかえ'));
-  const g=el('div','grid');
+  const g=el('div','list');
   for(const k of SHOP_BALLS){
     const B=BALLS[k], n=G.owned[k]||0;
-    g.append(card({icon:icon('ball',k),color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,price:B.price,tap:()=>openBuy('ball',k)}));
+    g.append(card({row:true,icon:icon('ball',k),color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,price:B.price,tap:()=>openBuy('ball',k)}));
   }
   body.append(g);
 }
 // タワーのタブ
 function tabTower(body){
   body.append(el('p','lead','ここで買うと、台の杭をタップしたときに建てられるようになるよ（建てるのにもコイン）'));
-  const g=el('div','grid');
+  const g=el('div','list');
   for(const k of SHOP_TOWERS){
     const t=TOWERS[k];
-    g.append(card({icon:icon('tower',k),color:t.color,name:t.name,desc:t.desc,own:G.unlocked[k]?(k==='basic'?'さいしょから':'持ってる'):null,price:t.unlock,tap:()=>openBuy('tower',k)}));
+    g.append(card({row:true,icon:icon('tower',k),color:t.color,name:t.name,desc:t.desc,own:G.unlocked[k]?(k==='basic'?'さいしょから':'持ってる'):null,price:t.unlock,tap:()=>openBuy('tower',k)}));
   }
   body.append(g);
 }
 // ギミックのタブ
 function tabGimmick(body){
   body.append(el('p','lead','買うと、台で建てた砲台をタップして、どの砲台にも1つつけられるよ（つけるのにもコイン）'));
-  const g=el('div','grid');
+  const g=el('div','list');
   for(const k of Object.keys(GIMMICKS)){
     const M=GIMMICKS[k];
-    g.append(card({icon:icon('gimmick',k),color:M.color,name:M.name,desc:M.desc,own:G.gimmicks[k]?'持ってる':null,price:M.unlock,tap:()=>openBuy('gimmick',k)}));
+    g.append(card({row:true,icon:icon('gimmick',k),color:M.color,name:M.name,desc:M.desc,own:G.gimmicks[k]?'持ってる':null,price:M.unlock,tap:()=>openBuy('gimmick',k)}));
   }
   body.append(g);
 }
@@ -2357,33 +2389,56 @@ function openBuild(p){
   for(const k of Object.keys(TOWERS)){
     const t=TOWERS[k];
     if(G.unlocked[k]){
-      body.append(itemRow(t.color,t.name,`${t.desc}（とどく広さ ${t.range}）`,t.cost,G.balls>=t.cost,()=>{
+      body.append(towerRow(k,t.cost,G.balls>=t.cost,()=>{
         G.balls-=t.cost; p.tower={type:k,lv:1,xp:0,cd:.3,rapid:0,pow:0,el:null,elT:0,sp:null,spT:0,combo:null,comboT:0,pop:.3,shot:0,
           ang:-Math.PI/2,tg:null,gm:null,bump:0,sa:0,sw:2.4,sdir:p.x<180?-1:1};
         p.r=Math.max(p.r,7);   // ang＝砲身の向き（はじめは上）。gm＝ギミック。回転十字は左半分なら左回り（下のうでがまん中へ動く）
         buildStatic(); burst(p.x,p.y,t.color,16); sfx.build(); closeSheet();
       }));
     }else{
-      const row=itemRow(t.color,t.name,'お店で手に入るよ','—',false); row.classList.add('locked'); body.append(row);
+      const row=towerRow(k,'—',false); row.classList.add('locked'); row.querySelector('.gauges').outerHTML='<div class="d">お店で手に入るよ</div>'; row.querySelector('.tags')?.remove(); body.append(row);
     }
   }
   $('sheet').hidden=false;
+}
+// 砲台の強さ（いまのレベル・バフ・FEVER をふくむ）を5つの点に。[いま, もとの強さ]（ふえた分は金色）
+function towerGauge(k,lv,T){
+  const D=TOWERS[k], d5=v=>Math.max(1,Math.min(5,Math.round(v)));
+  const dmg=D.dmg*(1+.4*(lv-1)), iv=D.rate*Math.pow(.85,lv-1), rg=D.range*(1+.08*(lv-1))*G.rscale;
+  const pm=(T&&T.pow>0?1.7:1)*(G.fever>0?2:1), rm=(T&&T.rapid>0?.5:1)*(G.fever>0?.5:1);
+  return [['威力',d5(dmg*pm/1.45),d5(dmg/1.45)],['射程',d5(rg/40),d5(rg/40)],['連射',d5(2/(iv*rm)),d5(2/iv)]];
+}
+const pips=(n,nb)=>{let h='<span class="pips">';for(let i=0;i<5;i++)h+=`<i class="${i<nb?'on':i<n?'up':''}"></i>`;return h+'</span>'};
+const gaugeHtml=(k,lv,T,mini)=>`<div class="gauges${mini?' mini':''}" style="--tc:${TOWERS[k].color}">`+towerGauge(k,lv,T).map(([l,n,nb])=>`<span class="gg"><span class="gl">${l}</span>${pips(n,nb)}</span>`).join('')+'</div>';
+// タグ：属性・とくしゅ効果・わざ・強撃（攻撃UP）・速射（連射UP）。下の細い線がのこり時間
+const EL_TAG={fire:'火炎',ice:'氷結',bolt:'雷',poison:'毒'};
+function towerTags(k,T){
+  const D=TOWERS[k], o=[];
+  if(D.el) o.push([EL_TAG[D.el],ELEM[D.el].color]);
+  if(T){
+    if(T.elT>0&&T.el&&T.el!==D.el) o.push([EL_TAG[T.el],ELEM[T.el].color,T.elT]);
+    if(T.spT>0) o.push([SPECIAL[T.sp].name,SPECIAL[T.sp].color,T.spT]);
+    if(T.comboT>0) o.push([COMBO[T.combo].name,COMBO[T.combo].color,T.comboT]);
+    if(T.pow>0) o.push(['強撃','#ffb36b',T.pow]);
+    if(T.rapid>0) o.push(['速射','#7ff3ff',T.rapid]);
+    if(G.fever>0) o.push(['FEVER',GOLD]);
+  }
+  return o.length?'<div class="tags">'+o.map(([t,c,left])=>`<span class="tg" style="--c:${c}">${t}${left!=null?`<i style="width:${Math.max(4,Math.min(100,left/BUFF_T*100))|0}%"></i>`:''}</span>`).join('')+'</div>':'';
+}
+function towerRow(k,price,enabled,onBuy){
+  const t=TOWERS[k], row=document.createElement('div'); row.className='item trow';
+  row.innerHTML=`<img class="tico" alt="" src="${icon('tower',k)}"><div><div class="t">${t.name}</div>${gaugeHtml(k,1,null,true)}${towerTags(k,null)}</div>`;
+  const b=document.createElement('button'); b.className='buy'; b.innerHTML=typeof price==='number'?COIN+price:price; b.disabled=!enabled; if(onBuy)b.onclick=onBuy; row.append(b); return row;
 }
 function openInfo(p){
   const T=p.tower, D=TOWERS[T.type];
   G.sel=p; G.paused=true;
   $('sheetTitle').textContent=`${D.name} Lv${T.lv}`;
   const body=$('sheetBody'); body.textContent='';
-  const info=document.createElement('p'); info.className='info';
-  const el=curEl(T), now=[];
-  if(T.comboT>0) now.push(`わざ <b>${COMBO[T.combo].name}</b>（のこり${Math.ceil(T.comboT)}秒）：${COMBO[T.combo].desc}`);
-  else if(T.spT>0) now.push(`とくしゅ効果 <b>${SPECIAL[T.sp].name}</b>（のこり${Math.ceil(T.spT)}秒）：${SPECIAL[T.sp].desc}`);
-  else if(el) now.push(`属性 <b>${ELEM[el].name}</b>`+(T.elT>0?`（のこり${Math.ceil(T.elT)}秒）`:'（いつも）'));
-  if(T.pow>0) now.push(`<b>攻撃UP</b>（のこり${Math.ceil(T.pow)}秒）`);
-  if(T.rapid>0) now.push(`<b>連射UP</b>（のこり${Math.ceil(T.rapid)}秒）`);
-  info.innerHTML=(T.lv<4?`経験値 <b class="num">${T.xp} / ${XP_NEED[T.lv]}</b>`:'<b>レベル最大</b>')+
-    (now.length?'<br>'+now.join('<br>'):'')+
-    `<br>${D.desc}。玉を当てると経験値。同じ属性が重なるとくしゅ効果、ちがう属性で「わざ」`;
+  const info=document.createElement('div'); info.className='tinfo';
+  const lvTop=T.lv>=4, fr=lvTop?1:(T.xp-XP_NEED[T.lv-1])/(XP_NEED[T.lv]-XP_NEED[T.lv-1]);
+  info.innerHTML=gaugeHtml(T.type,T.lv,T)+towerTags(T.type,T)+
+    `<div class="xpbar" style="--tc:${D.color}"><span class="gl">経験値</span><span class="bar"><i style="width:${Math.max(0,Math.min(1,fr))*100}%"></i></span><b>${lvTop?'MAX':'Lv'+(T.lv+1)+'へ'}</b></div>`;
   body.append(info);
   // ギミック：お店で解放したものを、この砲台につける（1つだけ。つけかえもできる）
   if(Object.keys(GIMMICKS).some(k=>G.gimmicks[k])){
@@ -2396,7 +2451,7 @@ function openInfo(p){
       }));
       else{const row=itemRow(M.color,M.name,'お店で手に入るよ','—',false);row.classList.add('locked');body.append(row)}
     }
-  }else info.innerHTML+='<br>お店で<b>ギミック</b>（バンパー・回転十字）を買うと、この砲台につけられるよ';
+  }else info.insertAdjacentHTML('beforeend','<p class="hint">お店で<b>ギミック</b>を買うと、この砲台につけられるよ</p>');
   $('sheet').hidden=false;
 }
 function closeSheet(){$('sheet').hidden=true;G.sel=null;G.paused=false}
