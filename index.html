@@ -574,7 +574,7 @@ function drawStake(c,x,y,r){
   c.strokeStyle='#3a2515'; c.lineWidth=1.3; c.beginPath(); c.arc(x,y,r,0,Math.PI*2); c.stroke();
   c.strokeStyle='rgba(243,230,181,.5)'; c.lineWidth=1.4; c.beginPath(); c.arc(x,y,r-1.6,Math.PI*1.05,Math.PI*1.6); c.stroke();
 }
-// 1面「ネオンな夜の草原」：木のフレーム（つる・草・光る木の実） → 空 → 星 → 月 → 木 → 光るふちの丘 → 草と花 → レール → ヘソ → 杭
+// 1面「ネオンな夜の草原」：木のフレーム（つる・草・光る木の実） → 空 → 星 → 三日月 → とがった木 → 光るふちの丘 → 草と花 → レール → ヘソ → 杭
 const NEON={pink:'#ff5fd2',cyan:'#4ff0ff',lime:'#c6ff4f',amber:'#ffc94f',violet:'#b27bff'};
 function sglow(c,color,x,y,R,a){c.globalAlpha=a;c.drawImage(glowSprite(color),x-R,y-R,R*2,R*2);c.globalAlpha=1}
 function woodFrame(c,V){
@@ -692,13 +692,14 @@ function buildMeadow(c,V){
   c.fillStyle='#f6f2dc';
   for(let i=0;i<80;i++){const x=24+rnd()*320,y=12+rnd()*360,r=rnd()<.12?1.25:.65;c.globalAlpha=.25+rnd()*.55;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.fill()}
   c.globalAlpha=1;
-  const mx=266,my=84, halo=c.createRadialGradient(mx,my,12,mx,my,70);
-  halo.addColorStop(0,'rgba(243,230,181,.2)'); halo.addColorStop(1,'rgba(243,230,181,0)');
-  c.fillStyle=halo; c.beginPath(); c.arc(mx,my,70,0,Math.PI*2); c.fill();
-  const mg=c.createRadialGradient(mx-5,my-5,2,mx,my,17); mg.addColorStop(0,'#fff8dc'); mg.addColorStop(1,'#e8d49a');
-  c.fillStyle=mg; c.beginPath(); c.arc(mx,my,16,0,Math.PI*2); c.fill();
-  c.fillStyle='rgba(180,160,110,.35)';
-  for(const [dx,dy,r] of [[-5,-3,3.2],[4,5,2.4],[6,-6,1.6]]){c.beginPath();c.arc(mx+dx,my+dy,r,0,Math.PI*2);c.fill()}
+  // 月：まるい月は敵とまぎらわしいので、細い三日月（光はうすく）
+  const mx=266,my=84, halo=c.createRadialGradient(mx,my,8,mx,my,50);
+  halo.addColorStop(0,'rgba(243,230,181,.11)'); halo.addColorStop(1,'rgba(243,230,181,0)');
+  c.fillStyle=halo; c.beginPath(); c.arc(mx,my,50,0,Math.PI*2); c.fill();
+  const mc=document.createElement('canvas'); mc.width=mc.height=64; const m=mc.getContext('2d');
+  m.fillStyle='#f6ecc4'; m.beginPath(); m.arc(32,32,14,0,Math.PI*2); m.fill();
+  m.globalCompositeOperation='destination-out'; m.beginPath(); m.arc(25,27,13,0,Math.PI*2); m.fill();
+  c.globalAlpha=.85; c.drawImage(mc,mx-32,my-32); c.globalAlpha=1;
   const hillY=(x,y0,amp,f,ph)=>y0-Math.sin(x*f+ph)*amp-Math.sin(x*f*2.3+ph*1.7)*amp*.35;
   const hill=(y0,amp,f,ph,color,rim)=>{
     c.beginPath();c.moveTo(0,H);for(let x=0;x<=W;x+=6)c.lineTo(x,hillY(x,y0,amp,f,ph));c.lineTo(W,H);c.closePath();c.fillStyle=color;c.fill();
@@ -711,12 +712,12 @@ function buildMeadow(c,V){
   // 奥の丘の木（光る実がなる）
   hill(392,20,.011,1.2,'#13253f',NEON.violet);
   const tree=(x,y,s,cols)=>{
-    c.fillStyle='#0b1a26'; c.fillRect(x-2*s,y,4*s,22*s);
-    for(const [dx,dy,r] of [[0,-6,15],[-10,2,11],[10,2,11],[0,6,10]]){c.beginPath();c.arc(x+dx*s,y+dy*s,r*s,0,Math.PI*2);c.fill()}
+    c.fillStyle='#0d1c2a'; c.fillRect(x-1.8*s,y+8*s,3.6*s,16*s);
+    for(const [ty,w,h] of [[-24,9,14],[-15,13,15],[-5,17,16]]){c.beginPath();c.moveTo(x,y+ty*s);c.lineTo(x+w*s,y+(ty+h)*s);c.lineTo(x-w*s,y+(ty+h)*s);c.closePath();c.fill()}
     const rr=seeded(x|0);
-    for(let i=0;i<7;i++){const fx=x+(rr()-.5)*30*s,fy=y-4*s+(rr()-.5)*22*s,col=cols[i%cols.length];
-      c.globalCompositeOperation='lighter';sglow(c,col,fx,fy,7*s,.7);c.globalCompositeOperation='source-over';
-      c.fillStyle=mixW(col,.35);c.beginPath();c.arc(fx,fy,1.7*s,0,Math.PI*2);c.fill()}
+    for(let i=0;i<5;i++){const k=rr(),fy=y+(-14+k*22)*s,fx=x+(rr()-.5)*(6+k*20)*s,col=cols[i%cols.length];
+      c.globalCompositeOperation='lighter';sglow(c,col,fx,fy,4.5*s,.45);c.globalCompositeOperation='source-over';
+      c.fillStyle=mixW(col,.3);c.beginPath();c.arc(fx,fy,1.1*s,0,Math.PI*2);c.fill()}
   };
   tree(48,362,1,[NEON.pink,NEON.amber]); tree(326,370,.85,[NEON.cyan,NEON.lime]);
   hill(452,16,.014,3.1,'#0f2832','#3fe0c8');
@@ -753,7 +754,6 @@ function buildMeadow(c,V){
     c.beginPath(); c.moveTo(q.x-15,q.y); c.lineTo(q.x-11,q.y+13); c.lineTo(q.x+11,q.y+13); c.lineTo(q.x+15,q.y); c.stroke();
     c.strokeStyle=NEON.pink; c.lineWidth=1.2;
     c.beginPath(); c.moveTo(q.x-13,q.y+1); c.lineTo(q.x-10,q.y+11); c.lineTo(q.x+10,q.y+11); c.lineTo(q.x+13,q.y+1); c.stroke();
-    c.fillStyle=MOON; c.font=`700 10px ${BODYF}`; c.textAlign='center'; c.fillText('ヘソ',q.x,q.y+28);
   }
   // 受け皿＝ライフのバーは draw() の drawTray で毎回描く
   for(const p of G.pegs) if(!p.tower) drawStake(c,p.x,p.y,p.r);
@@ -824,7 +824,7 @@ function buildNeon(c){
   };
   for(const q of G.pockets){
     if(q.k==='pocket') cup(q.x,q.y,18,CYAN,'+5');
-    if(q.k==='heso') cup(q.x,q.y,16,GOLD,'ヘソ');
+    if(q.k==='heso') cup(q.x,q.y,16,GOLD,'');
     if(q.k==='tulip'){
       c.shadowColor=S.accent; c.shadowBlur=6; c.strokeStyle=hexA(S.accent,.8); c.lineWidth=1.6;
       c.beginPath(); c.moveTo(q.x-6,q.y+9); c.lineTo(q.x+6,q.y+9); c.moveTo(q.x,q.y+9); c.lineTo(q.x,q.y+17); c.stroke();
