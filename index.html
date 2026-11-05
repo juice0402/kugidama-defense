@@ -368,14 +368,16 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
 
 /* ==================== コードのしくみ（フック） ====================
    台ごとの中身は「表に行を足す＋小さな関数（フック）」で足す。共通のループ（update・stepBalls・draw・drawGhost…）は if をふやさずにフックを呼ぶ。
-   フックの関数は、表の行に書いても、あとで Object.assign(表.キー,{...}) でつけてもよい（台ごとの区切り「草原（0）」「森（1）」「洋館（2）」「砂漠（3）」「雪山（4）」「火山（5）」を見本に）。
+   フックの関数は、表の行に書いても、あとで Object.assign(表.キー,{...}) でつけてもよい（台ごとの区切り「草原（0）」「森（1）」「洋館（2）」「砂漠（3）」「雪山（4）」「火山（5）」「魔王城（6）」を見本に）。
    ・BALLS[k] 玉：name,color,el（属性）,e（はね返り）,g（重さ）,r,dmg,price,board,desc, deco(b,r) 玉の上の絵（ボムの導火線など）
+       台の上の玉 b：b.clone＝ぶんしんミラーの 分身の玉（drawBall は drawClone で描く・ヘソに入らない・b.age を 30−寿命 から始めて 時間切れで きえる）
    ・ELEM[k] 属性：name,color,tag（説明の文字）,part（粒の種類 FXK）,skin（体の色 {tint,edge,wash,spr:[色,濃さ]}）,mood（顔 ['hot'] / [名前,1]＝強い顔）,
        fx（粒の多さ {ball,tw,own,sp,cb,bl,en,gm:[1秒の数,広さ,高さ]}。場所の意味は FX_DEF）
        on(e,lv,dmg) 敵につく / has(e) いまついているか / tick(e,dt,rd) 時間を減らす・じわじわダメージ（rd＝ボスは早くとける）/
        speed(e,E) 動きの倍率（0で止まる）/ hold(e) true で止まる（いたずらもできない）/ calm(e) true で いたずらだけお休み（動きはそのまま。o.held になる）/ dmgK(e) 受けるダメージの倍率 /
        mark(e,r,t,ga) おばけの体の上の絵（おばけの座標）/ onBall(e) 属性弾が直接当たった / hit(e,d) 玉・砲台の弾など（じわじわ以外）が当たった / more(mode,x,y,R,dt,c) 粒の足し /
        special(e,dmg) SPECIAL[k] がないときのとくしゅ効果
+       hit で ダメージを ほかの敵へ わたすときは hurtEnemy(o,d,true)（じわじわ扱い）にすると、わたした先から また わたらない（くさり）
    ・SPECIAL[k]（同じ属性2つ）・COMBO['a+b']（ちがう属性。キーは comboKey(a,b)＝ELEM にならんだ順）：name,color,desc,n（はじける粒）,tint（{属性:粒の色}）,
        fx(e,dmg) 効き目（this＝その行）/ more(x,y,R,dt) 砲台の上の粒の足し / under(p,T,t) 砲台の下の絵
        足りない組み合わせは comboOf(k)・spOf(k) が「属性を強くつける」ものにする（全部の組み合わせを作るのが決まり）
@@ -389,7 +391,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        top(e,r,t,P) 頭の上 / mouth(e,r,ey,t) ふだんの口 / eye(e,x,ey,r,s,mood) 目（true で自前）/ pose(e,P) かたむき（P.rot,sx,sy,jx,lift）/ alt(e,r,t,P) 体ごと別の絵（true で自前）
        おばけの共通の状態：stun しびれ・sleep ねむり・push 押しもどし・vx 横・hopY はねる高さ・ghost すけすけ（ねらえない）・fake にせもの（玉1発で消える）・trail 残像・
        hide 雪にまぎれる（その近さの砲台からしか ねらえない）・cover かばわれている（G.time より大きい間 ねらえない）。砲台のねらいは aimAt(p,R)
-       bulletHit で弾の向きを見て dmgK でへらせる（サイ：正面＝下からの弾。ほうだんの弾は u.top で上から）
+       bulletHit で弾の向きを見て dmgK でへらせる（サイ：正面＝下からの弾。ほうだんの弾は u.top で上から）。bulletHit が true なら弾は ダメージなしで きえる（まおうの はね返し）
        中ボス・ボスは止まりにくい（update の共通のしくみ。BOSS_HOLD）：止まっている時間 holdT がたまると guard（がまん）の間は stun・sleep・root・freeze を0に、EL_HOLD と speed の0を使わない。新しい「止める」効き目も hold か speed の0で作れば自動でこれが効く
    ・TOWERS[k] 砲台：name,color,range,rate,dmg,cost,el,unlock,board,muz（砲身の先）,bullet（弾の種類）,aoe（はんい）,tag（お店のタグの文字）
        shoot(p,T,D,R) 撃ち方（true なら自前で撃った）/ gun(T,R,kick) 砲身の絵（砲台の向きの座標）/ over(p,T,t) 頭の上の絵 / tick(p,T,dt) 手助け
@@ -398,7 +400,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
    ・GIMMICKS[k] ギミック：name,color,unlock,cost,board,pad（玉の当たりを広げる）,ring（レベルの輪をはなす）
        step(b,p,T,h) 玉への力 / collide(b,p,T) 当たり方（true で杭の当たりなし）/ hit(p,T,b,nx,ny) はね返った / tick(p,T,dt) / draw(p,T,t,c)（c＝宿った色）/
        charged(p,T,eff,b) 宿っている砲台で玉がはね返った / aura(p,T,eff,dt) 宿っている間ずっと
-   ・OBJK[k] 台の上の小物（G.obs に {k,...}。おばけについていく物は o.e を持って step で o.x,o.y を合わせる＝時限ボム tbomb）：step(o,dt,f)（false で消える）/ back(o,t) 砲台の下 / draw(o,t) 砲台の上 / top(o,t) おばけの上
+   ・OBJK[k] 台の上の小物（G.obs に {k,...}。おばけについていく物は o.e を持って step で o.x,o.y を合わせる＝時限ボム tbomb・のろいの見張り hexW・バリア barrier・くさり clink）：step(o,dt,f)（false で消える）/ back(o,t) 砲台の下 / draw(o,t) 砲台の上 / top(o,t) おばけの上
    ・STAGES[i] 台：name,style,accent,layout,foes,scale,range,hp・grow・bossHp（敵の強さ）,fly（ホタルの色）,flies,stars,grassH,grass（false で手前の草なし）
        build(c,V) 止まった絵（レール rails(c)・ヘソ hesoCup(c,色)・杭 drawStake も自分で描く。buildPlain が見本）/ setup(L) 台に入るとき（L＝layout() の戻り。台のものは G.sx に）/
        tick(dt,f) ステージギミック / ball(b,h) 玉との当たり / drawBack(t) 砲台の下 / drawFront(t) おばけの上
@@ -434,6 +436,9 @@ const BALLS={
   // 火山の台が開くと お店にならぶ（deco＝玉の上の絵。火山の区切りでつける）
   magma:{name:'ようがん弾',color:'#ff3d8a',el:'magma',e:.5,g:.16,r:5,dmg:1,price:300,board:5,desc:'「ようがん」をつける。重いダメージで よろいをわって、しばらく ダメージが ふえる'},
   bomb:{name:'ボム弾',color:'#ff4a4a',el:'bomb',e:.5,g:.16,r:5,dmg:1,price:300,board:5,desc:'「ボム」をつける。少しあとで ばくはつして、まわりの敵にも ダメージ'},
+  // 魔王城の台が開くと お店にならぶ（deco は魔王城の区切りでつける）
+  curse:{name:'のろい弾',color:'#b6ff3d',el:'curse',e:.5,g:.16,r:5,dmg:1,price:325,board:6,desc:'「のろい」をつける。のろわれた敵は 受けるダメージが ふえる（3つまで重なる）。倒れると 近くの敵に のりうつる'},
+  chain:{name:'くさり弾',color:'#ffc94d',el:'chain',e:.5,g:.16,r:5,dmg:1,price:325,board:6,desc:'「くさり」をつける。近くの敵と くさりで つないで、どちらかが 受けた ダメージが もう1体にも つたわる'},
 };
 // 属性。タワーの上で2つの属性が出会うと「わざ」。敵の状態：火 burn/burnD・氷 slow/slowF/freeze・雷 shock（と stun）・毒 psnT/psnD・水 wet（push）・つる vineT/root/rootCD/thorn
 const ELEM={
@@ -546,6 +551,21 @@ const ELEM={
     on(e,lv,dmg){bombOn(e,lv,dmg)},                                      // 時限ボム：少しあとで ばくはつ（まわりの敵にも）
     has:e=>!!(e.bombO&&!e.bombO.done),
     mark(e,r,t,ga){if(e.bombO&&!e.bombO.done)drawBombGlow(e,r,t,ga)}},
+  // 魔王城の のろい・くさり（フックの中身は魔王城の区切り）。のろい＝重なって 受けるダメージが ふえる・倒れると 近くの敵に のりうつる（ようがんの よろいわり は 1回で 重ならない・うつらない）、
+  // くさり＝近くの敵と つないで、受けた ダメージが つないだ敵にも つたわる（ELEM の hit）
+  curse:{name:'のろい',color:'#b6ff3d',tag:'のろい',part:'hex',mood:['scared'],skin:{wash:'rgba(110,190,30,.17)',spr:['#7ad020',.3]},fx:{en:[3,1,-.6]},
+    on(e,lv){curseOn(e,lv)},                                              // のろい（重なって 受けるダメージが ふえる）
+    has:e=>e.curseT>0,
+    tick(e,dt,rd){if(e.curseT>0){e.curseT=Math.max(0,e.curseT-rd);if(!e.curseT)e.curseN=0}if(e.czT>0)e.czT=Math.max(0,e.czT-dt);if(e.mummy>0)e.mummy=Math.max(0,e.mummy-dt);if(e.hexPop>0)e.hexPop=Math.max(0,e.hexPop-dt)},
+    dmgK:e=>e.curseT>0?1+CURSE.k*(e.curseN||1):1,
+    mark(e,r,t,ga){if(e.curseT>0||e.mummy>0)drawCurseMark(e,r,t,ga)}},
+  chain:{name:'くさり',color:'#ffc94d',tag:'くさり',part:'link',fx:{en:[1.5,.9,.4]},
+    on(e,lv){chainOn(e,lv)},                                              // 近くの敵と くさりで つなぐ
+    has:e=>e.chainT>0||e.anchor>0,
+    tick(e,dt,rd){if(e.chainT>0)e.chainT=Math.max(0,e.chainT-dt);if(e.netT>0)e.netT=Math.max(0,e.netT-rd);if(e.anchor>0)e.anchor=Math.max(0,e.anchor-rd)},
+    speed:(e,E)=>chainSpeed(e,E),
+    hit(e,d){chainShare(e,d)},                                            // つないだ敵にも ダメージが つたわる
+    mark(e,r,t,ga){if(e.chainT>0||e.anchor>0)drawChainMark(e,r,t,ga)}},
 };
 const EL_ORDER=[];                                   // ELEM にならんだ順（finishHooks で入る）。わざのキーはこの順
 const EL_TICK=[], EL_SPEED=[], EL_HOLD=[], EL_DMG=[], EL_MARK=[], EL_SKIN=[], EL_MOOD=[], EL_CALM=[], EL_HIT=[];   // そのフックを持つ属性（finishHooks で入る）
@@ -591,6 +611,11 @@ const SPECIAL={
     fx(e,dmg){applyEl(e,'magma',2,dmg);zone('lava',e.x,e.y,32,3.5)}},
   bomb:{name:'だいばくはつ',color:'#ffb03d',n:14,desc:'大きな時限ボム。少しあとで 大ばくはつして、広い範囲の敵に 大きなダメージ',
     fx(e,dmg){bombOn(e,3,dmg*BOMB.big,{big:true,R:62,c:'#ffb03d'})}},
+  // 魔王城の のろい・くさり
+  curse:{name:'のろいのわ',color:'#c8ff70',n:12,desc:'弾が当たると のろいの輪。まわりの敵みんなに のろい2つ、輪の中に いると のろいが つづく',
+    fx(e){around(e,56,o=>curseOn(o,2));zone('hex',e.x,e.y,40,3.5);ringAt(e,56,this.color)}},
+  chain:{name:'くさりのあみ',color:'#ffd870',n:12,desc:'弾が当たると くさりの網。まわりの敵みんなを くさりで つないで、しばらく とても おそい',
+    fx(e){chainNet(e,60);ringAt(e,60,this.color)}},
 };
 // ちがう属性が出会うと「わざ」。tint＝わざのときの粒の色（どくの炎はピンクの炎など。なければ属性の色）
 const COMBO={
@@ -786,6 +811,67 @@ const COMBO={
     fx(e,dmg){bombOn(e,1,dmg,{el:'crystal',c:this.color})}},
   'magma+bomb':{name:'かざんだん',color:'#ff5a6a',tint:{magma:'#ff6a8a',bomb:'#ff7a50'},desc:'ふんかで とぶ ようがんの かたまり。少しあとで 大きく ばくはつして、ようがんだまりが残る',
     fx(e,dmg){bombOn(e,2,dmg*1.2,{el:'magma',zone:'lava',R:46,c:this.color})}},
+  // 魔王城の のろい（×前の台の属性）。のろい＝重なって 受けるダメージが ふえる（倒れると 近くに のりうつる）
+  'fire+curse':{name:'ひとだま',color:'#d0ff60',tint:{fire:'#b6ff3d',curse:'#e0ff90'},desc:'のろいの ひとだまが とびまわる。まわりの敵みんな やけど＋のろい',
+    fx(e){around(e,50,o=>{applyEl(o,'fire',1);curseOn(o,1)});applyEl(e,'fire',2);hitodama(e,50)}},
+  'ice+curse':{name:'しもやけ',color:'#c8f0ff',tint:{curse:'#d8ffb0'},desc:'つめたい のろいで ひりひり。とても おそくなって、のろい2つ',
+    fx(e){applyEl(e,'ice',2);curseOn(e,2)}},
+  'bolt+curse':{name:'ばちあたり',color:'#f0ff60',tint:{bolt:'#e8ff70'},desc:'てんから ばちが あたる。大きな かみなりで 少し止めて のろい、2体に とびうつる',
+    fx(e,dmg){G.zaps.push({x1:e.x+(Math.random()-.5)*8,y1:e.y-70,x2:e.x,y2:e.y,t:.25,c:this.color});hurtEnemy(e,dmg*1.2+2);if(e.dead)return;
+      if(!(e.flinchCD>0)){e.stun=Math.max(e.stun||0,.4);e.flinchCD=1.6}curseOn(e,1);zapFrom(e,2,dmg*.5,o=>curseOn(o,1))}},
+  'poison+curse':{name:'まじょのスープ',color:'#a8e060',tint:{poison:'#a0e070',curse:'#c890ff'},desc:'ぐつぐつ まじょのスープ。どく2ばい＋のろい、どくの 沼も のこる',
+    fx(e){applyEl(e,'poison',2);curseOn(e,1);zone('poison',e.x,e.y,28,3)}},
+  'water+curse':{name:'くろいあめ',color:'#7ab0a0',tint:{water:'#6aa0b0',curse:'#a0e060'},desc:'のろいの くろい あめ。まわりの敵を ぬらして 押しもどして、のろい',
+    fx(e){around(e,50,o=>{o.wet=5;pushBack(o,10);curseOn(o,1)});ringAt(e,50,this.color);for(let i=0;i<(reduce?4:10);i++)fxAdd({k:'drop',x:e.x+(Math.random()-.5)*90,y:e.y-40-Math.random()*24,vx:0,vy:2.2,max:.45,s:1.7,c:'#4a6a70'})}},
+  'vine+curse':{name:'いばらひめ',color:'#c0f080',tint:{vine:'#90e060',curse:'#d0ff90'},desc:'いばらの のろいで ねむってしまう。少し ねむって、いばらが はえる＋のろい',
+    fx(e){if(!(e.lullCD>0)){e.sleep=Math.max(e.sleep||0,1);e.lullCD=3.5}zone('thorn',e.x,e.y,26,3);curseOn(e,1)}},
+  'sound+curse':{name:'おばけのコーラス',color:'#e0b0ff',tint:{sound:'#e0a0ff',curse:'#c8ff70'},desc:'おばけたちの こわい コーラス。まわりの敵みんな ひるんで、のろい',
+    fx(e){around(e,60,o=>{flinch(o,.3);o.noteT=3;curseOn(o,1)});for(const R of [30,60])ringAt(e,R,this.color,.35)}},
+  'shadow+curse':{name:'くろまじゅつ',color:'#9a70e0',tint:{shadow:'#7a50d0',curse:'#b6ff3d'},desc:'まおうの くろまじゅつ。こんらん＋のろい2つ',
+    fx(e){applyEl(e,'shadow',1);curseOn(e,2)}},
+  'sand+curse':{name:'ミイラのろい',color:'#e8e0a0',tint:{sand:'#f0e0b0',curse:'#c8ff70'},desc:'ほうたいで ぐるぐる まき。すなかぶり（いたずらできない・少し おそい）＋のろい',
+    fx(e){applyEl(e,'sand',2);curseOn(e,1);e.mummy=2.5}},
+  'wind+curse':{name:'かまいたち',color:'#c0ffb0',tint:{wind:'#a0ffd0',curse:'#c8ff70'},desc:'みえない かぜの かま。まわりの敵を きって、まん中へ ふきよせて、のろい',
+    fx(e,dmg){around(e,52,o=>{if(o!==e)hurtEnemy(o,dmg*.5);if(o.dead)return;blowSide(o,1);curseOn(o,1)});ringAt(e,52,this.color);slashFx(e)}},
+  'snow+curse':{name:'ゆきおんな',color:'#e8f4ff',tint:{snow:'#f0f8ff',curse:'#d0ff90'},desc:'ゆきおんなの つめたい いき。雪2つ＋のろい、まわりにも 雪',
+    fx(e){applyEl(e,'snow',2);curseOn(e,1);around(e,44,o=>{if(o!==e)applyEl(o,'snow',1)});for(let i=0;i<3;i++)fxMist(e.x,e.y,30,'#eef6ff',false)}},
+  'crystal+curse':{name:'のろいのダイヤ',color:'#c0ffb0',tint:{crystal:'#b0ffc0'},desc:'のろいを とじこめた ダイヤ。結晶＋のろい。割れると まわりに のろいが とびちる',
+    fx(e,dmg){curseOn(e,1);crystOn(e,2,dmg,'curse')}},
+  'magma+curse':{name:'じごくのかま',color:'#e0ff50',tint:{magma:'#ff4a9a',curse:'#c8ff50'},desc:'ぐらぐら にえる じごくの かま。ようがん（重いダメージ・よろいわり）＋のろい2つ',
+    fx(e,dmg){applyEl(e,'magma',1,dmg);curseOn(e,2)}},
+  'bomb+curse':{name:'びっくりばこ',color:'#d0ff70',tint:{bomb:'#ff6a6a',curse:'#c8ff70'},desc:'のろいの びっくりばこ。少しあとで ばくはつして、まわりの敵みんな のろい2つ',
+    fx(e,dmg){bombOn(e,1,dmg,{el:'curse',lv:2,c:this.color})}},
+  // 魔王城の くさり（×前の台の属性・のろい）。わざは くさりで つないで、つないだ敵みんなに 属性（chainAll）
+  'fire+chain':{name:'ひのわくぐり',color:'#ffa040',tint:{chain:'#ffb050'},desc:'もえる くさりで つなぐ。つないだ敵みんな やけど',
+    fx(e){chainAll(e,2,o=>applyEl(o,'fire',2))}},
+  'ice+chain':{name:'かちこちつなぎ',color:'#c0e8ff',tint:{chain:'#d0f0ff'},desc:'こおった くさりで つなぐ。つないだ敵みんな とても おそい',
+    fx(e){chainAll(e,2,o=>applyEl(o,'ice',2))}},
+  'bolt+chain':{name:'でんせん',color:'#fff070',tint:{chain:'#ffe070'},desc:'くさりを でんきが はしる。つないだ敵みんなに かみなり',
+    fx(e,dmg){chainAll(e,2,o=>{o.shock=2;if(o!==e){G.zaps.push({x1:e.x,y1:e.y,x2:o.x,y2:o.y,t:.22});hurtEnemy(o,dmg*.6,true)}})}},
+  'poison+chain':{name:'くものす',color:'#d0a0ff',tint:{chain:'#e0c0ff'},desc:'どくの くものすで つなぐ（3体まで）。つないだ敵みんな どく',
+    fx(e){chainAll(e,3,o=>applyEl(o,'poison',1))}},
+  'water+chain':{name:'いかり',color:'#80c8ff',tint:{chain:'#a0d0ff'},desc:'おもい いかりを つける。ぬらして 押しもどして、しばらく とても おそい',
+    fx(e){chainOn(e,1);pushBack(e,16);e.wet=5;e.anchor=Math.max(e.anchor||0,2.5)}},
+  'vine+chain':{name:'つなひき',color:'#b0e060',tint:{chain:'#c0e070'},desc:'つなひき！ つないだ敵を ひっぱって、少し 止める',
+    fx(e){chainAll(e,2,o=>{pushBack(o,6);if(!(o.rootCD>0))tangle(o,.7)})}},
+  'sound+chain':{name:'じゃらじゃら',color:'#ffc0e0',tint:{chain:'#ffd080'},desc:'くさりを じゃらじゃら ならす。つないだ敵みんな ひるんで、まわりに 小さな ダメージ',
+    fx(e,dmg){chainAll(e,2,o=>{flinch(o,.35);o.noteT=3});around(e,40,o=>{if(o!==e)hurtEnemy(o,dmg*.3)});ringAt(e,40,this.color,.35)}},
+  'shadow+chain':{name:'ゆうれいくさり',color:'#a890ff',tint:{chain:'#c0a8ff'},desc:'ゆうれいの くさり。つないだ敵みんな こんらん',
+    fx(e){chainAll(e,2,o=>applyEl(o,'shadow',1))}},
+  'sand+chain':{name:'キャラバン',color:'#ffd890',tint:{chain:'#ffe0a0'},desc:'らくだの れつの ように つなぐ（3体まで）。つないだ敵みんな すなかぶり（いたずらできない）',
+    fx(e){chainAll(e,3,o=>applyEl(o,'sand',1))}},
+  'wind+chain':{name:'たこあげ',color:'#b0ffe0',tint:{chain:'#c0ffe0'},desc:'たこあげ みたいに ふきあげる。つないだ敵を まん中へ ふきよせて、上へ押しもどす',
+    fx(e){chainAll(e,2,o=>{blowSide(o,1);pushBack(o,8)})}},
+  'snow+chain':{name:'そりひき',color:'#f0f4ff',tint:{chain:'#ffe8b0'},desc:'ゆきの そりで ひっぱる。つないだ敵みんなに 雪',
+    fx(e){applyEl(e,'snow',1);chainAll(e,2,o=>applyEl(o,'snow',1))}},
+  'crystal+chain':{name:'ネックレス',color:'#d8d0ff',tint:{chain:'#ffe0a0',crystal:'#d0c8ff'},desc:'けっしょうの ネックレス。つないだ敵みんなに 結晶（つぎに当たると 割れて 大ダメージ）',
+    fx(e,dmg){chainAll(e,2,o=>crystOn(o,1,dmg))}},
+  'magma+chain':{name:'まっかなくさり',color:'#ff7090',tint:{chain:'#ff9a60'},desc:'ようがんで まっかに やけた くさり。つないだ敵みんなに ようがん',
+    fx(e,dmg){chainAll(e,2,o=>applyEl(o,'magma',1,dmg*.6))}},
+  'bomb+chain':{name:'れんさばくはつ',color:'#ff8a50',tint:{chain:'#ffb040'},desc:'つないだ敵みんなに ボム。つぎつぎ ばくはつ',
+    fx(e,dmg){chainAll(e,2,o=>bombOn(o,1,dmg))}},
+  'curse+chain':{name:'ふういん',color:'#e0ff80',tint:{curse:'#c8ff50',chain:'#ffd050'},desc:'のろいの おふだで ふういん。つないだ敵みんな のろい2つ、少し 止まる',
+    fx(e){chainAll(e,3,o=>{curseOn(o,2);if(!(o.flinchCD>0)){o.stun=Math.max(o.stun||0,.5);o.flinchCD=1.8}});sealFx(e)}},
 };
 // 地面に残るもの（とくしゅ効果・わざが置く）。中の敵に tick、粒は fx、絵は draw
 const ZONES={
@@ -815,6 +901,9 @@ const ZONES={
   lava:{color:'#ff3d8a',tick(z,e){e.mag=Math.max(e.mag||0,.6);if(!(e.lavaT>0)){e.lavaT=.5;hurtEnemy(e,MAGMA.pool,true)}},   // ようがんだまり（中の敵は よろいわり＋じわじわ）
     fx(z,dt){for(let i=fxN(5,dt);i--;)fxEl('magma',z.x,z.y,z.R*.8,false)},
     draw(z,t,a){drawLavaZone(z,t,a)}},
+  hex:{color:'#b6ff3d',tick(z,e){if(!(e.czT>0)){e.czT=1;curseOn(e,1)}},   // のろいの輪（中の敵は 1秒ごとに のろい）
+    fx(z,dt){for(let i=fxN(5,dt);i--;)fxEl('curse',z.x,z.y,z.R*.85,false)},
+    draw(z,t,a){drawHexZone(z,t,a)}},
 };
 const zone=(k,x,y,R,t)=>G.zones.push({k,x,y,R,t,max:t});
 function zoneRing(z,c,a){ctx.globalAlpha=a;ctx.strokeStyle=hexA(c,.6);ctx.lineWidth=1.2;ctx.setLineDash([3,4]);circle(z.x,z.y,z.R);ctx.stroke();ctx.setLineDash([]);ctx.globalAlpha=1}
@@ -842,6 +931,9 @@ const TOWERS={
   // 火山の台が開くと お店にならぶ。ようがんタワーは 重い ようがんの弾（BULLETK.lava）、ほうだんタワーは 山なりに撃って 落ちた所で ばくはつ（shoot と BULLETK.shell は火山の区切り）
   magma:{name:'ようがんタワー',color:'#ff3d8a',range:72,rate:1.2,dmg:2.6,cost:65,el:'magma',unlock:600,board:5,muz:1.65,bullet:'lava',desc:'重い ようがんの弾（よろいをわって、しばらく ダメージが ふえる）。ようがん弾が当たると「ようがんだまり」'},
   houdan:{name:'ほうだんタワー',color:'#ffb03d',range:100,rate:1.9,dmg:2.6,cost:70,unlock:600,board:5,muz:1.45,aoe:1,tag:'やまなり',desc:'山なりに 弾を撃って、落ちた所で ばくはつ（まわりの敵みんなに当たる）。とおくまで とどく'},
+  // 魔王城の台が開くと お店にならぶ。のろいタワーの弾は BULLETK.hex、まほうじんタワーは 撃たずに 通り道に わなを置く（shoot と OBJK.mtrap は魔王城の区切り）
+  curse:{name:'のろいタワー',color:'#b6ff3d',range:74,rate:1,dmg:2.4,cost:70,el:'curse',unlock:650,board:6,muz:1.7,bullet:'hex',desc:'弾で のろい（受けるダメージが ふえる。重なる・倒れると 近くの敵に のりうつる）。のろい弾が当たると「のろいのわ」'},
+  mahou:{name:'まほうじんタワー',color:'#c070ff',range:84,rate:1.6,dmg:3,cost:75,unlock:650,board:6,muz:1.2,aoe:1,tag:'わな',desc:'弾を撃たずに、おばけの通り道に わなの まほうじんを置く。ふんだ おばけと まわりに ダメージ、少し 止まる'},
 };
 const SOUND_FX=2;                             // サウンドタワー：玉でついた とくしゅ効果・わざが出る敵の数（属性は波の中の敵みんなに）
 // ギミック：どの砲台にも1つつけられる（お店で解放 → 台の上で砲台をタップして、コインでつける）。属性のある砲台につけると、ギミックにも属性が宿る
@@ -856,6 +948,8 @@ const JUMP={top:.35, up:5.4, side:1.8, max:3, xp:1, float:4, lift:.86, drag:.03,
 const SANDAN={a:.4, sp:6, fx:2};                                   // さんだんタワー：左右の弾の向き（ラジアン）・左右の弾の速さ・とくしゅ効果・わざが出る数（属性は3つの弾みんな）
 const HOUDAN={dur:.85, R:30, fx:2, arc:58, lead:.8};               // ほうだんタワー：弾がとぶ秒・ばくはつの広さ・とくしゅ効果・わざが出る数（属性は ばくはつの中 みんな）・山なりの高さ・ねらう先（おばけの進む分の割合）
 const FUNKA={pad:2, max:3, wait:.4, up:5.8, side:1.6, use:3, xp:1, float:4, lift:.86, drag:.03, flow:3, cd:.4, ringR:64, splash:46};   // ふんか口：玉が入る広さ（杭のふちから）・ためる数（たまると いっせいに ふき上げる）・待つ秒（それより長いと たまった分だけ ふき上げる）・ふき上げる強さ・横の強さ・1つの玉が入れる回数（同じ口は1回）・ふき上げた玉1つの経験値・ふき上げた玉が 熱い風で ふわっと落ちる秒・重さを消す割合・速さがへる割合（1コマ）・ふき上げたあと ようがんが あふれている秒・宿った技（ためている間と あふれている間 cd 秒ごと・ふき上げ）の広さ・ふき上げで ようがんが とびちる広さ（宿っていなくても。まわりの おばけに ようがん）
+const TRAP={max:2, R:22, life:6, lead:.7, k:1.3, stun:.5, cd:2, fx:2, arm:.25};   // まほうじんタワー：1つの砲台が置ける わなの数（Lv3から+1）・わなの広さ・わなが のこる秒・ねらう先（おばけの進む先・秒）・ダメージの倍率・ふんだ おばけが 止まる秒・同じおばけが つぎに止まるまで・とくしゅ効果・わざが出る数（属性は みんな）・置いてから はたらくまで
+const BUNSHIN={pad:1, per:3, cap:10, life:6, lift:.6, drag:.02, ringR:40, cd:.5, glowR:32, glowCd:.6};   // ぶんしんミラー：玉が当たる広さ（杭のふちから）・1つの玉が 分かれる回数・台の上の 分身の玉の上限・分身の玉が きえるまでの秒・分身の玉の 重さを消す割合（ふわっと落ちる）・速さがへる割合（1コマ）・宿ったミラーの 光の輪の広さ・つぎの輪まで・宿った分身の玉の 光の広さ・つぎの光まで
 // ならび：お店・砲台のシートの順。自動プレイ（dev/sim）は いちばん下の持っているギミックを全部の砲台につける（sim.js の gm で えらべる）。雪山のジャンプ台は ありじごくの上に置いた（ありじごくの方が強い。記録の雪山）。火山のふんか口は いちばん下（ありじごく・ジャンプ台と分けて測って そろえた。記録の火山）
 const GIMMICKS={
   bumper:{name:'バンパー',color:'#e8f4ff',unlock:300,cost:20,pad:BUMP_R,ring:2.5,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい。属性のある砲台なら、はね返すたびに属性の輪がはじける'},
@@ -865,6 +959,7 @@ const GIMMICKS={
   jump:{name:'ジャンプ台',color:'#9fe8ff',unlock:500,cost:40,board:4,pad:1.5,ring:2,desc:'杭の上に ばねのジャンプ台。上から乗った玉を ぴょーんと はね上げて、ふわっと落とす（もう一度 杭に当たれる・砲台の経験値も少し多め）。属性のある砲台なら、はね上げた玉に効き目が宿って、まいあがる 雪けむりで まわりのおばけにも'},
   ari:{name:'ありじごく',color:'#f2b866',unlock:450,cost:35,board:3,ring:2,desc:'砲台のまわりに すなのうず。近くを通る玉は うずを巻いて ゆっくり落ちる（この砲台に何度も当たりやすい）。属性のある砲台なら、玉がうずにいる間、まわりのおばけに その効き目'},
   funka:{name:'ふんか口',color:'#ff6a5a',unlock:550,cost:45,board:5,pad:FUNKA.pad,ring:2.5,desc:'杭の上に 小さな ふんか口。上から入った玉を ためて、3つ たまると 上へ いっせいに ふき上げる（もう一度 杭に当たれる）。属性のある砲台なら、ふき上げた玉に その効き目が宿って、ふき上げるときに まわりの おばけにも効く'},
+  bunshin:{name:'ぶんしんミラー',color:'#d8c8ff',unlock:600,cost:50,board:6,pad:BUNSHIN.pad,ring:2.5,desc:'杭のまわりに 魔法の かがみ。当たった玉が 2つに 分かれる（分身の玉は 少しで きえて、ヘソには 入らない・コインは かからない）。属性のある砲台なら、分身の玉に その効き目が宿って、分かれるときに まわりの おばけにも効く'},
 };
 // おばけ（イタズラ好きの白いおばけに動物の特ちょう。gh＝おばけの絵）。台ごとの顔ぶれは STAGES の foes（ふつう・はやい・かたい・中ボス・ボス）
 // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）。いたずらはフック（草原・森の区切り）
@@ -906,6 +1001,12 @@ const ENEMIES={
   sai:{gh:1,hp:8.5,sp:.22,r:14,color:'#c0a0e0',reward:10},                     // サイおばけ（かたい）：よろいの角で 正面（下）からの砲台の弾が へる（玉が当たると ひび・3つで割れる。ようがんで すぐ割れる）
   inoshishi:{gh:1,hp:900,sp:.13,r:24,color:'#e8905a',reward:60,boss:1,call:6,calls:['buta','buta'],tintK:.82,ey:.16},   // 中ボス：とつぜん 突進して 一気に進む（ためている間に玉が当たると止まる。突進中に玉が当たると ころぶ）
   dragon:{gh:1,hp:1700,sp:.15,r:32,color:'#ff4f7a',reward:150,boss:2,call:5,calls:['buta','hinotori','sai'],ey:.14},   // ボス：火をはいて 下の砲台の列を しばらく撃てなくする（息をすっている・火をはいている間に玉が当たると 火が止まる）
+  // 魔王城のおばけ（bar:1＝黒ヤギの バリアが つく）
+  karasu:{gh:1,hp:2.4,sp:.32,r:11,color:'#7c8cff',reward:4,bar:1},                  // カラスおばけ（ふつう）：近くの砲台の バフ（玉でついた属性・わざ・攻撃UPなど）を ぬすむ（玉が当たるか 倒すと 返す）
+  hebi:{gh:1,hp:2,sp:.46,r:9,color:'#c66bff',reward:5,bar:1},                       // ヘビおばけ（はやい）：ダメージを受けると ぬけがらを のこして 身代わりにする（玉が当たると もう ぬけがらを 作れない）
+  kaeru:{gh:1,hp:8.5,sp:.22,r:14,color:'#7fd8b0',reward:10,bar:1,ey:.82},             // 石のカエルおばけ（かたい）：ときどき 石になって 砲台の弾などが ほとんど効かない（玉が当たると 石が われる）
+  yagi:{gh:1,hp:430,sp:.13,r:24,color:'#b070ff',reward:60,boss:1,call:6,calls:['karasu','karasu'],tintK:.82,ey:.12,bar:1},   // 中ボス：まわりの おばけに バリア（となえている間に玉が当たると止まる。バリアに玉が当たると われる）。バリアで 手下を まもるので HP は ほかの中ボス（900）より ひくめ
+  kujaku:{gh:1,hp:1700,sp:.15,r:32,color:'#3ee8d0',reward:150,boss:2,call:5,calls:['karasu','hebi','kaeru'],ey:.14,bar:1},   // ボス：まおう（黒いクジャク）。羽を広げると 砲台の弾を はね返す（玉が当たると 羽が とじる）
 };
 // Canvaで作ったおばけの絵（11/5 ためし：わたげ・正面向き）。h＝おばけの半径に対する絵の高さ、by＝絵の下はしの位置（半径に対して）。絵がない種類はコードの絵
 const SPRITE_SRC={wata:{h:3.0,by:1.05,src:'data:image/png;base64,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'}};
@@ -969,6 +1070,16 @@ const MAGMA={k:.6, base:1, t:4, weak:1.3, pool:.5};                     // よ�
 const BOMB={fuse:1.3, R:34, k:1.6, base:3, max:3, big:1.4};               // ボム：ばくはつまでの秒・ばくはつの広さ（＋lv×6）・ダメージ（当たったダメージ×k＋base×lv）・重なる数・だいばくはつの倍率
 // 火山のステージギミック：ようがんの噴水。台の下の噴水口から every 秒ごとに（warn 秒 ぶくぶくしてから）ようがんが ふき上がる → 柱の中の おばけに dmg×ウェーブの強さ のダメージ＋ようがん。玉が当たると すぐ ふき上がる（つぎまで cd 秒）
 const FOUNT={at:[[122,505],[254,505]], every:6, warn:.9, dur:.8, h:96, w:14, dmg:3, cd:1.5, r:7, e:.6, lift:3.8};
+// 魔王城のおばけのいたずら
+const KARASU={first:2.5, every:6, R:95, grab:.5};                       // カラス：はじめに ぬすむまで・つぎまで・ぬすめる砲台の近さ・ぬすむ秒（止まる）
+const HEBI={at:[.6,.3], hide:1.4, dash:1, k:1.5, hp:.6, life:3};        // ヘビ：ぬけがらを のこす HP（割合。1つずつ）・のこしたあと ねらわれない秒・速くなる秒・速さの倍率・ぬけがらの HP（最大HPの割合）・ぬけがらが のこる秒
+const KAERU={first:3, every:6.5, stone:2.4, k:.15, slow:.6, cd:3, hop:.9};   // 石のカエル：はじめに 石になるまで・つぎまで・石の秒・石の間に 砲台の弾などが効く割合（玉は全部）・石の間の速さ・玉で われたあと つぎまで・ぴょんの間かく
+const YAGI={first:6, every:9, chant:1.1, R:110, bar:4, k:.5};           // 黒ヤギ：はじめのバリアまで・つぎまで・となえる秒（玉が当たると止まる）・とどく広さ・バリアの秒・バリアの間に 砲台の弾などが効く割合（玉が当たると われる）
+const KUJAKU={first:5, every:10, aim:1, fan:4, back:.4};                // まおう：はじめに 羽を広げるまで・つぎまで・ひろげる秒（玉が当たると止まる）・広げている秒（砲台の弾を はね返す。玉が当たると とじる）・はね返った弾が当たった砲台が おくれる秒
+const CURSE={t:5, k:.2, max:3, R:70};                                   // のろい：つづく秒・1つごとに 受けるダメージ +割合・重なる数・倒れたとき のりうつる広さ
+const CHAIN={t:4, R:72, k:.5, slow:.85, max:3, net:2, links:40};        // くさり：つづく秒・つなぐ広さ・つないだ敵に つたわる ダメージの割合・おそさ・1体の くさりの数・くさりの網で とても おそい秒・台の上の くさりの上限
+// 魔王城のステージギミック：まほうじん。台の中に3つ。玉が通るたびに光がたまり（1つの玉は cd 秒に1回）、n こ たまると いちばん HP の多い おばけに ビーム（dmg×ウェーブの強さ＋のろい）
+const MJ={at:[[188,216],[96,334],[280,334]], r:13, n:6, dmg:8, cd:.6};
 const WAVES=10, WAVE_T=30, SPAWN_T=22, MID_WAVE=5, HP_GROW=.35, WAVE_N=[4,2.4];   // HP_GROW＝ウェーブごとに敵のHPがふえる割合。WAVE_N＝敵の数（a＋b×ウェーブ）   // 1ウェーブ30秒（1ゲーム約5分）。敵は最初の22秒で出る。倒しきると早めに次へ
 // scale＝玉・敵の大きさの倍率、range＝タワーのとどく広さの倍率
 const STAGES=[
@@ -978,6 +1089,7 @@ const STAGES=[
   {name:'砂漠',style:'desert',scale:1.3,range:1.15,accent:'#ffc94f',layout:layoutDesert,foes:['mia','tokage','rakuda','sasori','sphinx'],hp:4.5,grow:5,bossHp:1.1,fly:'#ffd27a',flies:18,stars:18,grass:false},
   {name:'雪山',style:'snow',scale:1.3,range:1.15,accent:'#a8e4ff',layout:layoutSnow,foes:['okojo','penguin','tonakai','seiuchi','mammoth'],hp:4.5,grow:9.2,bossHp:1,fly:'#cfe4ff',flies:12,stars:22,grass:false},
   {name:'火山',style:'volcano',scale:1.3,range:1.15,accent:'#ff5a8a',layout:layoutVolcano,foes:['buta','hinotori','sai','inoshishi','dragon'],hp:4.5,grow:9.2,bossHp:1.2,fly:'#ff8a5a',flies:14,stars:10,grass:false},
+  {name:'魔王城',style:'castle',scale:1.3,range:1.15,accent:'#b56bff',layout:layoutCastle,foes:['karasu','hebi','kaeru','yagi','kujaku'],hp:4.5,grow:8,bossHp:1.3,fly:'#b6ff3d',flies:12,stars:16,grass:false},
 ];
 // 台えらび。stage＝STAGES の番号。need＝この台をクリアすると開く（price があれば、そのあとコインで買う）。soon＝まだ作っていない台（担当が作ったら soon を消す）
 const SOON_THUMB='repeating-linear-gradient(45deg,#1b2230 0 8px,#141a25 8px 16px)', SOON_DESC='買うと、お店に新しいタワーや玉がふえる';
@@ -988,7 +1100,7 @@ const BOARDS=[
   {stage:3,price:2000,need:2,desc:'ネオンな夜の砂漠。ピラミッドの杭と、うごく たつまき',thumb:'radial-gradient(circle at 26% 20%,#ffe7a8 0 5%,transparent 6%),linear-gradient(#0b0a26 0 50%,#3a1a3c 51% 64%,#8a5a2c 65% 80%,#4a2e16 81%)'},
   {stage:4,price:2500,need:3,desc:'ネオンな夜の雪山。雪の結晶の杭と、落ちてくる つらら',thumb:'radial-gradient(circle at 50% 48%,#dfe8ff 0 3%,transparent 4%),linear-gradient(#050818 0 20%,#1d5a5a 21% 26%,#1c1650 27% 54%,#cdd6ff 55% 58%,#24204e 59% 72%,#3a4680 73%)'},
   {stage:5,price:3000,need:4,desc:'ネオンな夜の火山。火口の杭と、ふき上がる ようがんの噴水',thumb:'radial-gradient(ellipse at 50% 30%,#ffd25a 0 3%,#ff3d8a 6%,transparent 15%),linear-gradient(#07030c 0 26%,#3a0c26 27% 52%,#24101e 53% 78%,#ff3d8a 79% 81%,#140a12 82%)'},
-  {stage:6,price:3500,need:5,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 魔王城
+  {stage:6,price:3500,need:5,desc:'ネオンな夜の魔王城。魔法陣の杭と、光をためる まほうじん',thumb:'radial-gradient(circle at 50% 18%,#ffd84d 0 2%,#b6ff3d 3%,#7a3cff 6%,transparent 10%),linear-gradient(#04020a 0 14%,#140a26 15% 40%,#1e0c34 41% 66%,#2c1048 67% 82%,#0e0618 83%)'},
   {stage:7,price:4000,need:6,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 宇宙
   {stage:8,price:5000,need:7,soon:true,name:'？？？',desc:SOON_DESC,thumb:SOON_THUMB},   // 天国
 ];
@@ -1134,6 +1246,24 @@ const sfx={
   dodo(){tone(80,.6,'sawtooth',.04,1.4)},                                                                            // イノシシの 突進
   gao(){tone(200,.6,'sawtooth',.035,.7);setTimeout(()=>tone(150,.5,'sawtooth',.03,.6),200)},                        // ドラゴン：がおー（息をすう）
   fwoo(){tone(300,.9,'sawtooth',.02,.3)},                                                                            // 火を はく
+  // 魔王城
+  hex(){const n=performance.now();if(n-(sfx._hx||0)<110)return;sfx._hx=n;tone(520,.22,'triangle',.016,.6);setTimeout(()=>tone(700,.16,'sine',.01,.7),50)},   // のろいが つく（ひゅるる）
+  jara(){const n=performance.now();if(n-(sfx._ja||0)<110)return;sfx._ja=n;seq([1900,1500,2100,1700],32,.04,.009)},   // くさりが じゃらっ
+  beam(){tone(880,.5,'sawtooth',.02,2);setTimeout(()=>tone(1320,.35,'sine',.02,.5),40)},                               // まほうじんの ビーム
+  mjin(){const n=performance.now();if(n-(sfx._mj||0)<90)return;sfx._mj=n;tone(1500+Math.random()*300,.07,'sine',.008,1.3)},   // まほうじんに 光が たまる
+  split(){const n=performance.now();if(n-(sfx._sp2||0)<80)return;sfx._sp2=n;tone(1800,.1,'sine',.016,1.5);setTimeout(()=>tone(2400,.12,'sine',.012,1.3),50)},   // 玉が 2つに 分かれる（きらりん）
+  trap(){const n=performance.now();if(n-(sfx._tp||0)<90)return;sfx._tp=n;tone(640,.18,'triangle',.014,1.4)},          // わなを 置く
+  trapgo(){const n=performance.now();if(n-(sfx._tg||0)<80)return;sfx._tg=n;tone(300,.3,'square',.02,2.6);setTimeout(()=>tone(900,.2,'sine',.016,.6),40)},   // わなが はつどう
+  caw(){tone(700,.14,'sawtooth',.02,.6);setTimeout(()=>tone(620,.18,'sawtooth',.018,.6),150)},                         // カラス：かあかあ（ぬすむ）
+  kira(){seq([1568,2093,2637],60,.08,.016)},                                                                          // ぬすまれた バフが もどる
+  shed(){tone(420,.3,'sine',.02,1.8)},                                                                                // ヘビが ぬけがらを のこす（にゅるっ）
+  kero(){seq([520,390],80,.07,.02)},                                                                                  // カエル：けろっ（石になる）
+  gotsu(){const n=performance.now();if(n-(sfx._go||0)<90)return;sfx._go=n;tone(180,.12,'square',.02,.6)},             // 石に 弾が ごつっ
+  mee(){tone(500,.4,'sawtooth',.018,.85)},                                                                            // ヤギ：めえ（となえる）
+  barrier(){tone(1100,.35,'sine',.018,1.6)},                                                                          // バリアが はられる
+  bbreak(){const n=performance.now();if(n-(sfx._bb||0)<80)return;sfx._bb=n;tone(2600,.08,'square',.012,.5);tone(1600,.18,'triangle',.016,.4)},   // バリアが われる
+  fan(){seq([784,1047,1319,1568],55,.12,.016)},                                                                      // まおうが 羽を 広げる（しゃらん）
+  refl(){const n=performance.now();if(n-(sfx._rf||0)<70)return;sfx._rf=n;tone(2200,.07,'sine',.012,1.6)},             // 弾を はね返す
 };
 
 /* ---------- 杭の配置 ---------- */
@@ -1170,6 +1300,14 @@ function layoutSnow(){
 // 6面：夜の火山。火山の形に杭12本：V字の火口（ふち2本・底1本）・山の左右のすそ（3本ずつ）・まん中の ようがんの通り道（1本）と 下の ようがんだまり（2本）。噴水口は ヘソの左右の下（FOUNT.at）
 const VOLC_P=[[152,160],[224,160],[188,212],[124,236],[252,236],[188,290],[96,306],[280,306],[146,362],[230,362],[68,378],[308,378]];
 function layoutVolcano(){return {P:VOLC_P.map(p=>p.slice()),pegR:11,heso:{x:188,y:480}}}
+// 7面：夜の魔王城。床の 魔法陣（五芒星）の 角5本（半径112）と 内がわの 角5本（半径43）に杭10本、うしろの城の 左右の塔の先に2本。まほうじんは 魔法陣の上と 左右の下（MJ.at）
+const PENTA={x:188, y:290, R:112, r:43};
+function layoutCastle(){
+  const P=[]; for(let i=0;i<5;i++){const a=rad(90+i*72);P.push([Math.round(PENTA.x+Math.cos(a)*PENTA.R),Math.round(PENTA.y-Math.sin(a)*PENTA.R)])}
+  for(let i=0;i<5;i++){const a=rad(-90+i*72);P.push([Math.round(PENTA.x+Math.cos(a)*PENTA.r),Math.round(PENTA.y-Math.sin(a)*PENTA.r)])}
+  P.push([104,178],[272,178]);
+  return {P,pegR:11,heso:{x:188,y:480}};
+}
 
 /* ---------- 台を作る ---------- */
 // 台の上で動いているものを空にする（台に入るとき・ロビーにもどるとき）
@@ -2154,7 +2292,7 @@ function heso(q,b){
 // ヘソ：受け口のふちの2本の柱。間から落ちた玉が入る
 function hesoPosts(b){const q=G.heso;if(!q)return;dotHit(b,q.x-14,q.y+2,2.5,.4);dotHit(b,q.x+14,q.y+2,2.5,.4)}
 function inHeso(b){
-  const q=G.heso; if(!q||!(b.vy>0&&b.y>q.y&&b.y<q.y+10&&Math.abs(b.x-q.x)<7)) return false;
+  const q=G.heso; if(!q||b.clone||!(b.vy>0&&b.y>q.y&&b.y<q.y+10&&Math.abs(b.x-q.x)<7)) return false;   // 分身の玉（b.clone）は 入らない
   G.stat.heso=(G.stat.heso||0)+1; b.gone=true; heso(q,b); return true;
 }
 
@@ -2669,6 +2807,7 @@ function feverFrame(t,c){
 function shade(hex,f){const n=parseInt(hex.slice(1),16);return `rgb(${(n>>16&255)*f|0},${(n>>8&255)*f|0},${(n&255)*f|0})`}
 function mixW(hex,f){const n=parseInt(hex.slice(1),16),m=v=>Math.round(v+(255-v)*f);return `rgb(${m(n>>16&255)},${m(n>>8&255)},${m(n&255)})`}
 function drawBall(b){
+  if(b.clone){drawClone(b);return}                                                                    // ぶんしんミラーの 分身の玉（魔王城の区切り）
   const B=BALLS[b.t], r=b.r, g=ctx.createRadialGradient(b.x-r*.4,b.y-r*.45,r*.1,b.x,b.y,r);
   g.addColorStop(0,'#ffffff'); g.addColorStop(.45,B.color); g.addColorStop(1,shade(B.color,.5));
   ctx.fillStyle='rgba(0,0,0,.3)'; circle(b.x+1.5,b.y+2,r); ctx.fill();
@@ -6010,6 +6149,921 @@ Object.assign(ENEMIES.dragon,{
   },
   mouth(){},
   pose(e,P){if(e.dying)return;if(e.inh>0){const k=Math.min(1,(DRAGON.aim-e.inh)*2);P.sx*=1+.08*k;P.sy*=1+.05*k;P.rot-=.05*k}else if(e.breath>0){P.sy*=.97;P.jx+=Math.sin(G.time*50)*e.r*.02}},
+});
+
+/* ---------- 魔王城（6）：魔法陣の杭・まほうじん・のろい/くさり・のろいタワー/まほうじんタワー・ぶんしんミラー・おばけのいたずら ---------- */
+// ---- のろい・くさり（ELEM のフックの中身） ----
+// のろい：重なって（CURSE.max まで）受けるダメージが 1つごとに CURSE.k ふえる（CURSE.t 秒。中ボス・ボスは 少し はやく とける）。
+// のろわれた敵が 倒れると、まわり CURSE.R の いちばん近い敵に のりうつる（OBJK.hexW が 見張る。おばけに ついていく小物）
+function curseOn(e,lv){
+  if(e.dead) return;
+  const was=e.curseT>0;
+  e.curseN=Math.min(CURSE.max,(was?e.curseN||0:0)+(lv||1)); e.curseT=CURSE.t; e.hexPop=.3;
+  if(!e.hexW){e.hexW=true;G.obs.push({k:'hexW',e})}
+  if(!was){sfx.hex();G.rings.push({x:e.x,y:e.y,R:e.r*1.5,c:'rgba(182,255,61,.8)',t:.3})}
+}
+function curseJump(e){   // のろいが のりうつる（ライムの すじが とんでいく）
+  let best=null,bd=CURSE.R*CURSE.R;
+  for(const o of G.en){if(o===e||o.dead||o.ghost>0||o.fake)continue;const d=(o.x-e.x)**2+(o.y-e.y)**2;if(d<bd){bd=d;best=o}}
+  if(!best) return;
+  curseOn(best,e.curseN||1);
+  G.obs.push({k:'hexLine',x:e.x,y:e.y,o:best,t:0,max:.35});
+}
+// くさり：近くの敵（CHAIN.R の中・近い順）と くさりで つなぐ（lv 本。1体 CHAIN.max 本まで）。どちらかが 受けた ダメージ（じわじわ以外）の CHAIN.k が もう1体にも つたわる（ELEM の hit → chainShare）。
+// つながっている間は 少し おそい。くさりは G.obs の clink（a・b の おばけに ついていく）。台の上の くさりは CHAIN.links 本まで
+const partners=e=>(e.links||[]).filter(L=>L.t>0&&!L.a.dead&&!L.b.dead).map(L=>L.a===e?L.b:L.a);
+const linkCount=()=>{let n=0;for(const o of G.obs)if(o.k==='clink')n++;return n};
+function chainLink(a,b){
+  a.links=(a.links||[]).filter(L=>L.t>0); b.links=(b.links||[]).filter(L=>L.t>0);
+  const L0=a.links.find(L=>L.a===b||L.b===b);
+  if(L0){L0.t=L0.max=CHAIN.t;return false}
+  if(a.links.length>=CHAIN.max||b.links.length>=CHAIN.max||linkCount()>=CHAIN.links) return false;
+  const L={k:'clink',a,b,t:CHAIN.t,max:CHAIN.t,fl:0};
+  a.links.push(L); b.links.push(L); G.obs.push(L);
+  a.chainT=Math.max(a.chainT||0,CHAIN.t); b.chainT=Math.max(b.chainT||0,CHAIN.t);
+  return true;
+}
+function chainOn(e,lv){
+  if(e.dead) return;
+  e.chainT=Math.max(e.chainT||0,CHAIN.t);
+  for(const L of e.links||[]) if(L.t>0) L.t=L.max=CHAIN.t;   // いまの くさりは のびる
+  let n=Math.min(CHAIN.max,lv||1), made=false;
+  const d2=o=>(o.x-e.x)**2+(o.y-e.y)**2, live=partners(e);
+  const cand=G.en.filter(o=>o!==e&&!o.dead&&!(o.ghost>0)&&!o.fake&&!live.includes(o)&&d2(o)<CHAIN.R*CHAIN.R).sort((p,q)=>d2(p)-d2(q));
+  for(const o of cand){if(n<=0)break;if(chainLink(e,o)){made=true;n--}}
+  if(made){sfx.jara();for(let i=0;i<(reduce?1:3);i++)FXK.link.pop(e.x,e.y,(Math.random()-.5)*2,-1-Math.random(),0,i,null)}
+}
+function chainShare(e,d){   // つないだ敵にも ダメージが つたわる（じわじわ扱いで わたすので、つたわった先から また つたわらない）
+  if(!(e.chainT>0)||!e.links||d<.05) return;
+  for(const L of e.links){
+    if(!(L.t>0)||L.a.dead||L.b.dead) continue;
+    const o=L.a===e?L.b:L.a; hurtEnemy(o,d*CHAIN.k,true); L.fl=.25;
+  }
+}
+function chainSpeed(e,E){let k=1;if(e.chainT>0)k*=E.boss?.93:CHAIN.slow;if(e.netT>0)k*=E.boss?.75:.5;if(e.anchor>0)k*=E.boss?.8:.45;return k}
+function chainAll(e,lv,fn){chainOn(e,lv);fn(e);for(const o of partners(e))if(!o.dead)fn(o)}   // くさりで つないで、つないだ敵みんなに fn（わざ用）
+function chainNet(e,R){   // くさりの網：まわりの敵みんなを 近い2体と つなぐ＋しばらく とても おそい
+  const L=G.en.filter(o=>!o.dead&&!(o.ghost>0)&&!o.fake&&(o.x-e.x)**2+(o.y-e.y)**2<=R*R);
+  for(const o of L){
+    o.netT=Math.max(o.netT||0,CHAIN.net); o.chainT=Math.max(o.chainT||0,CHAIN.t);
+    const d2=q=>(q.x-o.x)**2+(q.y-o.y)**2;
+    for(const q of L.filter(q=>q!==o).sort((p,q)=>d2(p)-d2(q)).slice(0,2)) chainLink(o,q);
+  }
+  G.obs.push({k:'cnet',x:e.x,y:e.y,R,t:0,max:.6}); sfx.jara();
+}
+// わざの 見せ方
+function hitodama(e,R){for(let i=0;i<(reduce?2:5);i++){const a=i/5*6.28;fxAdd({k:'wisp',x:e.x+Math.cos(a)*R*.5,y:e.y+Math.sin(a)*R*.4,vx:Math.cos(a+1.6)*.9,vy:-.5,max:.9+Math.random()*.4,s:3.4,ph:Math.random()*6.28,c:i%2?'#b6ff3d':'#c89aff'})}}
+function slashFx(e){G.obs.push({k:'slash',x:e.x,y:e.y,t:0,max:.3,a:Math.random()*.6-.3})}
+function sealFx(e){G.obs.push({k:'ofuda',x:e.x,y:e.y-e.r*1.5,t:0,max:.8,rot:(Math.random()-.5)*.4})}
+
+// ---- 絵：のろい・くさり（おばけの体の上・くさり・のろいの輪） ----
+function pentaPath(c,x,y,R,a0){c.beginPath();for(let i=0;i<5;i++){const j=(i*2)%5,a=a0+j*Math.PI*2/5,px=x+Math.cos(a)*R,py=y+Math.sin(a)*R;i?c.lineTo(px,py):c.moveTo(px,py)}c.closePath()}   // 五芒星
+function drawCurseMark(e,r,t,ga){   // のろい：頭の上で まわる 五芒星の しるし（重なった数だけ むらさきの 火）・体の まわりに ライムの もや。ミイラのろいは ほうたい
+  if(e.mummy>0){   // ほうたいで ぐるぐる
+    ctx.save(); ghostPath(ctx,r,t,e.ph); ctx.clip(); ctx.globalAlpha=ga*Math.min(1,e.mummy*2);
+    for(const [y,a] of [[-.35,.25],[.1,-.2],[.5,.18]]){ctx.save();ctx.translate(0,y*r);ctx.rotate(a);ctx.fillStyle='#f4ecd0';ctx.fillRect(-r*1.3,-r*.1,r*2.6,r*.2);ctx.strokeStyle='rgba(150,130,90,.7)';ctx.lineWidth=Math.max(.6,r*.025);ctx.strokeRect(-r*1.3,-r*.1,r*2.6,r*.2);ctx.restore()}
+    ctx.restore(); ctx.globalAlpha=ga;
+  }
+  if(!(e.curseT>0)) return;
+  const k=Math.min(1,e.curseT*2), s=r*.34*(1+(e.hexPop||0)*1.5), y=-r*1.42;
+  glowIn('#b6ff3d',0,y,s*2.2,.35*k,ga); ctx.globalAlpha=ga*k;
+  ctx.strokeStyle='#2a1040'; ctx.lineWidth=Math.max(1.6,r*.1); circle(0,y,s); ctx.stroke(); pentaPath(ctx,0,y,s*.92,-Math.PI/2+t*1.4); ctx.stroke();
+  ctx.strokeStyle='#d8ff80'; ctx.lineWidth=Math.max(.8,r*.045); circle(0,y,s); ctx.stroke(); pentaPath(ctx,0,y,s*.92,-Math.PI/2+t*1.4); ctx.stroke();
+  for(let i=0;i<(e.curseN||1);i++){const a=-Math.PI/2+(i-((e.curseN||1)-1)/2)*.9, px=Math.cos(a)*s*1.55, py=y+Math.sin(a)*s*1.2-s*.2, h=s*(.55+.12*Math.sin(t*12+i));   // 重なった数の むらさきの 火
+    ctx.fillStyle='#b070ff'; ctx.beginPath(); ctx.moveTo(px-s*.22,py); ctx.quadraticCurveTo(px-s*.2,py-h*.6,px,py-h); ctx.quadraticCurveTo(px+s*.2,py-h*.6,px+s*.22,py); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#e8d0ff'; circle(px,py-s*.05,s*.1); ctx.fill()}
+  ctx.globalAlpha=ga;
+}
+function drawChainMark(e,r,t,ga){   // くさり：体の下の方に 金の わっか（てかせ）と たれる くさり。いかりは 下に ぶらさがる
+  const y=r*.62, k=Math.min(1,Math.max(e.chainT||0,e.anchor||0)*2);
+  ctx.globalAlpha=ga*k;
+  ctx.strokeStyle='#5a3a10'; ctx.lineWidth=Math.max(2,r*.14); ctx.beginPath(); ctx.ellipse(0,y,r*.82,r*.2,0,0,Math.PI); ctx.stroke();
+  ctx.strokeStyle='#ffc94d'; ctx.lineWidth=Math.max(1,r*.07); ctx.stroke();
+  ctx.fillStyle='#ffe9a0'; for(const x of [-.5,0,.5]){circle(x*r,y+r*.19*Math.sqrt(1-x*x*.9),Math.max(.8,r*.05));ctx.fill()}   // びょう
+  if(e.anchor>0){   // いかり（ぶらぶら）
+    ctx.save(); ctx.translate(0,r*.85); ctx.rotate(Math.sin(t*3+e.ph)*.25); ctx.lineCap='round';
+    for(const [c,w] of [['#2a3a50',r*.16],['#9ab8d8',r*.08]]){ctx.strokeStyle=c;ctx.lineWidth=Math.max(.8,w);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,r*.62);ctx.moveTo(-r*.2,r*.18);ctx.lineTo(r*.2,r*.18);ctx.moveTo(-r*.32,r*.42);ctx.quadraticCurveTo(-r*.2,r*.72,0,r*.64);ctx.quadraticCurveTo(r*.2,r*.72,r*.32,r*.42);ctx.stroke()}
+    ctx.restore();
+  }
+  ctx.globalAlpha=ga;
+}
+function chainPts(L){   // くさりの 両はしと たるみ
+  const a=L.a,b=L.b,x0=a.x,y0=a.y+a.r*.55,x1=b.x,y1=b.y+b.r*.55,d=Math.hypot(x1-x0,y1-y0)||1;
+  return [x0,y0,(x0+x1)/2,(y0+y1)/2+Math.min(14,d*.2),x1,y1,d];
+}
+function drawChainLink(L,t){   // 2体を つなぐ 金の くさり（わっかが じゅんばんに たて・よこ）。ダメージが つたわると 光る
+  const [x0,y0,mx,my,x1,y1,d]=chainPts(L), n=Math.max(3,Math.floor(d/6)), f=L.fl>0?L.fl/.25:0;
+  ctx.globalAlpha=Math.min(1,L.t*2);
+  if(f>0){ctx.globalCompositeOperation='lighter';ctx.strokeStyle=hexA('#fff0a0',.5*f);ctx.lineWidth=6;ctx.beginPath();ctx.moveTo(x0,y0);ctx.quadraticCurveTo(mx,my,x1,y1);ctx.stroke();ctx.globalCompositeOperation='source-over'}
+  for(let i=0;i<n;i++){
+    const q=(i+.5)/n, u=1-q, x=u*u*x0+2*u*q*mx+q*q*x1, y=u*u*y0+2*u*q*my+q*q*y1, ang=Math.atan2(2*u*(my-y0)+2*q*(y1-my),2*u*(mx-x0)+2*q*(x1-mx)), ca=Math.cos(ang), sa=Math.sin(ang);
+    if(i%2){ctx.strokeStyle='#4a300c';ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(x-ca*3,y-sa*3);ctx.lineTo(x+ca*3,y+sa*3);ctx.stroke();ctx.strokeStyle=f>0?'#fff4c0':'#e8b440';ctx.lineWidth=1;ctx.stroke()}
+    else{ctx.strokeStyle='#4a300c';ctx.lineWidth=2.4;ctx.beginPath();ctx.ellipse(x,y,3.6,2,ang,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=f>0?'#fff4c0':'#ffc94d';ctx.lineWidth=1.1;ctx.stroke()}
+  }
+  ctx.globalAlpha=1;
+}
+function drawHexZone(z,t,a){   // のろいの輪：ライムの 輪と まわる 五芒星、まほうの もじ
+  ctx.globalAlpha=a*.25; ctx.fillStyle='#3a1a5a'; circle(z.x,z.y,z.R); ctx.fill();
+  ctx.globalAlpha=a*.8; ctx.strokeStyle='#b6ff3d'; ctx.lineWidth=1.2; circle(z.x,z.y,z.R); ctx.stroke(); circle(z.x,z.y,z.R*.82); ctx.stroke();
+  ctx.strokeStyle='#c89aff'; pentaPath(ctx,z.x,z.y,z.R*.78,-Math.PI/2+t*.8); ctx.stroke();
+  for(let i=0;i<8;i++){const q=i/8*6.28-t*.6;runeGlyph(ctx,z.x+Math.cos(q)*z.R*.91,z.y+Math.sin(q)*z.R*.91,2.2,i,'#d8ff90')}
+  ctx.globalAlpha=1;
+}
+function runeGlyph(c,x,y,s,k,col){   // まほうの もじ（かんたんな 線の しるし 8種類）
+  c.strokeStyle=col; c.lineWidth=1; c.beginPath();
+  switch(((k%8)+8)%8){
+    case 0: c.moveTo(x,y-s);c.lineTo(x,y+s);c.moveTo(x-s*.6,y-s*.3);c.lineTo(x+s*.6,y+s*.3);break;
+    case 1: c.moveTo(x-s*.6,y+s);c.lineTo(x,y-s);c.lineTo(x+s*.6,y+s);c.moveTo(x-s*.3,y+s*.2);c.lineTo(x+s*.3,y+s*.2);break;
+    case 2: c.arc(x,y,s*.7,0,Math.PI*2);c.moveTo(x,y-s);c.lineTo(x,y+s);break;
+    case 3: c.moveTo(x-s*.6,y-s);c.lineTo(x+s*.6,y);c.lineTo(x-s*.6,y+s);break;
+    case 4: c.moveTo(x,y-s);c.lineTo(x,y+s);c.moveTo(x,y-s*.5);c.lineTo(x+s*.6,y-s);c.moveTo(x,y);c.lineTo(x+s*.6,y-s*.5);break;
+    case 5: c.moveTo(x-s*.6,y-s);c.lineTo(x+s*.6,y+s);c.moveTo(x+s*.6,y-s);c.lineTo(x-s*.6,y+s);c.moveTo(x-s*.6,y);c.lineTo(x+s*.6,y);break;
+    case 6: c.moveTo(x-s*.6,y+s);c.lineTo(x-s*.6,y-s);c.lineTo(x+s*.6,y-s*.3);c.lineTo(x-s*.6,y+s*.2);break;
+    default: c.moveTo(x,y-s);c.lineTo(x+s*.7,y);c.lineTo(x,y+s);c.lineTo(x-s*.7,y);c.closePath();
+  }
+  c.stroke();
+}
+// 粒：のろい＝くるくる まわりながら ゆっくり のぼる 小さな 五芒星（ライムの線）、くさり＝くるくる まわって 落ちる 金の わっか
+Object.assign(FXK,{
+  hex:{
+    spawn(x,y,big,c){const r=Math.random;fxAdd({k:'hex',x,y,vx:(r()-.5)*.3,vy:-(.25+r()*.35),max:.7+r()*.5,s:(big?3.2:2.4)+r()*.8,rot:r()*6.28,vr:(r()-.5)*4,c})},
+    pop(x,y,vx,vy,a,i,c){fxAdd({k:'hex',x,y,vx:vx*.8,vy:vy*.8-.4,max:.6+Math.random()*.4,s:2.6+Math.random()*1.2,rot:a,vr:(Math.random()-.5)*6,c})},
+    upd(q,f,dt){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.96;q.vy*=.97;q.rot+=q.vr*dt},
+    glow(q,k,a){glow(q.c||'#b6ff3d',q.x,q.y,q.s*3,a*.5)},
+    draw(q,k,a){ctx.globalAlpha=a;ctx.strokeStyle=q.c?mixW(q.c,.3):'#d8ff80';ctx.lineWidth=.9;pentaPath(ctx,q.x,q.y,q.s,q.rot);ctx.stroke()}},
+  link:{
+    spawn(x,y,big,c){const r=Math.random;fxAdd({k:'link',x,y,vx:(r()-.5)*.5,vy:-.3-r()*.4,max:.5+r()*.4,s:(big?2.6:2)+r()*.6,rot:r()*6.28,vr:(r()-.5)*8,c})},
+    pop(x,y,vx,vy,a,i,c){fxAdd({k:'link',x,y,vx:vx*1.1,vy:vy*1.1-.6,max:.5+Math.random()*.3,s:2.2+Math.random()*.8,rot:a,vr:(Math.random()-.5)*10,c})},
+    upd(q,f,dt){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.97;q.vy+=.05*f;q.rot+=q.vr*dt},
+    glow(q,k,a){glow(q.c||'#ffc94d',q.x,q.y,q.s*2.6,a*.45)},
+    draw(q,k,a){ctx.globalAlpha=a;ctx.strokeStyle='#4a300c';ctx.lineWidth=1.8;ctx.beginPath();ctx.ellipse(q.x,q.y,q.s,q.s*.55,q.rot,0,Math.PI*2);ctx.stroke();ctx.strokeStyle=q.c?mixW(q.c,.2):'#ffd870';ctx.lineWidth=.9;ctx.stroke()}},
+});
+// 玉の上の絵（drawBall の deco）
+BALLS.curse.deco=(b,r)=>{   // のろい弾：まん中に ライムの 五芒星
+  ctx.strokeStyle='rgba(40,20,60,.8)'; ctx.lineWidth=Math.max(.9,r*.3); pentaPath(ctx,b.x,b.y,r*.58,-Math.PI/2+G.time*2); ctx.stroke();
+  ctx.strokeStyle='#efffc0'; ctx.lineWidth=Math.max(.5,r*.12); ctx.stroke();
+};
+BALLS.chain.deco=(b,r)=>{   // くさり弾：まわりに 金の わっか2つ
+  for(const [dx,a] of [[-.45,.5],[.45,-.5]]){ctx.strokeStyle='#4a300c';ctx.lineWidth=Math.max(.9,r*.26);ctx.beginPath();ctx.ellipse(b.x+dx*r,b.y,r*.5,r*.32,a,0,Math.PI*2);ctx.stroke();ctx.strokeStyle='#fff0b0';ctx.lineWidth=Math.max(.5,r*.1);ctx.stroke()}
+};
+// 分身の玉（ぶんしんミラー）：すけた 玉に うすむらさきの ふち、きらきら。きえる前は うすくなる（drawBall の さいしょ）
+function drawClone(b){
+  const B=BALLS[b.t], r=b.r, life=Math.max(0,30-b.age), a=.62*Math.min(1,life/.8);
+  if(b.inf){ctx.globalCompositeOperation='lighter';glow(effColor(b.inf),b.x,b.y,r*3.4,.75*a);ctx.globalCompositeOperation='source-over'}
+  ctx.globalCompositeOperation='lighter'; glow('#d8c8ff',b.x,b.y,r*2.6,.4*a); ctx.globalCompositeOperation='source-over';
+  const g=ctx.createRadialGradient(b.x-r*.4,b.y-r*.45,r*.1,b.x,b.y,r); g.addColorStop(0,'#ffffff'); g.addColorStop(.5,mixW(B.color,.45)); g.addColorStop(1,'#8a7ac8');
+  ctx.globalAlpha=a; ctx.fillStyle=g; circle(b.x,b.y,r); ctx.fill();
+  ctx.globalAlpha=Math.min(1,a*1.4); ctx.strokeStyle=b.inf?mixW(effColor(b.inf),.25):'#efe6ff'; ctx.lineWidth=1.1; ctx.setLineDash([2.2,2]); ctx.lineDashOffset=-G.time*12; circle(b.x,b.y,r+.8); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset=0;
+  if(Math.sin(G.time*14+b.x*.3)>.6) star(b.x+r*.5,b.y-r*.6,r*.45,'#ffffff');
+  ctx.globalAlpha=1;
+}
+
+// ---- まほうじん（ステージギミック） ----
+// 台の中の まほうじん（MJ.at）に 玉が通るたび（1つの玉は MJ.cd 秒に1回）光が たまる。MJ.n こ たまると いちばん HP の多い おばけ（にせもの・ぬけがら以外）に ビーム（MJ.dmg×ウェーブの強さ＋のろい。すけすけも 見つかる）
+function mjSetup(){G.sx.mj=MJ.at.map(([x,y],i)=>({x,y,n:0,fl:0,shot:0,ph:i*2.1}))}
+function mjBall(b){
+  const L=G.sx.mj||[];
+  for(let i=0;i<L.length;i++){
+    const v=L[i], dx=b.x-v.x, dy=b.y-v.y, rr=MJ.r+b.r; if(dx*dx+dy*dy>=rr*rr) continue;
+    const m=b.mjT||(b.mjT={}); if(G.time<(m[i]??-9)) continue; m[i]=G.time+MJ.cd;
+    if(v.n<MJ.n){v.n++;v.fl=.25;sfx.mjin();fxEl('curse',v.x,v.y,MJ.r,false)}
+  }
+}
+function mjTarget(){let best=null;for(const e of G.en){if(e.dead||e.fake)continue;if(!best||e.hp>best.hp)best=e}return best}
+function stepMJ(dt){
+  for(const v of G.sx.mj||[]){
+    v.fl=Math.max(0,v.fl-dt); v.shot=Math.max(0,v.shot-dt);
+    if(v.n<MJ.n) continue;
+    const e=mjTarget(); if(!e) continue;   // おばけが いないときは ためたまま 待つ
+    v.n=0; v.shot=.5; mjBeam(v,e);
+  }
+}
+function mjBeam(v,e){
+  if(e.ghost>0){e.ghost=0;e.oops=.8}
+  G.obs.push({k:'mbeam',x:v.x,y:v.y,e,ex:e.x,ey:e.y,t:0,max:.45});
+  G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:'rgba(182,255,61,.9)',t:.35},{x:v.x,y:v.y,R:MJ.r*2.2,c:'rgba(200,140,255,.9)',t:.35});
+  hurtEnemy(e,MJ.dmg*(1+HP_GROW*(G.wave-1)));
+  if(!e.dead) curseOn(e,1);
+  fxBurst('curse',e.x,e.y,8); sfx.beam(); G.shake=Math.max(G.shake,.06);
+}
+function drawMJ(t){   // まほうじん：くらい 円ばんに ライムの 輪、まわる 五芒星、ためた光（金の弧と 点）。いっぱいだと どくん どくん
+  for(const v of G.sx.mj||[]){
+    const k=v.n/MJ.n, full=v.n>=MJ.n, R=MJ.r, p=full?.5+.5*Math.sin(t*10):0, f=v.fl/.25, s=v.shot/.5;
+    ctx.globalCompositeOperation='lighter'; glow(full?'#d8ff80':'#b56bff',v.x,v.y,R*2.4+k*8,.18+.32*k+.3*p+.4*s); ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='rgba(18,8,34,.78)'; circle(v.x,v.y,R+2); ctx.fill();
+    ctx.strokeStyle=hexA('#b56bff',.95); ctx.lineWidth=1.3; circle(v.x,v.y,R+2); ctx.stroke();
+    ctx.strokeStyle=hexA('#b6ff3d',.45+.55*k); ctx.lineWidth=1; circle(v.x,v.y,R*.84); ctx.stroke();
+    pentaPath(ctx,v.x,v.y,R*.78,-Math.PI/2+t*(.5+2.2*k)+v.ph); ctx.strokeStyle=full||f>0?'#f4ffd0':hexA('#b6ff3d',.55+.45*k); ctx.lineWidth=1.1; ctx.stroke();
+    if(k>0){ctx.strokeStyle='#ffd84d';ctx.lineWidth=2;ctx.beginPath();ctx.arc(v.x,v.y,R+5,-Math.PI/2,-Math.PI/2+k*Math.PI*2);ctx.stroke()}
+    for(let i=0;i<MJ.n;i++){const a=-Math.PI/2+(i+.5)/MJ.n*Math.PI*2;ctx.fillStyle=i<v.n?'#fff0a0':'rgba(180,140,255,.45)';circle(v.x+Math.cos(a)*(R+5),v.y+Math.sin(a)*(R+5),i<v.n?1.6:1.1);ctx.fill()}
+    if(full){ctx.strokeStyle=hexA('#f4ffd0',.4+.5*p);ctx.lineWidth=1.4;circle(v.x,v.y,R+8+p*3);ctx.stroke()}
+  }
+}
+function drawMBeam(o,t){   // ビーム：まほうじんから おばけへ（ふとい むらさき・ライム・白、とちゅうに まほうの もじ）
+  const a=1-o.t/o.max, x0=o.x, y0=o.y, x1=o.ex, y1=o.ey, w=1+Math.sin(o.t*60)*.15;
+  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
+  for(const [c,lw,al] of [['#7a2aff',10,.35],['#b6ff3d',4.5,.8],['#ffffff',1.6,.95]]){ctx.globalAlpha=a*al;ctx.strokeStyle=c;ctx.lineWidth=lw*w;ctx.beginPath();ctx.moveTo(x0,y0);ctx.lineTo(x1,y1);ctx.stroke()}
+  glow('#d8ff80',x1,y1,22,.8*a); glow('#b56bff',x0,y0,18,.7*a);
+  ctx.restore(); ctx.globalAlpha=1;
+  const d=Math.hypot(x1-x0,y1-y0)||1, n=Math.floor(d/22);
+  for(let i=1;i<=n;i++){const q=(i/(n+1)+o.t*2)%1;ctx.globalAlpha=a*.9;runeGlyph(ctx,x0+(x1-x0)*q,y0+(y1-y0)*q,2.6,i*3,'#f4ffd0')}
+  ctx.globalAlpha=1;
+}
+// 魔法陣の 五芒星を 光が ながれる（点線が うごく）と、まん中の 光
+function drawPentaFlow(t){
+  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.setLineDash([2,10]); ctx.lineDashOffset=-t*14;
+  pentaPath(ctx,PENTA.x,PENTA.y,PENTA.R,-Math.PI/2); ctx.strokeStyle='rgba(230,255,190,.55)'; ctx.lineWidth=1.6; ctx.stroke();
+  ctx.setLineDash([1.5,7]); ctx.lineDashOffset=t*10; ctx.beginPath(); ctx.arc(PENTA.x,PENTA.y,PENTA.R+12,0,Math.PI*2); ctx.strokeStyle='rgba(210,170,255,.5)'; ctx.lineWidth=1.2; ctx.stroke();
+  glow('#b56bff',PENTA.x,PENTA.y,40,.16+.08*Math.sin(t*1.7));
+  ctx.restore(); ctx.globalAlpha=1;
+}
+// ふわふわ のぼる まほうの もじ（台の中だけ。時間で位置がきまる）
+function drawRunes(t){
+  ctx.save(); fieldPath(ctx,RO,H-6); ctx.clip();
+  const n=reduce?6:14;
+  for(let i=0;i<n;i++){const sp=7+(i*5)%9, x=30+((i*61.7)%318)+Math.sin(t*.9+i)*8, y=590-((i*83.3)+t*sp)%600, a=(.25+((i*13)%10)/30)*Math.min(1,Math.sin(((i*83.3+t*sp)%600)/600*Math.PI)*2);
+    const c=i%3?'#b6ff3d':'#c89aff';
+    ctx.globalCompositeOperation='lighter'; glow(c,x,y,7,a*.7); ctx.globalCompositeOperation='source-over';
+    ctx.globalAlpha=a; runeGlyph(ctx,x,y,3.2,i*5+1,mixW(c,.35))}
+  ctx.restore(); ctx.globalAlpha=1;
+}
+Object.assign(STAGES[6],{
+  build:buildCastle,
+  setup(){mjSetup()},
+  tick(dt){stepMJ(dt)},
+  ball(b){mjBall(b)},
+  drawBack(t){drawPentaFlow(t);drawMJ(t)},
+  drawFront(t){drawRunes(t)},
+});
+
+// ---- 魔王城の台の絵 ----
+// 黒むらさきの 石の城壁（光る ルーン・宝石・たれる くさり）→ 夜空と みどりの もや → うしろの 魔王城（とがった塔・ステンドグラスの まどまど・みどりの窓）→ 宙に うかぶ 魔法陣（杭は 五芒星の 角）→ 石の にわと 門の中の 玉座（ヘソ）
+const CAS={pur:'#b56bff',lime:'#b6ff3d',gold:'#ffd84d',mag:'#ff5ab0',ink:'#0e0720'};
+function castleWall(c,V){   // 外：黒むらさきの 石の城壁（ブロック・ところどころ 光る まほうの もじ）
+  const w=V.x1-V.x0, h=V.y1-V.y0, rnd=seeded(6464), bh=17;
+  const g=c.createLinearGradient(V.x0,0,V.x1,0); g.addColorStop(0,'#07040c'); g.addColorStop(.5,'#160a24'); g.addColorStop(1,'#07040c');
+  c.fillStyle=g; c.fillRect(V.x0,V.y0,w,h);
+  let row=0;
+  for(let y=Math.floor(V.y0/bh)*bh;y<V.y1;y+=bh,row++){
+    let x=Math.floor(V.x0/34)*34-(row%2?17:0);
+    while(x<V.x1){const bw=30+rnd()*10;
+      c.fillStyle=`rgba(${(50+rnd()*22)|0},${(30+rnd()*14)|0},${(76+rnd()*26)|0},${.32+rnd()*.16})`; c.fillRect(x+1,y+1,bw-2,bh-2);
+      c.fillStyle='rgba(220,200,255,.07)'; c.fillRect(x+1,y+1,bw-2,1.2);
+      if(rnd()<.07){c.globalCompositeOperation='lighter';runeGlyph(c,x+bw/2,y+bh/2,4.2,(rnd()*8)|0,hexA(rnd()<.5?CAS.lime:CAS.pur,.5));c.globalCompositeOperation='source-over'}
+      x+=bw;
+    }
+  }
+}
+function castleRim(c){   // 台のふち：黒い石に むらさき・ライムのネオンと 金の線。アーチの上には とがった とげ（魔王城の かべの ぎざぎざ）
+  const edge=r=>{c.beginPath();c.moveTo(CX-r,H-6+(r-RO));c.lineTo(CX-r,CY);c.arc(CX,CY,r,Math.PI,Math.PI*2);c.lineTo(CX+r,H-6+(r-RO))};
+  c.lineCap='round'; c.lineJoin='round';
+  for(let d=174,i=0;d>=6;d-=8,i++){const a=rad(d), ca=Math.cos(a), sa=Math.sin(a), r0=RO+7, r1=RO+(i%2?14:19), w=3.6, bx=CX+r0*ca, by=CY-r0*sa;   // とげ
+    c.fillStyle='#1c1030'; c.beginPath(); c.moveTo(bx+sa*w,by+ca*w); c.lineTo(CX+r1*ca,CY-r1*sa); c.lineTo(bx-sa*w,by-ca*w); c.closePath(); c.fill();
+    c.strokeStyle=hexA(i%2?CAS.pur:CAS.lime,.75); c.lineWidth=.8; c.stroke();
+  }
+  c.strokeStyle='rgba(0,0,0,.6)'; c.lineWidth=11; edge(RO+6); c.stroke();
+  c.strokeStyle='#1c1030'; c.lineWidth=8; edge(RO+5); c.stroke();
+  c.globalCompositeOperation='lighter';
+  c.strokeStyle=hexA(CAS.pur,.22); c.lineWidth=7; edge(RO+5); c.stroke();
+  c.strokeStyle=hexA(CAS.pur,.9); c.lineWidth=1.2; edge(RO+8.4); c.stroke();
+  c.strokeStyle=hexA(CAS.lime,.75); c.lineWidth=1; edge(RO+1.8); c.stroke();
+  c.strokeStyle=hexA(CAS.gold,.45); c.lineWidth=.7; edge(RO+5); c.stroke();
+  c.globalCompositeOperation='source-over';
+  c.strokeStyle='#1c1030'; c.lineWidth=8; c.beginPath(); c.moveTo(CX-RO-5,H-1); c.lineTo(CX+RO+5,H-1); c.stroke();
+  c.strokeStyle=CAS.pur; c.lineWidth=1.2; c.beginPath(); c.moveTo(CX-RO-3,H+3.4); c.lineTo(CX+RO+3,H+3.4); c.stroke();
+}
+function castleGems(c){   // フレームの 宝石（ライム・むらさき・金のひし形）。光のゆらぎは G.fruits
+  const pts=[]; for(let d=150;d>=30;d-=30){const a=rad(d);pts.push([CX+(RO+5)*Math.cos(a),CY-(RO+5)*Math.sin(a)])}
+  for(const y of [270,380,490]){pts.push([CX-RO-5,y]);pts.push([CX+RO+5,y])}
+  const cols=[CAS.lime,CAS.pur,CAS.gold];
+  pts.forEach(([x,y],i)=>{const col=cols[i%3];
+    c.fillStyle='#120820'; c.beginPath(); c.moveTo(x,y-6); c.lineTo(x+4.6,y); c.lineTo(x,y+6); c.lineTo(x-4.6,y); c.closePath(); c.fill(); c.strokeStyle=hexA(CAS.gold,.8); c.lineWidth=.8; c.stroke();
+    c.globalCompositeOperation='lighter'; sglow(c,col,x,y,10,.5); c.globalCompositeOperation='source-over';
+    c.fillStyle=mixW(col,.25); c.beginPath(); c.moveTo(x,y-3.6); c.lineTo(x+2.6,y); c.lineTo(x,y+3.6); c.lineTo(x-2.6,y); c.closePath(); c.fill();
+    G.fruits.push({x,y,r:2,c:col,ph:i*1.3});
+  });
+}
+function castleSky(c,rnd){   // 黒→こい むらさきの 夜空・星・みどりの まほうの もや・流れ星（まるい月は なし）
+  const g=c.createLinearGradient(0,0,0,440);
+  g.addColorStop(0,'#030208'); g.addColorStop(.35,'#0c0520'); g.addColorStop(.7,'#1a0a32'); g.addColorStop(1,'#260f44');
+  c.fillStyle=g; c.fillRect(0,0,W,440);
+  c.fillStyle='#f0e8ff'; for(let i=0;i<54;i++){const x=20+rnd()*330,y=14+rnd()*190;c.globalAlpha=(.15+rnd()*.55)*(1-y/240);c.beginPath();c.arc(x,y,rnd()<.1?1.1:.6,0,Math.PI*2);c.fill()} c.globalAlpha=1;
+  c.globalCompositeOperation='lighter';
+  for(const [x,y,R,col,a] of [[60,150,70,CAS.lime,.08],[310,140,64,CAS.lime,.07],[188,60,90,CAS.pur,.12],[120,250,80,CAS.pur,.08],[260,250,80,CAS.pur,.08]]) sglow(c,col,x,y,R,a);
+  c.globalCompositeOperation='source-over';
+  c.strokeStyle='rgba(220,255,200,.4)'; c.lineWidth=1; c.beginPath(); c.moveTo(254,36); c.lineTo(286,26); c.stroke();   // 流れ星
+}
+function spire(c,x,yTop,w,yBase,col){   // とがった 塔（円すいの 屋根・ネオンの ふち・屋根の先に 小さな はた）
+  const hh=yBase-yTop;
+  c.fillStyle=col; c.fillRect(x-w/2,yBase,w,H-yBase);
+  c.beginPath(); c.moveTo(x,yTop); c.quadraticCurveTo(x-w*.12,yBase-hh*.4,x-w*.66,yBase); c.lineTo(x+w*.66,yBase); c.quadraticCurveTo(x+w*.12,yBase-hh*.4,x,yTop); c.closePath(); c.fill();
+  c.globalCompositeOperation='lighter';
+  c.strokeStyle=hexA(CAS.pur,.75); c.lineWidth=1; c.stroke();
+  c.strokeStyle=hexA(CAS.pur,.3); c.lineWidth=.8; c.beginPath(); c.moveTo(x-w/2,yBase); c.lineTo(x-w/2,H); c.moveTo(x+w/2,yBase); c.lineTo(x+w/2,H); c.stroke();
+  c.strokeStyle=hexA(CAS.lime,.35); c.beginPath(); c.moveTo(x-w*.66,yBase+.5); c.lineTo(x+w*.66,yBase+.5); c.stroke();
+  c.globalCompositeOperation='source-over';
+}
+function gothWin(c,x,y,w,h,col,a){   // とがった まど（光る）
+  c.beginPath(); c.moveTo(x-w/2,y+h); c.lineTo(x-w/2,y+w*.55); c.quadraticCurveTo(x-w/2,y+w*.1,x,y); c.quadraticCurveTo(x+w/2,y+w*.1,x+w/2,y+w*.55); c.lineTo(x+w/2,y+h); c.closePath();
+  c.fillStyle=hexA(col,a); c.fill();
+  c.globalCompositeOperation='lighter'; sglow(c,col,x,y+h*.5,w*2.2,a*.35); c.globalCompositeOperation='source-over';
+}
+function battlement(c,x0,x1,y,col){   // 城壁の上の ぎざぎざ
+  c.fillStyle=col; for(let x=x0;x<x1;x+=10) c.fillRect(x,y-6,6,6);
+  c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(CAS.pur,.4); c.lineWidth=.8; c.beginPath(); c.moveTo(x0,y); c.lineTo(x1,y); c.stroke(); c.globalCompositeOperation='source-over';
+}
+function roseWindow(c,x,y,R){   // ステンドグラスの まるまど（むらさき・ライム・ピンク・金の8まい、くろい わく）
+  c.globalCompositeOperation='lighter'; sglow(c,CAS.pur,x,y,R*3,.35); c.globalCompositeOperation='source-over';
+  const cols=['#9a5aff','#b6ff3d','#ff5ab0','#ffd84d','#7a6aff','#9cff8a','#ff7ad0','#ffc04d'];
+  for(let i=0;i<8;i++){const a0=-Math.PI/2+i*Math.PI/4-Math.PI/8, a1=a0+Math.PI/4;
+    c.beginPath(); c.moveTo(x+Math.cos(a0)*R*.32,y+Math.sin(a0)*R*.32); c.arc(x,y,R*.92,a0,a1); c.lineTo(x+Math.cos(a1)*R*.32,y+Math.sin(a1)*R*.32); c.arc(x,y,R*.32,a1,a0,true); c.closePath();
+    const g=c.createRadialGradient(x,y,R*.3,x,y,R); g.addColorStop(0,mixW(cols[i],.35)); g.addColorStop(1,cols[i]); c.fillStyle=g; c.globalAlpha=.85; c.fill(); c.globalAlpha=1}
+  c.strokeStyle='#120820'; c.lineWidth=2.2; c.beginPath(); c.arc(x,y,R,0,Math.PI*2); c.stroke();
+  for(let i=0;i<8;i++){const a=-Math.PI/2+i*Math.PI/4-Math.PI/8;c.beginPath();c.moveTo(x+Math.cos(a)*R*.32,y+Math.sin(a)*R*.32);c.lineTo(x+Math.cos(a)*R,y+Math.sin(a)*R);c.stroke()}
+  c.lineWidth=1.6; c.beginPath(); c.arc(x,y,R*.32,0,Math.PI*2); c.stroke();
+  c.fillStyle='#ffe9a0'; pentaPath(c,x,y,R*.24,-Math.PI/2); c.fill();
+  c.strokeStyle=hexA(CAS.gold,.8); c.lineWidth=.8; c.beginPath(); c.arc(x,y,R+1.6,0,Math.PI*2); c.stroke();
+}
+function castleKeep(c,rnd){   // うしろの 魔王城：外の塔・城壁・左右の とがった塔（先に杭）・まん中の 大きな塔（ステンドグラス）。くらい むらさきの シルエットに ネオンの ふち、みどりの まど
+  spire(c,52,92,36,150,'#0c061a'); spire(c,324,94,36,152,'#0c061a');   // 外の塔
+  c.fillStyle='#100822'; c.fillRect(30,214,316,H-214); battlement(c,30,346,214,'#100822');   // 城壁
+  spire(c,104,178,26,232,'#130a28'); spire(c,272,178,26,232,'#130a28');   // 左右の塔（屋根の先に 杭）
+  c.fillStyle='#150b2c'; c.fillRect(150,104,76,H-104); battlement(c,146,230,104,'#150b2c');   // まん中の 大きな塔
+  c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(CAS.pur,.55); c.lineWidth=1; c.strokeRect(150,104,76,H-104); c.globalCompositeOperation='source-over';
+  spire(c,188,36,40,98,'#150b2c');
+  roseWindow(c,188,140,21);
+  for(const [x,y] of [[52,170],[52,196],[324,172],[324,198],[104,250],[272,250],[164,184],[212,184]]) gothWin(c,x,y,5,10,rnd()<.7?CAS.lime:CAS.gold,.75);
+  for(let i=0;i<14;i++){const x=40+rnd()*296,y=226+rnd()*60;if(Math.abs(x-188)<44)continue;c.fillStyle=hexA(CAS.lime,.35+rnd()*.3);c.fillRect(x,y,2,3.5)}   // 城壁の 小さな まど
+  for(const [x,y] of [[52,92],[324,94],[188,36]]){c.strokeStyle='#2a1a40';c.lineWidth=1;c.beginPath();c.moveTo(x,y);c.lineTo(x,y-9);c.stroke();c.fillStyle=CAS.mag;c.beginPath();c.moveTo(x,y-9);c.lineTo(x+7,y-7);c.lineTo(x,y-5);c.closePath();c.fill()}   // 屋根の はた
+}
+function bigCircle(c){   // 宙に うかぶ 魔法陣（2重の輪・まほうの もじ・杭を むすぶ 五芒星・内がわの 五角形）
+  const {x,y,R}=PENTA, R1=R+17, R2=R+7;
+  const g=c.createRadialGradient(x,y,10,x,y,R1+6); g.addColorStop(0,'rgba(120,60,200,.3)'); g.addColorStop(.85,'rgba(50,16,96,.32)'); g.addColorStop(1,'rgba(50,16,96,0)');
+  c.fillStyle=g; c.beginPath(); c.arc(x,y,R1+6,0,Math.PI*2); c.fill();
+  c.globalCompositeOperation='lighter';
+  for(const [r,w,a] of [[R1,1.4,.85],[R2,1,.6],[PENTA.r*.95,1,.45]]){c.strokeStyle=hexA(CAS.lime,a*.22);c.lineWidth=w*5;c.beginPath();c.arc(x,y,r,0,Math.PI*2);c.stroke();c.strokeStyle=hexA(CAS.lime,a);c.lineWidth=w;c.stroke()}
+  for(let i=0;i<28;i++){const a=i/28*Math.PI*2, rr=(R1+R2)/2; runeGlyph(c,x+Math.cos(a)*rr,y+Math.sin(a)*rr,2.8,i*3+1,hexA(i%3?CAS.lime:CAS.pur,.75))}
+  pentaPath(c,x,y,R,-Math.PI/2); c.strokeStyle=hexA(CAS.pur,.3); c.lineWidth=7; c.stroke(); c.strokeStyle=hexA(CAS.pur,.95); c.lineWidth=1.8; c.stroke(); c.strokeStyle=hexA(CAS.lime,.55); c.lineWidth=.8; c.stroke();
+  c.beginPath(); for(let i=0;i<5;i++){const a=rad(-90+i*72), px=x+Math.cos(a)*PENTA.r, py=y-Math.sin(a)*PENTA.r; i?c.lineTo(px,py):c.moveTo(px,py)} c.closePath(); c.strokeStyle=hexA(CAS.gold,.35); c.lineWidth=1; c.stroke();
+  c.globalCompositeOperation='source-over';
+  G.fruits.push({x,y,r:9,c:CAS.pur,ph:0});
+}
+function hangChain(c,x,y0,y1){   // かべから たれる 金の くさりと 先の わっか
+  for(let y=y0,i=0;y<y1;y+=4.6,i++){
+    if(i%2){c.strokeStyle='#3a2408';c.lineWidth=2;c.beginPath();c.moveTo(x,y-2.4);c.lineTo(x,y+2.4);c.stroke();c.strokeStyle='#d8a838';c.lineWidth=.9;c.stroke()}
+    else{c.strokeStyle='#3a2408';c.lineWidth=2.2;c.beginPath();c.ellipse(x,y,1.8,3.2,0,0,Math.PI*2);c.stroke();c.strokeStyle='#ffc94d';c.lineWidth=1;c.stroke()}
+  }
+  c.strokeStyle='#3a2408'; c.lineWidth=2.6; c.beginPath(); c.arc(x,y1+5,5,0,Math.PI*2); c.stroke(); c.strokeStyle='#ffc94d'; c.lineWidth=1.2; c.stroke();
+  c.globalCompositeOperation='lighter'; sglow(c,CAS.gold,x,y1+5,9,.25); c.globalCompositeOperation='source-over';
+}
+function throneGate(c){   // 下の まん中：とがった アーチの 門と、中の 玉座（ヘソは 玉座の せき）
+  const x=188;
+  c.beginPath(); c.moveTo(x-42,H); c.lineTo(x-42,432); c.quadraticCurveTo(x-42,400,x,384); c.quadraticCurveTo(x+42,400,x+42,432); c.lineTo(x+42,H); c.closePath();
+  const g=c.createLinearGradient(0,384,0,H); g.addColorStop(0,'#3a1460'); g.addColorStop(1,'#14062a'); c.fillStyle=g; c.fill();
+  c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(CAS.pur,.9); c.lineWidth=1.4; c.stroke(); c.strokeStyle=hexA(CAS.pur,.25); c.lineWidth=6; c.stroke(); c.globalCompositeOperation='source-over';
+  c.fillStyle='#4a1a6a'; c.beginPath(); c.moveTo(x-24,486); c.lineTo(x-24,428); c.lineTo(x-14,418); c.lineTo(x-9,426); c.lineTo(x,406); c.lineTo(x+9,426); c.lineTo(x+14,418); c.lineTo(x+24,428); c.lineTo(x+24,486); c.closePath();   // 玉座の せもたれ（とげ3つ）
+  const tg=c.createLinearGradient(0,406,0,486); tg.addColorStop(0,'#7a2a9a'); tg.addColorStop(1,'#3a0e50'); c.fillStyle=tg; c.fill();
+  c.strokeStyle=CAS.gold; c.lineWidth=1.4; c.stroke();
+  c.strokeStyle=hexA(CAS.gold,.5); c.lineWidth=.8; c.beginPath(); c.moveTo(x-17,484); c.lineTo(x-17,434); c.quadraticCurveTo(x,420,x+17,434); c.lineTo(x+17,484); c.stroke();
+  for(const s of [-1,1]){c.fillStyle='#2a0a3a';c.fillRect(x+s*24-(s>0?0:8),470,8,22);c.strokeStyle=CAS.gold;c.lineWidth=1;c.strokeRect(x+s*24-(s>0?0:8),470,8,22)}   // ひじかけ
+  c.globalCompositeOperation='lighter'; sglow(c,CAS.lime,x,424,12,.6); c.globalCompositeOperation='source-over';
+  c.fillStyle='#d8ff80'; c.beginPath(); c.moveTo(x,418); c.lineTo(x+4,424); c.lineTo(x,430); c.lineTo(x-4,424); c.closePath(); c.fill();
+  G.fruits.push({x,y:424,r:3,c:CAS.lime,ph:2});
+}
+function buildCastle(c,V){
+  const rnd=seeded(7272);
+  G.fruits=[]; c.lineCap='round';
+  castleWall(c,V);
+  c.save(); fieldPath(c,RO,H-6); c.clip();
+  castleSky(c,rnd);
+  castleKeep(c,rnd);
+  bigCircle(c);
+  const g=c.createLinearGradient(0,430,0,H); g.addColorStop(0,'#1c0c30'); g.addColorStop(1,'#0c0418');
+  c.fillStyle=g; c.fillRect(0,436,W,H-436);   // 石の にわ
+  c.globalCompositeOperation='lighter'; c.strokeStyle=hexA(CAS.pur,.5); c.lineWidth=1; c.beginPath(); c.moveTo(0,436); c.lineTo(W,436); c.stroke();
+  c.strokeStyle=hexA(CAS.pur,.13); for(let i=0;i<14;i++){const x=i*28+(i%2)*6;c.beginPath();c.moveTo(188+(x-188)*.5,436);c.lineTo(x-20,H);c.stroke()} for(const y of [462,494,530,570]){c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke()}
+  c.globalCompositeOperation='source-over';
+  for(const [x,y] of MJ.at){c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(x,y+3,MJ.r+4,(MJ.r+4)*.5,0,0,Math.PI*2);c.fill()}   // まほうじんの かげ
+  throneGate(c);
+  hangChain(c,48,112,232); hangChain(c,328,112,236);
+  c.restore();
+  rails(c);
+  castleRim(c);
+  castleGems(c);
+  if(V.y1>H+8){   // 画面の下のはし：黒い石
+    c.fillStyle='#0c0418'; c.fillRect(V.x0,H+7,V.x1-V.x0,V.y1-H-7);
+    c.fillStyle='rgba(182,255,61,.22)'; const r2=seeded(79); for(let i=0;i<40;i++){c.beginPath();c.arc(V.x0+r2()*(V.x1-V.x0),H+10+r2()*(V.y1-H-10),.7,0,Math.PI*2);c.fill()}
+  }
+  hesoCup(c,CAS.pur);
+  for(const p of G.pegs) if(!p.tower) drawStake(c,p.x,p.y,p.r);
+}
+
+// ---- のろいタワー・まほうじんタワー ----
+Object.assign(TOWERS.curse,{
+  gun(T,R){   // うしろに まじょの なべ（ライムの スープが ぶくぶく）、細い 砲身の先に のろいの 目玉（むらさきの 玉に ライムの ひとみ）
+    ctx.fillStyle='#2a2238'; ctx.beginPath(); ctx.ellipse(-R*.78,R*.04,R*.42,R*.36,0,0,Math.PI*2); ctx.fill(); ctx.strokeStyle=GUN.dark; ctx.lineWidth=.8; ctx.stroke();
+    const g=ctx.createRadialGradient(-R*.84,-R*.14,R*.04,-R*.78,-R*.1,R*.34); g.addColorStop(0,'#f0ffc0'); g.addColorStop(.5,'#b6ff3d'); g.addColorStop(1,'#4a8a10');
+    ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(-R*.78,-R*.1,R*.32,R*.13,0,0,Math.PI*2); ctx.fill();
+    barrel(R*.3,R*1.0,R*.3,0);
+    ctx.fillStyle='#3a1a5a'; circle(R*1.42,0,R*.3); ctx.fill(); ctx.strokeStyle='#b56bff'; ctx.lineWidth=.9; ctx.stroke();
+    ctx.fillStyle='#b6ff3d'; ctx.beginPath(); ctx.ellipse(R*1.5,0,R*.08,R*.17,0,0,Math.PI*2); ctx.fill();
+  },
+  over(p,T,t){if(Math.random()<.04)fxAdd({k:'hex',x:p.x+(Math.random()-.5)*8,y:p.y-p.r*.8,vx:0,vy:-.35,max:.7,s:2,rot:0,vr:2,c:null})},   // なべから のろいの しるしが ふわっ
+});
+BULLETK.hex={   // のろいタワーの弾：ねらった敵を追いかける ライムの ひとだま（しっぽに 小さな 五芒星）
+  step(u,f){BULLETK.dot.step(u,f);if(Math.random()<f*.12)fxAdd({k:'hex',x:u.x,y:u.y,vx:0,vy:-.15,max:.35,s:1.5,rot:0,vr:4,c:u.c})},
+  draw(u){ctx.globalCompositeOperation='lighter';glow(u.c,u.x,u.y,9,.7);ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='#2a1040'; circle(u.x,u.y,3.4); ctx.fill(); ctx.fillStyle=mixW(u.c,.2); circle(u.x,u.y,2.4); ctx.fill(); ctx.fillStyle='#ffffff'; circle(u.x-.7,u.y-.8,.9); ctx.fill()},
+};
+Object.assign(TOWERS.mahou,{
+  // まほうじんタワー：撃たずに、ねらった おばけの 進む先（TRAP.lead 秒）に わなの まほうじんを置く（1つの砲台で TRAP.max こ。Lv3から+1）。
+  // わなを おばけが ふむと はつどう：まわり TRAP.R×1.3 の おばけに ダメージ（属性は みんな、とくしゅ効果・わざは 近い TRAP.fx 体）＋ ふんだ おばけは 少し止まる（同じ おばけは TRAP.cd 秒に1回）
+  shoot(p,T,D,R){
+    let n=0; for(const o of G.obs) if(o.k==='mtrap'&&o.p===p&&!o.go) n++;
+    if(n>=TRAP.max+(T.lv>=3?1:0)){T.cd=.15;return true}
+    const tg=aimAt(p,R); if(!tg){T.cd=.12;return true}
+    let tx=tg.x, ty=Math.min(560,tg.y+tg.sp*60*TRAP.lead);
+    for(const o of G.obs) if(o.k==='mtrap'&&!o.go&&(o.x-tx)**2+(o.y-ty)**2<(TRAP.R*1.2)**2) ty=Math.min(560,ty+TRAP.R*1.3);   // かさならないように 少し先へ
+    const dx=tx-p.x, dy=ty-p.y, d=Math.hypot(dx,dy)||1; if(d>R){tx=p.x+dx/d*R;ty=p.y+dy/d*R}
+    const f=curEff(T);
+    G.obs.push({k:'mtrap',p,x:tx,y:ty,t:0,go:0,dmg:towerDmg(T,D)*TRAP.k,fx:f,c:f?effColor(f):D.color,ph:Math.random()*6.28});
+    T.tg=tg; T.ang=Math.atan2(ty-p.y,tx-p.x); T.cd=towerCd(T,D); T.shot=.08; sfx.trap(); return true;
+  },
+  gun(T,R,kick){   // まほうの つえ（金の わっかと むらさきの 水晶玉）。わなを置くと 光る
+    ctx.lineCap='round'; ctx.strokeStyle='#2a1a14'; ctx.lineWidth=R*.24; ctx.beginPath(); ctx.moveTo(-R*.55,0); ctx.lineTo(R*1.0,0); ctx.stroke();
+    ctx.strokeStyle='#8a6a40'; ctx.lineWidth=R*.11; ctx.stroke();
+    ctx.strokeStyle='#ffd84d'; ctx.lineWidth=R*.09; for(const x of [-.25,.55]){ctx.beginPath();ctx.moveTo(R*x,-R*.13);ctx.lineTo(R*x,R*.13);ctx.stroke()}
+    ctx.lineWidth=R*.07; ctx.beginPath(); ctx.ellipse(R*1.22,0,R*.14,R*.38,0,0,Math.PI*2); ctx.stroke();
+    const g=ctx.createRadialGradient(R*1.16,-R*.1,R*.03,R*1.22,0,R*.3); g.addColorStop(0,'#ffffff'); g.addColorStop(.45,'#e0b0ff'); g.addColorStop(1,'#7a2acc');
+    ctx.fillStyle=g; circle(R*1.22,0,R*.27); ctx.fill();
+    if(kick>0){ctx.globalCompositeOperation='lighter';glow('#d8a0ff',R*1.22,0,R*1.1,.7*kick);ctx.globalCompositeOperation='source-over'}
+  },
+  over(p,T,t){   // 頭の上で まわる 小さな 五芒星
+    ctx.globalAlpha=.55+.25*Math.sin(t*3+p.id); ctx.strokeStyle='#d8a0ff'; ctx.lineWidth=.9; pentaPath(ctx,p.x,p.y-p.r*1.55,p.r*.42,-Math.PI/2+t*1.2); ctx.stroke(); ctx.globalAlpha=1;
+  },
+});
+function trapGo(o,e0){   // わなが はつどう
+  o.go=.001; const R=TRAP.R*1.3, f=o.fx, d2=e=>(e.x-o.x)**2+(e.y-o.y)**2;
+  const list=G.en.filter(e=>!e.dead&&!(e.ghost>0)&&d2(e)<=(R+e.r*.5)**2).sort((a,b)=>d2(a)-d2(b));
+  let n=0;
+  for(const e of list){
+    if(e.fake){vanishFake(e);continue}
+    hurtEnemy(e,o.dmg); if(e.dead) continue;
+    if(f&&(f.el||n<TRAP.fx)){applyEff(e,f,o.dmg);if(!f.el)n++}
+  }
+  if(!e0.dead&&!e0.fake&&G.time-(e0.trapAt??-9)>TRAP.cd){e0.trapAt=G.time;e0.stun=Math.max(e0.stun||0,TRAP.stun)}   // ふんだ おばけは 少し止まる
+  G.rings.push({x:o.x,y:o.y,R,c:o.c,t:.4},{x:o.x,y:o.y,R:R*.5,c:'rgba(255,255,255,.9)',t:.3});
+  if(f) effFx(f,o.x,o.y,6); else fxBurst('curse',o.x,o.y,6,o.c);
+  sfx.trapgo(); G.shake=Math.max(G.shake,.04);
+}
+function drawTrap(o,t){   // わなの まほうじん（床に 光る 輪と 五芒星。置いた ばかりは つえから 光の すじ）
+  const life=TRAP.life-o.t, a=Math.min(1,o.t/.2)*Math.min(1,life/.6)*(o.go>0?Math.max(0,1-o.go*4):1), R=TRAP.R*Math.min(1,.4+o.t/.25*.6), armed=o.t>=TRAP.arm, c=o.c;
+  if(o.t<.25&&o.p){ctx.globalAlpha=(1-o.t/.25)*.8;ctx.strokeStyle=c;ctx.lineWidth=1.2;ctx.setLineDash([2,3]);ctx.beginPath();ctx.moveTo(o.p.x,o.p.y);ctx.lineTo(o.x,o.y);ctx.stroke();ctx.setLineDash([])}
+  if(a<=0){ctx.globalAlpha=1;return}
+  ctx.globalCompositeOperation='lighter'; glow(c,o.x,o.y,R*1.5,(.25+(armed?.15*Math.sin(t*8+o.ph):0))*a); ctx.globalCompositeOperation='source-over';
+  ctx.globalAlpha=a*.35; ctx.fillStyle='#2a1048'; ctx.beginPath(); ctx.ellipse(o.x,o.y,R,R*.62,0,0,Math.PI*2); ctx.fill();
+  ctx.save(); ctx.translate(o.x,o.y); ctx.scale(1,.62);
+  ctx.globalAlpha=a; ctx.strokeStyle=c; ctx.lineWidth=1.3; circle(0,0,R); ctx.stroke(); ctx.lineWidth=.8; circle(0,0,R*.78); ctx.stroke();
+  ctx.strokeStyle=mixW(c,.4); pentaPath(ctx,0,0,R*.74,-Math.PI/2+t*(armed?1.4:4)+o.ph); ctx.stroke();
+  ctx.restore(); ctx.globalAlpha=1;
+}
+function drawTrapBurst(o,t){   // はつどう：光の はしらが 立ちのぼる
+  const k=o.go/.5, h=46*(1-Math.pow(1-k,2)), w=TRAP.R*(1-k*.6), a=1-k;
+  ctx.save(); ctx.globalCompositeOperation='lighter';
+  const g=ctx.createLinearGradient(0,o.y-h,0,o.y); g.addColorStop(0,'rgba(255,255,255,0)'); g.addColorStop(1,hexA(o.c,.8));
+  ctx.globalAlpha=a; ctx.fillStyle=g; ctx.fillRect(o.x-w*.5,o.y-h,w,h);
+  ctx.fillStyle='rgba(255,255,255,.7)'; ctx.fillRect(o.x-w*.12,o.y-h*.9,w*.24,h*.9);
+  ctx.restore(); ctx.globalAlpha=1;
+}
+
+// ---- ぶんしんミラー（ギミック） ----
+// 杭のまわりを まわる 魔法の かがみ2まい。当たった玉（分身ではない玉）が 2つに 分かれる（1つの玉は 同じミラーで1回・ぜんぶで BUNSHIN.per 回まで）。分身の玉は 鏡うつしに とんで、
+// BUNSHIN.life 秒で きえる（b.age を 30−life から始めて、玉の時間切れで きえる）・ヘソには 入らない・コインは かからない・台の上に BUNSHIN.cap こまで
+// 宿ったミラーは、分かれた 分身の玉に 効き目を GM.infT 秒 宿す（つぎに当たった砲台・おばけに 運ぶ）＋ 分かれるときに 光の輪 BUNSHIN.ringR（属性は みんな、とくしゅ効果・わざは 受け皿に近い2体）
+const cloneN=()=>{let n=0;for(const b of G.bs)if(b.clone)n++;return n};
+function splitBall(p,T,b){
+  const m=b.mir||(b.mir={});
+  if(b.clone||b.rail||m[p.id]||(b.split||0)>=BUNSHIN.per||cloneN()>=BUNSHIN.cap) return null;
+  m[p.id]=1; b.split=(b.split||0)+1;
+  let vx=-b.vx; if(Math.abs(vx)<.8) vx=(b.vx>=0?-1:1)*(1+Math.random()*.6);
+  const c={x:b.x,y:b.y,vx,vy:b.vy,t:b.t,r:b.r,age:30-BUNSHIN.life,still:0,hit:Object.assign({},b.hit),gone:false,rail:false,s:0,e0:0,clone:true,cFrom:p.id,mir:Object.assign({},m),split:BUNSHIN.per};
+  G.bs.push(c); T.split=.35; sfx.split();
+  G.rings.push({x:b.x,y:b.y,R:10,c:'rgba(230,220,255,.9)',t:.25});
+  for(let i=0;i<(reduce?2:5);i++){const a=Math.random()*6.28;FXK.shard.pop(b.x,b.y,Math.cos(a)*1.4,Math.sin(a)*1.4,a,i,'#e8e0ff')}
+  return c;
+}
+Object.assign(GIMMICKS.bunshin,{
+  hit(p,T,b){T.lastClone=splitBall(p,T,b)},
+  charged(p,T,f){
+    const c=T.lastClone; T.lastClone=null; if(!c||c.gone) return;
+    c.inf=f; c.infT=GM.infT; c.infFrom=p.id;
+    if(T.gcd>0) return; T.gcd=BUNSHIN.cd;
+    const R=BUNSHIN.ringR, dmg=towerDmg(T,TOWERS[T.type])*GM.k;
+    G.rings.push({x:p.x,y:p.y,R,c:effColor(f),t:.4}); effFx(f,p.x,p.y,6);
+    const hit=G.en.filter(e=>!e.dead&&!(e.ghost>0)&&(e.x-p.x)**2+(e.y-p.y)**2<=(R+e.r*.5)**2).sort((a,b)=>b.y-a.y);
+    hit.forEach((e,i)=>{if(f.el||i<SOUND_FX)applyEff(e,f,dmg)});
+  },
+  step(b,p,T,h){if(b.clone&&b.cFrom===p.id&&b.vy>0){b.vy-=BALLS[b.t].g*BUNSHIN.lift*h;b.vy*=Math.pow(1-BUNSHIN.drag,h)}},   // 分身の玉は ふわっと ゆっくり落ちる
+  aura(p,T,f){   // 宿っている間：このミラーから 出た 分身の玉が 光って、BUNSHIN.glowCd 秒ごとに まわり BUNSHIN.glowR の おばけに 効き目（属性は みんな、とくしゅ効果・わざは 受け皿に近い2体）
+    const R=BUNSHIN.glowR, dmg=towerDmg(T,TOWERS[T.type])*GM.k;
+    for(const c of G.bs){
+      if(!c.clone||c.cFrom!==p.id||G.time<(c.glT||0)) continue; c.glT=G.time+BUNSHIN.glowCd;
+      const hit=G.en.filter(e=>!e.dead&&!(e.ghost>0)&&(e.x-c.x)**2+(e.y-c.y)**2<=(R+e.r*.5)**2).sort((a,b)=>b.y-a.y);
+      if(!hit.length) continue;
+      G.rings.push({x:c.x,y:c.y,R,c:hexA(effColor(f),.6),t:.3}); effFx(f,c.x,c.y,3);
+      hit.forEach((e,i)=>{if(f.el||i<SOUND_FX)applyEff(e,f,dmg)});
+    }
+  },
+  tick(p,T,dt){T.split=Math.max(0,(T.split||0)-dt)},
+  draw(p,T,t,c){   // 杭を かこむ 銀の 輪と、まわる 手かがみ2まい（玉が 分かれると ぴかっ）
+    const R=p.r, x=p.x, y=p.y, k=(T.split||0)/.35, id=p.id||0;
+    ctx.globalCompositeOperation='lighter'; glow(c||'#d8c8ff',x,y,R+10,.12+(c?.12:0)+.5*k); ctx.globalCompositeOperation='source-over';
+    ctx.strokeStyle='#5a5070'; ctx.lineWidth=2.4; circle(x,y,R+BUNSHIN.pad+.6); ctx.stroke();
+    ctx.strokeStyle=k>0?'#ffffff':c?mixW(c,.45):'#e8e0ff'; ctx.lineWidth=1; ctx.setLineDash([3,2.4]); circle(x,y,R+BUNSHIN.pad+.6); ctx.stroke(); ctx.setLineDash([]);
+    for(let i=0;i<2;i++){const a=t*.9+id*1.7+i*Math.PI, mx=x+Math.cos(a)*(R+6.5), my=y+Math.sin(a)*(R+6.5)*.9;
+      ctx.save(); ctx.translate(mx,my); ctx.rotate(a+Math.PI/2);
+      ctx.strokeStyle='#8a7aa8'; ctx.lineWidth=1.6; ctx.beginPath(); ctx.moveTo(0,3.8); ctx.lineTo(0,6.4); ctx.stroke();   // え
+      ctx.fillStyle='#c8b070'; ctx.beginPath(); ctx.ellipse(0,0,3.4,4.4,0,0,Math.PI*2); ctx.fill();   // 金の わく
+      const g=ctx.createLinearGradient(-2.6,-3.6,2.6,3.6); g.addColorStop(0,'#ffffff'); g.addColorStop(.45,c?mixW(c,.55):'#d8d0ff'); g.addColorStop(1,'#7a6aa8');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(0,0,2.5,3.5,0,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='rgba(255,255,255,.85)'; ctx.lineWidth=.7; ctx.beginPath(); ctx.moveTo(-1.2,-1.8); ctx.lineTo(.6,-2.6); ctx.stroke();
+      if(k>0){ctx.globalCompositeOperation='lighter';glow('#ffffff',0,0,7,.8*k);ctx.globalCompositeOperation='source-over'}
+      ctx.restore()}
+  },
+});
+
+// ---- 台の上の小物（のろいの見張り・くさり・わな・ビーム・バリア・はね返った弾・ぬすまれた バフ など） ----
+Object.assign(OBJK,{
+  hexW:{step(o){const e=o.e;if(e.dead){e.hexW=false;if(e.hp<=0&&!e.fake&&e.curseT>0)curseJump(e);return false}if(!(e.curseT>0)){e.hexW=false;return false}return true}},   // のろわれた おばけを 見張る（倒れたら のりうつる）
+  hexLine:{step(o,dt){o.t+=dt;return o.t<o.max&&!o.o.dead},   // のりうつる のろい（ライムの すじ）
+    top(o,t){const q=Math.min(1,o.t/o.max*1.4), x=o.x+(o.o.x-o.x)*q, y=o.y+(o.o.y-o.y)*q-Math.sin(q*Math.PI)*18;
+      ctx.globalCompositeOperation='lighter'; glow('#b6ff3d',x,y,10,.9); ctx.globalCompositeOperation='source-over';
+      ctx.strokeStyle='#efffc0'; ctx.lineWidth=1; pentaPath(ctx,x,y,4,t*6); ctx.stroke()}},
+  clink:{step(L,dt){L.t-=dt;L.fl=Math.max(0,L.fl-dt);const a=L.a,b=L.b;if(L.t<=0||a.dead||b.dead||(a.x-b.x)**2+(a.y-b.y)**2>(CHAIN.R*2)**2){L.t=0;return false}return true},   // 2体を つなぐ くさり
+    draw(L,t){drawChainLink(L,t)}},
+  cnet:{step(o,dt){o.t+=dt;return o.t<o.max},   // くさりの網が ひろがる
+    top(o,t){const u=o.t/o.max, R=o.R*(.4+.6*u);ctx.globalAlpha=1-u;ctx.strokeStyle='#ffc94d';ctx.lineWidth=1.2;
+      for(let i=0;i<8;i++){const a=i/8*Math.PI*2;ctx.beginPath();ctx.moveTo(o.x,o.y);ctx.lineTo(o.x+Math.cos(a)*R,o.y+Math.sin(a)*R);ctx.stroke()}
+      for(const k of [.5,1]){ctx.beginPath();for(let i=0;i<=8;i++){const a=i/8*Math.PI*2;i?ctx.lineTo(o.x+Math.cos(a)*R*k,o.y+Math.sin(a)*R*k):ctx.moveTo(o.x+Math.cos(a)*R*k,o.y+Math.sin(a)*R*k)}ctx.stroke()}
+      ctx.globalAlpha=1}},
+  slash:{step(o,dt){o.t+=dt;return o.t<o.max},   // かまいたち：みかづきの きりきず3本
+    top(o,t){const u=o.t/o.max;ctx.globalAlpha=1-u;ctx.strokeStyle='#e8fff0';ctx.lineCap='round';
+      for(let i=0;i<3;i++){const y=o.y+(i-1)*9;ctx.lineWidth=2.2-i*.4;ctx.beginPath();ctx.arc(o.x-6+i*3,y+20,24,-Math.PI/2-.9+o.a+u*.3,-Math.PI/2+.5+o.a+u*.3);ctx.stroke()}
+      ctx.globalAlpha=1}},
+  ofuda:{step(o,dt){o.t+=dt;o.y-=dt*14;return o.t<o.max},   // ふういんの おふだ
+    top(o,t){const u=o.t/o.max;ctx.save();ctx.globalAlpha=Math.min(1,(1-u)*2.5);ctx.translate(o.x,o.y);ctx.rotate(o.rot+Math.sin(t*8)*.08);
+      ctx.fillStyle='#fff4dc';ctx.fillRect(-4.5,-9,9,18);ctx.strokeStyle='#b6ff3d';ctx.lineWidth=.8;ctx.strokeRect(-4.5,-9,9,18);
+      ctx.strokeStyle='#7a2acc';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(-2,-6);ctx.lineTo(2,-4);ctx.lineTo(-2,-1);ctx.lineTo(2,2);ctx.lineTo(-2,5);ctx.stroke();ctx.restore()}},
+  mtrap:{step(o,dt){   // まほうじんタワーの わな（ふまれると はつどう）
+      o.t+=dt;
+      if(o.go>0){o.go+=dt;return o.go<.5}
+      if(o.t>TRAP.life) return false;
+      if(o.t<TRAP.arm) return true;
+      for(const e of G.en){if(e.dead||e.ghost>0||e.cover>G.time)continue;const rr=TRAP.R+e.r*.5;if((e.x-o.x)**2+(e.y-o.y)**2<rr*rr){trapGo(o,e);break}}
+      return true},
+    back(o,t){drawTrap(o,t)},
+    top(o,t){if(o.go>0)drawTrapBurst(o,t)}},
+  mbeam:{step(o,dt){o.t+=dt;if(!o.e.dead){o.ex=o.e.x;o.ey=o.e.y}return o.t<o.max},   // まほうじんの ビーム
+    top(o,t){drawMBeam(o,t)}},
+  barrier:{step(o,dt){const e=o.e;e.barrier=Math.max(0,(e.barrier||0)-dt);if(e.dead||!(e.barrier>0)){e.barW=false;return false}return true},   // 黒ヤギの バリア（おばけに ついていく）
+    top(o,t){drawBarrier(o.e,t)}},
+  refl:{step(o,dt){o.t+=dt;if(o.t<o.max)return true;const T=o.p&&o.p.tower;if(T){T.cd=Math.max(T.cd,0)+KUJAKU.back;burst(o.p.x,o.p.y,'#bff8ff',4)}return false},   // まおうに はね返された弾（砲台に もどって 少し おくらせる）
+    top(o,t){const q=o.t/o.max, x=o.x+(o.p.x-o.x)*q, y=o.y+(o.p.y-o.y)*q;
+      ctx.globalCompositeOperation='lighter'; glow(o.c,x,y,8,.8); ctx.globalCompositeOperation='source-over';
+      ctx.strokeStyle=hexA('#ffffff',.6*(1-q)); ctx.lineWidth=1.2; ctx.beginPath(); ctx.moveTo(o.x+(o.p.x-o.x)*Math.max(0,q-.3),o.y+(o.p.y-o.y)*Math.max(0,q-.3)); ctx.lineTo(x,y); ctx.stroke();
+      ctx.fillStyle='#ffffff'; circle(x,y,2); ctx.fill()}},
+  gemFly:{step(o,dt){o.t+=dt;return o.t<o.max},   // カラスが ぬすんだ バフ（宝石）が とんでいく・もどる
+    top(o,t){const q=o.t/o.max, a=o.a(), b=o.b(), x=a[0]+(b[0]-a[0])*q, y=a[1]+(b[1]-a[1])*q-Math.sin(q*Math.PI)*22;
+      ctx.globalCompositeOperation='lighter'; glow(o.c,x,y,10,.9); ctx.globalCompositeOperation='source-over';
+      gem(x,y,3.6,o.c)}},
+});
+function gem(x,y,s,c){ctx.fillStyle=mixW(c,.15);ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x+s*.75,y);ctx.lineTo(x,y+s);ctx.lineTo(x-s*.75,y);ctx.closePath();ctx.fill();ctx.strokeStyle='#ffffff';ctx.lineWidth=.7;ctx.stroke();ctx.fillStyle='rgba(255,255,255,.8)';ctx.beginPath();ctx.moveTo(x-s*.2,y-s*.5);ctx.lineTo(x+s*.15,y-s*.35);ctx.lineTo(x-s*.2,y);ctx.closePath();ctx.fill()}   // 宝石（ひし形）
+function drawBarrier(e,t){   // バリア：おばけを つつむ ピンクの 六角の まく（きらきら・おわりは 点めつ）
+  const R=e.r*1.42, k=Math.min(1,e.barrier*3)*(e.barrier<1?.6+.4*Math.sin(t*30):1), y=e.y-e.r*.1;
+  ctx.globalCompositeOperation='lighter'; glow('#ff5ab0',e.x,y,R*1.25,.22*k); ctx.globalCompositeOperation='source-over';
+  ctx.beginPath(); for(let i=0;i<6;i++){const a=i/6*Math.PI*2+t*.4;i?ctx.lineTo(e.x+Math.cos(a)*R,y+Math.sin(a)*R):ctx.moveTo(e.x+Math.cos(a)*R,y+Math.sin(a)*R)} ctx.closePath();
+  ctx.globalAlpha=.13*k; ctx.fillStyle='#ffb0e0'; ctx.fill();
+  ctx.globalAlpha=.85*k; ctx.strokeStyle='#ff8ad0'; ctx.lineWidth=1.4; ctx.stroke();
+  ctx.globalAlpha=.6*k; ctx.strokeStyle='#ffffff'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(e.x,y,R*.82,-2.6+Math.sin(t*2)*.2,-1.9+Math.sin(t*2)*.2); ctx.stroke();
+  ctx.globalAlpha=1;
+}
+
+// ---- 魔王城のおばけのいたずら ----
+// 黒ヤギの バリア：ENEMIES の bar:1 の おばけ（魔王城の おばけ）に つく。バリアの間は 砲台の弾などが YAGI.k しか効かない（dmgK の barK）。玉が当たると われる（barHit）
+const barK=e=>e.barrier>0?YAGI.k:1;
+function giveBarrier(o){o.barrier=YAGI.bar;if(!o.barW){o.barW=true;G.obs.push({k:'barrier',e:o})}}
+function breakBarrier(e){
+  e.barrier=0;
+  for(let i=0;i<(reduce?3:8);i++){const a=Math.random()*6.28;FXK.shard.pop(e.x,e.y,Math.cos(a)*1.8,Math.sin(a)*1.8,a,i,'#ffb0e0')}
+  G.rings.push({x:e.x,y:e.y,R:e.r*1.7,c:'rgba(255,140,210,.9)',t:.3}); sfx.bbreak();
+}
+const barHit=e=>{if(e.barrier>0)breakBarrier(e)};
+// カラス：ぬすめる バフ（わざ＞とくしゅ効果＞玉でついた属性＞攻撃UP＞連射UP）
+function towerLoot(T){
+  if(T.comboT>0) return {k:'combo',v:T.combo,t:T.comboT,c:comboOf(T.combo).color};
+  if(T.spT>0) return {k:'sp',v:T.sp,t:T.spT,c:spOf(T.sp).color};
+  if(T.elT>0&&T.el) return {k:'el',v:T.el,t:T.elT,c:ELEM[T.el].color};
+  if(T.pow>0) return {k:'pow',t:T.pow,c:BALLS.lead.color};
+  if(T.rapid>0) return {k:'rapid',t:T.rapid,c:BALLS.bb.color};
+  return null;
+}
+function stealBuff(e){   // カラスが 砲台の バフを ぬすむ
+  const p=e.gp; e.gp=null; const T=p&&p.tower; if(!T) return;
+  const L=towerLoot(T); if(!L) return;
+  if(L.k==='combo')T.comboT=0; else if(L.k==='sp')T.spT=0; else if(L.k==='el')T.elT=0; else T[L.k]=0;
+  L.p=p; e.loot=L; e.laughT=1.2;
+  G.obs.push({k:'gemFly',a:()=>[p.x,p.y],b:()=>[e.x,e.y+e.r*.2],t:0,max:.35,c:L.c});
+  burst(p.x,p.y,L.c,6); sfx.caw();
+}
+function giveLoot(e,ball){   // ぬすんだ バフを 砲台に 返す（玉が当たると のこり時間 いっぱいで、倒れたときは のこりの時間で）
+  const L=e.loot; e.loot=null; if(!L) return; const p=L.p, T=p&&p.tower; if(!T) return;
+  const t=ball?BUFF_T:Math.max(1,L.t);
+  if(L.k==='combo'){T.combo=L.v;T.comboT=t;T.elT=0;T.spT=0}
+  else if(L.k==='sp'){T.sp=L.v;T.spT=t;T.el=L.v;T.elT=t;T.comboT=0}
+  else if(L.k==='el'){T.el=L.v;T.elT=t}
+  else T[L.k]=t;
+  const x=e.x, y=e.y; G.obs.push({k:'gemFly',a:()=>[x,y],b:()=>[p.x,p.y],t:0,max:.4,c:L.c});
+  sfx.kira();
+}
+Object.assign(ENEMIES.karasu,{   // カラス：ときどき 近くの砲台の バフを ぬすむ（とまって ばたばた → 宝石にして くちばしに）。玉が当たると 返す（倒れても 返す）
+  init(e){e.kt=KARASU.first*(.6+Math.random()*.8);e.grab=0;e.loot=null;e.gp=null},
+  tick(e,dt,o){
+    if(e.grab>0){o.mv=0;o.wob=0;e.grab-=dt;if(e.grab<=0){e.grab=0;stealBuff(e);e.kt=KARASU.every}return}
+    if(o.held||e.loot) return;
+    e.kt-=dt; if(e.kt>0) return;
+    let best=null,bd=KARASU.R*KARASU.R;
+    for(const p of G.pegs){const T=p.tower;if(!T||!towerLoot(T))continue;const d=(p.x-e.x)**2+(p.y-e.y)**2;if(d<bd){bd=d;best=p}}
+    if(!best){e.kt=.8;return}
+    e.grab=KARASU.grab; e.gp=best; G.rings.push({x:best.x,y:best.y,R:best.r+10,c:'rgba(124,140,255,.85)',t:.4});
+  },
+  ballHit(e){barHit(e);if(e.grab>0){e.grab=0;e.gp=null;e.kt=KARASU.every*.6;stopMischief(e)}if(e.loot){giveLoot(e,true);e.oops=.7}return false},
+  death(e){giveLoot(e,false)},
+  dmgK:e=>barK(e),
+  mood:e=>e.dying?null:e.loot?'laugh':e.grab>0?'dash':null,
+});
+function shedSkin(e){   // ヘビが ぬけがらを のこす（ぬけがらは にせもの：砲台の弾を 引きつける・玉1発で きえる）。本ものは 少しの間 ねらわれずに 速く にげる
+  e.shedN++;
+  addEnemy('hebi',e.x,e.y,{fake:true,shell:true,life:HEBI.life,hp:e.max*HEBI.hp,max:e.max*HEBI.hp,born:1,sp:0,ph:e.ph});
+  e.cover=G.time+HEBI.hide; e.dashT=HEBI.dash; e.fresh=.6; e.laughT=1;
+  G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:'rgba(198,107,255,.85)',t:.35}); sfx.shed();
+}
+Object.assign(ENEMIES.hebi,{   // ヘビ：HP が へると（HEBI.at）ぬけがらを のこして 身代わりにする。玉が当たると ばんそうこう＝もう ぬけがらを 作れない
+  init(e){e.shedN=0;e.noShed=false;e.dashT=0;e.fresh=0},
+  tick(e,dt,o){
+    if(e.shell){o.mv=0;o.wob=0;e.life-=dt;if(e.life<=0)vanishFake(e);return}   // ぬけがら：動かない・少しで きえる
+    o.wob=Math.sin(e.born*7+e.ph)*.5;   // にょろにょろ
+    e.fresh=Math.max(0,(e.fresh||0)-dt);
+    if(e.dashT>0){e.dashT-=dt;o.mv*=HEBI.k;e.trailT=(e.trailT||0)-dt;if(e.trailT<=0){e.trailT=.07;e.trail.push({x:e.x,y:e.y,a:.3})}}
+    if(e.noShed||e.shedN>=HEBI.at.length||o.held) return;
+    if(e.hp<e.max*HEBI.at[e.shedN]) shedSkin(e);
+  },
+  ballHit(e){barHit(e);if(!e.noShed&&!e.shell){e.noShed=true;e.oops=.6;G.rings.push({x:e.x,y:e.y,R:e.r*1.6,c:'rgba(255,200,220,.9)',t:.3})}return false},
+  dmgK:e=>barK(e),
+  mood:e=>e.dying?null:e.shell?'shell':e.dashT>0||e.fresh>0?'laugh':null,
+});
+function breakStone(e){   // 石の カエルの 石が われる
+  e.stone=0; e.stCD=KAERU.cd; e.st=KAERU.every; e.oops=.6;
+  for(let i=0;i<(reduce?3:9);i++){const a=Math.random()*6.28,s=1+Math.random()*2;FXK.shard.pop(e.x,e.y,Math.cos(a)*s,Math.sin(a)*s,a,i,'#a8b0b8')}
+  G.rings.push({x:e.x,y:e.y,R:e.r*1.7,c:'rgba(220,226,232,.9)',t:.3}); sfx.crack();
+}
+Object.assign(ENEMIES.kaeru,{   // 石のカエル：ぴょんぴょん 進む。ときどき 石になって（ガーゴイル）砲台の弾などが ほとんど効かない。玉が当たると 石が われる
+  init(e){e.st=KAERU.first*(.6+Math.random()*.8);e.stone=0;e.stCD=0;e.ting=0},
+  tick(e,dt,o){
+    e.stCD=Math.max(0,(e.stCD||0)-dt); e.ting=Math.max(0,(e.ting||0)-dt);
+    if(e.stone>0){
+      e.stone-=dt; o.mv*=KAERU.slow; o.wob=0; e.hopY=0;
+      if(e.stone<=0){e.stone=0;e.st=KAERU.every;for(let i=0;i<3;i++)fxMist(e.x,e.y,e.r,'#c8d0d8',true)}
+      return;
+    }
+    const q=(e.born/KAERU.hop+e.ph)%1, hp=Math.sin(q*Math.PI);
+    o.mv*=.2+1.25*hp; e.hopY=hp*.35; o.wob=0;   // ぴょん、ぴょん
+    if(o.held||e.stCD>0) return;
+    e.st-=dt; if(e.st<=0){e.stone=KAERU.stone;e.hopY=0;sfx.kero();G.rings.push({x:e.x,y:e.y,R:e.r*1.6,c:'rgba(180,190,200,.85)',t:.35})}
+  },
+  bulletHit(e,u){if(e.stone>0){e.ting=.12;if(Math.random()<.5)burst(u.x,u.y,'#d0d8e0',2);sfx.gotsu()}return false},
+  dmgK:e=>(e.stone>0?KAERU.k:1)*barK(e),
+  ballHit(e){barHit(e);if(e.stone>0)breakStone(e);return false},
+  mood:e=>e.dying?null:e.stone>0?'stone':null,
+});
+function castBarrier(e){   // 黒ヤギが まわりの おばけに バリア
+  let n=0;
+  for(const o of G.en){if(o===e||o.dead||o.fake||!ENEMIES[o.t].bar)continue;if((o.x-e.x)**2+(o.y-e.y)**2>YAGI.R*YAGI.R)continue;giveBarrier(o);n++}
+  G.rings.push({x:e.x,y:e.y,R:YAGI.R,c:'rgba(255,90,176,.7)',t:.5},{x:e.x,y:e.y,R:e.r*2,c:'rgba(255,255,255,.8)',t:.35});
+  if(n) sfx.barrier();
+}
+Object.assign(ENEMIES.yagi,{   // 黒ヤギ（中ボス）：まほうを となえて（足もとに まほうじん・角が光る。玉が当たると止まる）→ まわりの おばけに バリア
+  init(e){e.yt=YAGI.first;e.chant=0},
+  tick(e,dt,o){if(e.fake)return;
+    if(e.chant>0){
+      o.mv=0; o.wob=0; e.chant-=dt;
+      if(Math.random()<dt*14) fxEl('curse',e.x,e.y-e.r*.9,e.r*.8,false,'#ff8ad0');
+      if(e.chant<=0){e.chant=0;e.yt=YAGI.every;castBarrier(e)}
+      return;
+    }
+    if(o.held) return;
+    e.yt-=dt; if(e.yt<=0){e.chant=YAGI.chant;sfx.mee();G.rings.push({x:e.x,y:e.y,R:e.r*2,c:'rgba(255,90,176,.8)',t:.45})}
+  },
+  ballHit(e){barHit(e);if(e.chant>0){e.chant=0;e.yt=YAGI.every*.6;stopMischief(e)}return false},
+  dmgK:e=>barK(e),
+  mood:e=>e.dying?null:e.chant>0&&!(e.stun>0)?'dash':null,
+});
+function reflectBullet(e,u){   // まおうが 弾を はね返す（いちばん近い砲台へ もどる）
+  let best=null,bd=1e9;
+  for(const p of G.pegs){if(!p.tower)continue;const d=(p.x-u.x)**2+(p.y-u.y)**2;if(d<bd){bd=d;best=p}}
+  e.ting=.15; G.rings.push({x:u.x,y:u.y,R:8,c:'rgba(190,255,250,.9)',t:.2}); sfx.refl();
+  if(best&&bd<180*180) G.obs.push({k:'refl',x:u.x,y:u.y,p:best,t:0,max:.25,c:u.c||'#ffffff'});
+}
+Object.assign(ENEMIES.kujaku,{   // まおう（黒いクジャク・ボス）：羽を ひろげて（玉が当たると止まる）→ 大きな おうぎの 羽で 砲台の弾を はね返す（上から落ちる ほうだんは はね返せない）。玉が当たると 羽が とじる。家来を よぶ（call）
+  init(e){e.kt=KUJAKU.first;e.fanUp=0;e.fan=0;e.ting=0},
+  tick(e,dt,o){if(e.fake)return;
+    e.ting=Math.max(0,(e.ting||0)-dt);
+    if(e.fan>0){e.fan-=dt;o.mv=0;o.wob=0;if(e.fan<=0){e.fan=0;e.kt=KUJAKU.every}return}   // ひろげている間は 立ちどまって 見せびらかす
+    if(e.fanUp>0){o.mv=0;e.fanUp-=dt;if(e.fanUp<=0){e.fanUp=0;e.fan=KUJAKU.fan;e.laughT=1;sfx.fan();G.rings.push({x:e.x,y:e.y,R:e.r*2.4,c:'rgba(62,232,208,.85)',t:.5})}return}
+    if(o.held) return;
+    e.kt-=dt; if(e.kt<=0){e.fanUp=KUJAKU.aim;G.rings.push({x:e.x,y:e.y,R:e.r*1.8,c:'rgba(255,216,77,.8)',t:.4})}
+  },
+  bulletHit(e,u){if(e.fan>0&&!u.top){reflectBullet(e,u);return true}return false},
+  ballHit(e){barHit(e);if(e.fanUp>0||e.fan>0){e.fanUp=0;e.fan=0;e.kt=KUJAKU.every*.6;stopMischief(e);for(let i=0;i<(reduce?3:8);i++){const a=-Math.PI*Math.random();fxAdd({k:'leaf',x:e.x+Math.cos(a)*e.r*1.5,y:e.y-e.r*.3+Math.sin(a)*e.r,vx:(Math.random()-.5)*1.2,vy:.4+Math.random()*.6,max:.9,s:2.4,rot:a,vr:(Math.random()-.5)*5,c:'#3ee8d0'})}}return false},
+  dmgK:e=>barK(e),
+  mood:e=>e.dying?null:e.fan>0?'laugh':e.fanUp>0&&!(e.stun>0)?'dash':null,
+});
+/* ---------- おばけごとの絵（魔王城） ---------- */
+Object.assign(ENEMIES.karasu,{
+  back(e,r,t,P){const {line,lw}=P, fl=e.grab>0;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.84,-r*.02);ctx.rotate(s*(fl?-.7+Math.sin(t*28)*.5:.28+Math.sin(t*5+e.ph+s)*.12));   // くろい はね（ぬすむ時は ばたばた）
+      ctx.fillStyle='#262040';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(0,-r*.14);
+      ctx.quadraticCurveTo(s*r*.52,-r*.12,s*r*.56,r*.3);ctx.lineTo(s*r*.4,r*.22);ctx.lineTo(s*r*.34,r*.42);ctx.lineTo(s*r*.2,r*.3);ctx.lineTo(s*r*.12,r*.46);ctx.quadraticCurveTo(0,r*.2,0,-r*.14);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(150,165,255,.7)';ctx.lineWidth=Math.max(.6,r*.03);ctx.beginPath();ctx.moveTo(s*r*.04,-r*.08);ctx.quadraticCurveTo(s*r*.44,-r*.06,s*r*.48,r*.24);ctx.stroke();
+      ctx.restore()}
+  },
+  skin(e,r,ey,t,P){   // あたまの くろい ずきん（ふちは 羽の ぎざぎざ・ネオンの つや）
+    const y0=ey-r*.3;
+    ctx.fillStyle='#262040'; ctx.beginPath(); ctx.arc(0,-r*.14,r*.94,Math.PI,0); ctx.lineTo(r*.92,y0);
+    for(let i=0;i<6;i++){const x=r*.92-i*r*.307;ctx.lineTo(x-r*.15,y0+r*.13);ctx.lineTo(x-r*.307,y0)}
+    ctx.closePath(); ctx.fill(); ctx.strokeStyle=P.line; ctx.lineWidth=P.lw; ctx.beginPath(); ctx.arc(0,-r*.14,r*.94,Math.PI,0); ctx.stroke();
+    ctx.strokeStyle='rgba(150,165,255,.55)'; ctx.lineWidth=Math.max(.8,r*.05); ctx.beginPath(); ctx.arc(0,-r*.14,r*.76,Math.PI*1.18,Math.PI*1.48); ctx.stroke();
+  },
+  front(e,r,ey,t,P){   // くちばし（ぬすんだ バフは 宝石にして くわえる）
+    const y=ey+r*.1;
+    ctx.fillStyle='#3a3458'; ctx.strokeStyle=P.ink; ctx.lineWidth=Math.max(.7,r*.04);
+    ctx.beginPath(); ctx.moveTo(-r*.15,y); ctx.quadraticCurveTo(0,y-r*.06,r*.15,y); ctx.lineTo(0,y+r*.3); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='rgba(200,200,255,.6)'; ctx.lineWidth=Math.max(.5,r*.025); ctx.beginPath(); ctx.moveTo(-r*.08,y+r*.03); ctx.lineTo(-r*.01,y+r*.2); ctx.stroke();
+    if(e.loot&&!e.dying){const c=e.loot.c, gy=y+r*.38; glowIn(c,0,gy,r*.7,.6+.2*Math.sin(t*8),P.ga); gem(0,gy,r*.22,c); if(Math.sin(t*9+e.ph)>.7)star(r*.2,gy-r*.18,r*.1,'#ffffff')}
+  },
+  mouth(){},
+  top(e,r,t,P){   // あたまの アホ毛（羽 3本）
+    for(const [x,a,h] of [[-.1,-.5,.32],[.06,-.1,.4],[.2,.35,.28]]){ctx.save();ctx.translate(x*r,-r*1.0);ctx.rotate(a+Math.sin(t*4+e.ph+x*5)*.12);ctx.fillStyle='#262040';ctx.beginPath();ctx.moveTo(-r*.06,0);ctx.quadraticCurveTo(-r*.05,-r*h*.7,0,-r*h);ctx.quadraticCurveTo(r*.06,-r*h*.6,r*.06,0);ctx.closePath();ctx.fill();ctx.restore()}
+  },
+  pose(e,P){if(e.dying)return;if(e.grab>0){P.rot+=Math.sin(G.time*22)*.06;P.sy*=1.03}},
+});
+Object.assign(ENEMIES.hebi,{
+  back(e,r,t,P){if(e.shell)return;const {line,lw}=P;
+    ctx.fillStyle='#4a2272'; ctx.strokeStyle=line; ctx.lineWidth=lw;   // コブラの フード（むらさき・ライムの もよう）
+    ctx.beginPath(); ctx.moveTo(0,-r*1.22); ctx.bezierCurveTo(r*1.75,-r*1.15,r*1.8,r*.1,r*.55,r*.4); ctx.lineTo(-r*.55,r*.4); ctx.bezierCurveTo(-r*1.8,r*.1,-r*1.75,-r*1.15,0,-r*1.22); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='#d8a0ff'; ctx.lineWidth=Math.max(.7,r*.04); ctx.stroke();
+    ctx.fillStyle='#b6ff3d'; for(const s of [-1,1]){ctx.globalAlpha=P.ga*.85;ctx.beginPath();ctx.ellipse(s*r*1.18,-r*.38,r*.1,r*.17,s*.3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#2a1040';ctx.beginPath();ctx.ellipse(s*r*1.18,-r*.38,r*.04,r*.08,s*.3,0,Math.PI*2);ctx.fill();ctx.fillStyle='#b6ff3d'} ctx.globalAlpha=P.ga;
+    ctx.save(); ctx.lineCap='round'; ctx.beginPath();   // しっぽ（にょろにょろ・しましま）
+    const tl=[]; for(let i=0;i<=16;i++){const q=i/16;tl.push([r*(.4+q*1.35),r*(.85-q*.5)+Math.sin(t*6+e.ph+q*6)*r*.18*q])}
+    for(let i=0;i<16;i++){const w=r*(.34-.26*i/16);ctx.beginPath();ctx.moveTo(...tl[i]);ctx.lineTo(...tl[i+1]);ctx.strokeStyle=line;ctx.lineWidth=w+lw;ctx.stroke()}
+    for(let i=0;i<16;i++){const w=r*(.34-.26*i/16);ctx.beginPath();ctx.moveTo(...tl[i]);ctx.lineTo(...tl[i+1]);ctx.strokeStyle=i%3===1?'#c66bff':'#ffffff';ctx.lineWidth=w;ctx.stroke()}
+    ctx.restore();
+  },
+  skin(e,r,ey,t,P){if(e.shell)return;   // おなかの ひし形の うろこ・ばんそうこう（もう ぬけがらを 作れない）・ぬけたあとは ぴかぴか
+    ctx.fillStyle='rgba(198,107,255,.32)';
+    for(const [x,y] of [[-.42,.25],[0,.32],[.42,.25],[-.22,.58],[.22,.58]]){ctx.beginPath();ctx.moveTo(x*r,y*r-r*.1);ctx.lineTo(x*r+r*.1,y*r);ctx.lineTo(x*r,y*r+r*.1);ctx.lineTo(x*r-r*.1,y*r);ctx.closePath();ctx.fill()}
+    if(e.noShed){ctx.save();ctx.translate(r*.5,-r*.6);ctx.rotate(.6);ctx.fillStyle='#ffe0c8';ctx.strokeStyle='#c09070';ctx.lineWidth=Math.max(.6,r*.03);rrPath(ctx,-r*.26,-r*.09,r*.52,r*.18,r*.08);ctx.fill();ctx.stroke();ctx.fillStyle='#ffb0b8';ctx.fillRect(-r*.08,-r*.07,r*.16,r*.14);ctx.restore()}
+    if(e.fresh>0) glowIn('#ffffff',0,0,r*1.3,.5*e.fresh/.6,P.ga);
+  },
+  eye(e,x,ey,r,s,mood){   // ヘビの目：ライムの ひとみに たての 細い ひとみ
+    ctx.fillStyle='#d8ff70'; ctx.strokeStyle='#2b2140'; ctx.lineWidth=Math.max(.7,r*.04); ctx.beginPath(); ctx.ellipse(x,ey,r*.13,r*.15,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#2b2140'; ctx.beginPath(); ctx.ellipse(x,ey,r*.035,r*.12,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#fff'; circle(x-r*.05,ey-r*.06,r*.035); ctx.fill(); return true},
+  front(e,r,ey,t){if(e.shell||e.dying)return;   // ちろちろ 舌
+    const u=(t*1.1+e.ph)%2; if(u>.4) return; const L=r*(.18+.2*Math.sin(u/.4*Math.PI)), y=ey+r*.42;
+    ctx.strokeStyle='#ff4f7a'; ctx.lineWidth=Math.max(.8,r*.05); ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(0,y+L); ctx.lineTo(-r*.07,y+L+r*.08); ctx.moveTo(0,y+L); ctx.lineTo(r*.07,y+L+r*.08); ctx.stroke()},
+  mouth(e,r,ey){ctx.beginPath();ctx.moveTo(-r*.14,ey+r*.38);ctx.quadraticCurveTo(0,ey+r*.46,r*.14,ey+r*.38);ctx.stroke()},
+  alt(e,r,t,P){if(!e.shell)return false;   // ぬけがら：すけた うすい 皮（うろこの もよう・からっぽの 目）。きえる前は うすくなる
+    ctx.globalAlpha=P.ga*Math.min(1,(e.life||0)*1.5)*.9; ghostPath(ctx,r,0,e.ph); ctx.fillStyle='rgba(250,240,215,.35)'; ctx.fill();
+    ctx.setLineDash([2.5,2]); ctx.strokeStyle='rgba(230,215,255,.9)'; ctx.lineWidth=Math.max(1,r*.06); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle='rgba(200,180,230,.55)'; ctx.lineWidth=Math.max(.6,r*.03);
+    for(let i=0;i<3;i++)for(let j=0;j<4;j++){const x=(-.45+j*.3+(i%2)*.15)*r, y=(-.4+i*.35)*r;if(x>r*.6)continue;ctx.beginPath();ctx.moveTo(x,y-r*.1);ctx.lineTo(x+r*.1,y);ctx.lineTo(x,y+r*.1);ctx.lineTo(x-r*.1,y);ctx.closePath();ctx.stroke()}
+    ctx.fillStyle='rgba(60,40,80,.45)'; for(const s of [-1,1]){ctx.beginPath();ctx.ellipse(s*r*.32,-r*.2,r*.11,r*.14,0,0,Math.PI*2);ctx.fill()}
+    ctx.globalAlpha=P.ga; return true},
+  pose(e,P){if(e.dying||e.shell)return;P.rot+=Math.sin(G.time*7+e.ph)*.07},
+});
+Object.assign(ENEMIES.kaeru,{
+  back(e,r,t,P){const {line,lw}=P, st=e.stone>0;
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.78,-r*.25);ctx.rotate(s*(.25+(st?0:Math.sin(t*4+e.ph)*.1)));   // 石の こうもりの つばさ（ガーゴイル）
+      ctx.fillStyle='#8a94a0';ctx.strokeStyle='#3a4250';ctx.lineWidth=lw;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(s*r*.55,-r*.5);ctx.lineTo(s*r*.5,-r*.15);ctx.lineTo(s*r*.7,-r*.05);ctx.lineTo(s*r*.48,r*.12);ctx.lineTo(s*r*.56,r*.3);ctx.lineTo(s*r*.2,r*.22);ctx.closePath();ctx.fill();ctx.stroke();
+      ctx.strokeStyle='rgba(200,210,220,.6)';ctx.lineWidth=Math.max(.5,r*.025);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(s*r*.5,-r*.15);ctx.moveTo(0,0);ctx.lineTo(s*r*.48,r*.12);ctx.stroke();ctx.restore()}
+    for(const s of [-1,1]){ctx.fillStyle='#f6fbff';ctx.strokeStyle=line;ctx.lineWidth=lw;circle(s*r*.32,-r*.84,r*.3);ctx.fill();ctx.stroke()}   // あたまの上の まるい 目の ふくらみ
+  },
+  skin(e,r,ey,t,P){   // おなかの みどりの もよう。石の時は 体が 石（ひび・こけ）
+    ctx.fillStyle='rgba(127,216,176,.35)'; for(const [x,y,s] of [[-.5,.3,.12],[.42,.45,.1],[-.1,.6,.08],[.15,.22,.07]]){circle(x*r,y*r,s*r);ctx.fill()}
+    const st=e.stone>0?Math.max(0,Math.min(1,(KAERU.stone-e.stone)*6,e.stone*4)):0;
+    if(st>0){
+      ctx.save(); ctx.globalAlpha=P.ga*st*.85; ghostPath(ctx,r,t,e.ph); ctx.clip();
+      ctx.fillStyle='#8a94a0'; ctx.fillRect(-r*1.3,-r*1.3,r*2.6,r*2.6);
+      ctx.fillStyle='rgba(60,70,80,.4)'; for(const [x,y,s] of [[-.5,-.5,.14],[.4,-.1,.18],[-.2,.4,.12],[.5,.55,.1]]){circle(x*r,y*r,s*r);ctx.fill()}
+      ctx.fillStyle='rgba(110,190,120,.6)'; for(const [x,y] of [[-.7,.5],[.6,.7],[-.3,.85]]){ctx.beginPath();ctx.ellipse(x*r,y*r,r*.16,r*.08,0,0,Math.PI*2);ctx.fill()}   // こけ
+      ctx.strokeStyle='#3a4250'; ctx.lineWidth=Math.max(.7,r*.04); ctx.beginPath(); ctx.moveTo(-r*.6,-r*.2); ctx.lineTo(-r*.35,0); ctx.lineTo(-r*.45,r*.25); ctx.moveTo(r*.3,r*.3); ctx.lineTo(r*.5,r*.15); ctx.stroke();
+      ctx.restore();
+      ctx.globalAlpha=P.ga*st; ctx.fillStyle='#8a94a0'; for(const s of [-1,1]){circle(s*r*.32,-r*.84,r*.3);ctx.fill()} ctx.globalAlpha=P.ga;   // 目の ふくらみも 石に
+    }
+    if(e.ting>0) glowIn('#e8f0ff',0,0,r*1.3,.6*e.ting/.12,P.ga);   // 弾を はじいた
+  },
+  eye(e,x,ey,r,s,mood){if(mood!=='stone')return false;ctx.strokeStyle='#3a4250';ctx.lineWidth=Math.max(1,r*.06);ctx.beginPath();ctx.moveTo(x-r*.12,ey);ctx.lineTo(x+r*.12,ey);ctx.stroke();return true},   // 石の時は ほそい 目
+  mouth(e,r,ey){ctx.beginPath();ctx.moveTo(-r*.46,ey+r*.36);ctx.quadraticCurveTo(0,ey+r*.6,r*.46,ey+r*.36);ctx.stroke()},   // 大きな ひろい 口
+  pose(e,P){if(e.dying)return;const h=e.hopY||0;P.sy*=1+h*.25;P.sx*=1-h*.15;if(e.stone>0)P.rot*=.1},
+});
+Object.assign(ENEMIES.yagi,{
+  back(e,r,t,P){const {line,lw}=P, ch=e.chant>0&&!e.dying;
+    if(ch){const k=Math.min(1,(YAGI.chant-e.chant)*4);ctx.save();ctx.translate(0,r*1.12);ctx.scale(1,.4);   // 足もとの まほうじん
+      glowIn('#ff5ab0',0,0,r*1.6,.5*k,P.ga);ctx.globalAlpha=P.ga*k;ctx.strokeStyle='#ff8ad0';ctx.lineWidth=2;circle(0,0,r*1.3);ctx.stroke();pentaPath(ctx,0,0,r*1.2,-Math.PI/2+t*3);ctx.stroke();ctx.restore();ctx.globalAlpha=P.ga}
+    for(const s of [-1,1]){ctx.save();ctx.translate(s*r*.92,-r*.28);ctx.rotate(s*(.25+Math.sin(t*2.5+e.ph+s)*.08));   // よこに たれる 耳
+      ctx.fillStyle='#f4eef8';ctx.strokeStyle=line;ctx.lineWidth=lw;ctx.beginPath();ctx.ellipse(s*r*.12,0,r*.24,r*.1,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+      ctx.fillStyle='#ffb0d0';ctx.beginPath();ctx.ellipse(s*r*.12,0,r*.15,r*.05,0,0,Math.PI*2);ctx.fill();ctx.restore()}
+    for(const s of [-1,1]){   // まきまきの 角（くろむらさき・ネオンの ふち。となえると 光る）
+      ctx.save(); ctx.translate(s*r*.42,-r*.86); ctx.scale(s,1); ctx.lineCap='round';
+      ctx.beginPath(); for(let i=0;i<=26;i++){const q=i/26, a=Math.PI+q*Math.PI*1.8, rr=r*(.32-.22*q), x=r*.32+Math.cos(a)*rr, y=r*.02+Math.sin(a)*rr; i?ctx.lineTo(x,y):ctx.moveTo(x,y)}
+      ctx.strokeStyle=line; ctx.lineWidth=r*.2+lw; ctx.stroke(); ctx.strokeStyle='#2e1e44'; ctx.lineWidth=r*.18; ctx.stroke();
+      ctx.strokeStyle=ch?'#ffc0f0':'#9a6ad8'; ctx.lineWidth=Math.max(.8,r*.035); ctx.stroke();
+      ctx.restore();
+      if(ch) glowIn('#ff5ab0',s*r*.74,-r*.84,r*.5,.5,P.ga);
+    }
+  },
+  skin(e,r,ey,t,P){   // 黒ヤギの くろい 毛（あたまの上。ふちは もこもこ）
+    const y0=ey-r*.34;
+    ctx.fillStyle='#2e1e44'; ctx.beginPath(); ctx.arc(0,-r*.14,r*.94,Math.PI,0); ctx.lineTo(r*.88,y0);
+    for(let i=0;i<6;i++){const x0=r*.88-i*r*.293, x1=x0-r*.293; ctx.quadraticCurveTo((x0+x1)/2,y0+r*.2,x1,y0)}
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle=P.line; ctx.lineWidth=P.lw; ctx.beginPath(); ctx.arc(0,-r*.14,r*.94,Math.PI,0); ctx.stroke();
+    ctx.strokeStyle='rgba(190,140,255,.55)'; ctx.lineWidth=Math.max(.8,r*.04); ctx.beginPath(); ctx.arc(0,-r*.14,r*.78,Math.PI*1.18,Math.PI*1.45); ctx.stroke();
+  },
+
+  eye(e,x,ey,r,s,mood){   // ヤギの目：金の ひとみに よこ長の ひとみ
+    ctx.fillStyle='#ffe07a'; ctx.strokeStyle='#2b2140'; ctx.lineWidth=Math.max(.8,r*.04); ctx.beginPath(); ctx.ellipse(x,ey,r*.15,r*.13,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#2b2140'; rrPath(ctx,x-r*.11,ey-r*.03,r*.22,r*.06,r*.03); ctx.fill(); ctx.fillStyle='#fff'; circle(x-r*.05,ey-r*.06,r*.03); ctx.fill(); return true},
+  front(e,r,ey,t,P){
+    ctx.fillStyle='#3a2450'; ctx.beginPath(); ctx.moveTo(-r*.13,ey+r*.58); ctx.quadraticCurveTo(0,ey+r*.55,r*.13,ey+r*.58); ctx.lineTo(r*.03,ey+r*.95+Math.sin(t*3+e.ph)*r*.03); ctx.lineTo(-r*.03,ey+r*.95); ctx.closePath(); ctx.fill();   // あごひげ
+    ctx.fillStyle='#d8a0c0'; ctx.beginPath(); ctx.ellipse(0,ey+r*.2,r*.08,r*.05,0,0,Math.PI*2); ctx.fill();   // はな
+  },
+  mouth(e,r,ey){mouthW(e,r,ey)},
+  top(e,r,t,P){if(e.chant>0&&!e.dying){const k=Math.min(1,(YAGI.chant-e.chant)*4);glowIn('#ff5ab0',0,-r*1.32,r*.6,.6*k,P.ga);ctx.globalAlpha=P.ga*k;ctx.lineWidth=2;runeGlyph(ctx,0,-r*1.32,r*.2,(t*6)|0,'#ffe0f4');ctx.globalAlpha=P.ga}},   // となえている まほうの もじ
+  pose(e,P){if(e.dying)return;if(e.chant>0){P.sy*=1.04;P.jx+=Math.sin(G.time*30)*e.r*.015}},
+});
+function peacockFan(e,r,t,P,open){   // まおうの 羽：とじている時は うしろに たれて、広げると 大きな おうぎ（くろむらさきの 羽に 金と ターコイズの 目玉もよう）
+  const n=9;
+  if(open>.05) glowIn('#3ee8d0',0,-r*.5,r*2.2*open,.28*open,P.ga);
+  for(let i=0;i<n;i++){const q=(i-(n-1)/2)/((n-1)/2);
+    const ac=Math.PI/2+q*.22, ao=-Math.PI/2+q*1.45, a=ac+(ao-ac)*open+Math.sin(t*2+i)*.03*open;
+    const L=r*(.95+.95*open)*(1-.12*Math.abs(q)*(1-open)), w=r*(.13+.07*open);
+    ctx.save(); ctx.translate(0,r*.15); ctx.rotate(a);
+    ctx.strokeStyle='#2a1a3a'; ctx.lineWidth=Math.max(1,r*.03); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(L,0); ctx.stroke();
+    ctx.fillStyle='#1c1230'; ctx.strokeStyle=hexA('#3ee8d0',.85); ctx.lineWidth=Math.max(.7,r*.022);
+    ctx.beginPath(); ctx.ellipse(L*.72,0,L*.32,w,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    const ex=L*.86, es=w*.85;
+    ctx.fillStyle='#ffd84d'; ctx.beginPath(); ctx.ellipse(ex,0,es*1.1,es,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#3ee8d0'; ctx.beginPath(); ctx.ellipse(ex,0,es*.75,es*.68,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#1a2a6a'; ctx.beginPath(); ctx.ellipse(ex,0,es*.4,es*.38,0,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+  }
+}
+Object.assign(ENEMIES.kujaku,{
+  back(e,r,t,P){const open=e.dying?0:e.fan>0?1:e.fanUp>0?Math.min(1,(KUJAKU.aim-e.fanUp)/KUJAKU.aim):0;peacockFan(e,r,t,P,open)},
+  skin(e,r,ey,t,P){   // まおうの マント（くろむらさき・金の ふち。体の 左右に かかる）と むねの 宝石の とめぐ
+    ctx.save(); ghostPath(ctx,r,t,e.ph); ctx.clip();
+    for(const s of [-1,1]){
+      ctx.fillStyle='#2a1a48'; ctx.beginPath(); ctx.moveTo(s*r*.2,ey+r*.42); ctx.quadraticCurveTo(s*r*.5,ey+r*.36,s*r*1.1,ey+r*.2); ctx.lineTo(s*r*1.2,r*1.3); ctx.lineTo(s*r*.5,r*1.3); ctx.quadraticCurveTo(s*r*.36,r*.6,s*r*.2,ey+r*.42); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle='#ffd84d'; ctx.lineWidth=Math.max(.8,r*.03); ctx.beginPath(); ctx.moveTo(s*r*.5,r*1.3); ctx.quadraticCurveTo(s*r*.36,r*.6,s*r*.2,ey+r*.42); ctx.quadraticCurveTo(s*r*.5,ey+r*.36,s*r*1.1,ey+r*.2); ctx.stroke();
+      ctx.strokeStyle='rgba(62,232,208,.5)'; ctx.lineWidth=Math.max(.6,r*.015); ctx.beginPath(); ctx.moveTo(s*r*.62,r*1.2); ctx.quadraticCurveTo(s*r*.5,r*.6,s*r*.36,ey+r*.5); ctx.stroke();
+    }
+    ctx.restore();
+    const y=ey+r*.44; ctx.fillStyle='#ffd84d'; circle(0,y,r*.09); ctx.fill(); ctx.fillStyle='#3ee8d0'; ctx.beginPath(); ctx.moveTo(0,y-r*.07); ctx.lineTo(r*.05,y); ctx.lineTo(0,y+r*.07); ctx.lineTo(-r*.05,y); ctx.closePath(); ctx.fill();
+  },
+
+  eye(e,x,ey,r,s,mood){   // まおうの目：金の ひとみ・半分とじた まぶた・はねた アイライン
+    ctx.fillStyle='#ffffff'; ctx.beginPath(); ctx.ellipse(x,ey,r*.14,r*.12,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#ffd84d'; circle(x+s*r*.02,ey+r*.02,r*.08); ctx.fill(); ctx.fillStyle='#2b2140'; circle(x+s*r*.02,ey+r*.02,r*.04); ctx.fill();
+    ctx.fillStyle='#2a1a3a'; ctx.beginPath(); ctx.ellipse(x,ey,r*.15,r*.13,0,Math.PI,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#2b2140'; ctx.lineWidth=Math.max(1,r*.04); ctx.beginPath(); ctx.moveTo(x-s*r*.15,ey); ctx.lineTo(x+s*r*.15,ey); ctx.lineTo(x+s*r*.25,ey-r*.08); ctx.stroke();
+    return true},
+  front(e,r,ey,t,P){   // くちばし（くろ・金の すじ）。弾を はね返すと 光る
+    ctx.fillStyle='#2a1a3a'; ctx.strokeStyle=P.ink; ctx.lineWidth=Math.max(.8,r*.03); ctx.beginPath(); ctx.moveTo(-r*.09,ey+r*.12); ctx.quadraticCurveTo(0,ey+r*.08,r*.09,ey+r*.12); ctx.lineTo(0,ey+r*.32); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='rgba(255,216,77,.7)'; ctx.lineWidth=Math.max(.6,r*.015); ctx.beginPath(); ctx.moveTo(-r*.04,ey+r*.14); ctx.lineTo(0,ey+r*.26); ctx.stroke();
+    if(e.ting>0) glowIn('#bff8ff',0,-r*.6,r*1.8,.4*e.ting/.15,P.ga);
+  },
+  mouth(){},
+  top(e,r,t,P){   // 金の かんむりと クジャクの とさか（3本）
+    const y=-r*1.0;
+    for(const [x,a] of [[-.14,-.35],[0,0],[.14,.35]]){ctx.save();ctx.translate(x*r,y-r*.16);ctx.rotate(a+Math.sin(t*3+x*9)*.06);
+      ctx.strokeStyle='#2a1a3a';ctx.lineWidth=Math.max(.8,r*.025);ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(0,-r*.32);ctx.stroke();
+      ctx.fillStyle='#3ee8d0';ctx.beginPath();ctx.ellipse(0,-r*.36,r*.06,r*.08,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#ffd84d';circle(0,-r*.36,r*.03);ctx.fill();ctx.restore()}
+    ctx.fillStyle='#ffd84d'; ctx.strokeStyle='#8a6010'; ctx.lineWidth=Math.max(.8,r*.025);
+    ctx.beginPath(); ctx.moveTo(-r*.26,y+r*.06); ctx.lineTo(-r*.28,y-r*.16); ctx.lineTo(-r*.14,y-r*.04); ctx.lineTo(0,y-r*.22); ctx.lineTo(r*.14,y-r*.04); ctx.lineTo(r*.28,y-r*.16); ctx.lineTo(r*.26,y+r*.06); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#b6ff3d'; circle(0,y-r*.02,r*.045); ctx.fill(); ctx.fillStyle='#ff5ab0'; for(const s of [-1,1]){circle(s*r*.16,y,r*.03);ctx.fill()}
+  },
+  pose(e,P){if(e.dying)return;if(e.fanUp>0){const k=Math.min(1,(KUJAKU.aim-e.fanUp)/KUJAKU.aim);P.sx*=1+.06*k;P.sy*=1+.04*k}else if(e.fan>0)P.rot*=.4},
 });
 
 
