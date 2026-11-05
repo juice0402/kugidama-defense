@@ -426,7 +426,7 @@ const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,
 const SAVE_KEY='kugidama-save-v1';
 const NEW_UNLOCKED=()=>({basic:true,fire:false,ice:false,bolt:false,poison:false,long:false});
 
-const G={fx:[],fruits:[],msp:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
+const G={fx:[],fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:{bumper:false,spinner:false},cleared:[],owned:{...START_OWNED},
   pegs:[],walls:[],pockets:[],mills:[],lcd:null,heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -471,6 +471,8 @@ const sfx={
   warp(){tone(500,.22,'sine',.03,3)},
   kill(){tone(420,.12,'square',.03,2.2)},
   hurt(){tone(160,.35,'sawtooth',.05,.4)},
+  gate(){const n=performance.now();if(n-(sfx._g||0)<120)return;sfx._g=n;tone(180,.3,'sine',.018,2.6)},
+  pop(){const n=performance.now();if(n-(sfx._p||0)<60)return;sfx._p=n;tone(330,.1,'triangle',.04,2.4)},
   lv(){seq([660,880,1100],60,.09,.03)},
   build(){tone(300,.14,'triangle',.05,2.5)},
   wave(){seq([392,587],120,.18,.035)},
@@ -546,7 +548,7 @@ function setupStage(){
   G.mills=L.mills.map(m=>({...m,ang:0,spin:2.2}));
   G.lcd=L.lcd; G.frame=L.frame||null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
-  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];
+  G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.pend=[];G.portals=[];G.fw=[];G.conf=[];
   G.life=G.lifeShow=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
@@ -891,21 +893,30 @@ function inArch(x,y,r){
   if(y<CY){const R=RI-r-4,d=CY-y,m=d<R?Math.sqrt(R*R-d*d):0;x=Math.max(CX-m,Math.min(CX+m,x))}
   return x;
 }
+// 敵は台の中（内レールの内がわ）の上の方に出る。ボスはHPバーが台の上に出る高さから。
+// まず その色の光の出口がうずを巻いてひらき、少しして中から ぽんと飛び出す（14回目）
 function spawn(t,at){
-  const E=ENEMIES[t], mul=E.boss?1+.45*G.stage:1+.45*G.stage+HP_GROW*(G.wave-1);
-  // 敵は台の中（内レールの内がわ）の上の方に、ぽんとあらわれる。ボスはHPバーが台の上に出る高さから
+  const E=ENEMIES[t];
   const r=E.r*G.bscale, R=RI-r-4;
   let x,y;
   if(at){x=at.x+(Math.random()-.5)*at.r*2.2;y=at.y+at.r*.4}
   else{x=E.boss?188+(Math.random()-.5)*36:CX+(Math.random()*2-1)*R*.84;y=CY-Math.sqrt(R*R-(x-CX)**2);if(E.boss)y=Math.max(y,20+r*1.62)}
   x=inArch(x,y,r);
-  G.en.push({id:G.eid++,t,x,y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r,ph:Math.random()*6.28,slow:0,flash:0,dead:false,callT:E.call||0,born:0});
-  G.rings.push({x,y,R:r*1.9,c:hexA(E.color,.8),t:.35});
+  const d=at?.3:E.boss?.75:.45;
+  G.pend.push({t,x,y,d});
+  G.portals.push({x,y,r,c:E.color,age:0,open:d,dur:d+.5,boss:!!E.boss});
   if(E.boss){
-    G.shake=.5; burst(x,y+20,E.color,30); sfx.hurt();
+    G.shake=.3; sfx.hurt();
     banner(E.boss===2?'ボス出現！':'中ボス出現！',E.color,2,230);
     G.alarm=2.6; G.alarmC=E.color;            // 台のまわりが警告の色で点滅
-  }
+  }else if(!at) sfx.gate();
+}
+function popOut(p){
+  const t=p.t, E=ENEMIES[t], mul=E.boss?1+.45*G.stage:1+.45*G.stage+HP_GROW*(G.wave-1), r=E.r*G.bscale, x=p.x, y=p.y;
+  G.en.push({id:G.eid++,t,x,y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r,ph:Math.random()*6.28,slow:0,flash:.12,dead:false,callT:E.call||0,born:0});
+  G.rings.push({x,y,R:r*2.7,c:hexA(E.color,.9),t:.45},{x,y,R:r*1.7,c:'rgba(255,255,255,.85)',t:.3});
+  burst(x,y,E.color,E.boss?30:9); sfx.pop();
+  if(E.boss){G.shake=.6;G.flash=Math.max(G.flash,.22)}
 }
 
 /* ---------- 遊びの中身 ---------- */
@@ -1322,6 +1333,8 @@ function update(dt){
   G.launchFx=Math.max(0,G.launchFx-dt);
   // 敵が出る
   if(G.spawnQ.length){G.spawnT-=dt;if(G.spawnT<=0){spawn(G.spawnQ.shift());G.spawnT=G.spawnGap||1}}
+  for(const p of G.pend){p.d-=dt;if(p.d<=0)popOut(p)}
+  G.pend=G.pend.filter(p=>p.d>0);
   // 敵が進む
   for(const e of G.en){
     if(e.dead) continue;
@@ -1391,7 +1404,7 @@ function update(dt){
   G.shake=Math.max(0,G.shake-dt); G.flash=Math.max(0,G.flash-dt);
   if(G.life<=0){G.life=0;gameOver();return}
   // ウェーブの区切り
-  const cleared=!G.spawnQ.length&&!G.en.length;
+  const cleared=!G.spawnQ.length&&!G.en.length&&!G.pend.length;
   if(G.wave>=WAVES){if(cleared){stageClear();return}}
   else{
     G.waveT-=dt;
@@ -1409,6 +1422,7 @@ function updateFx(dt){
   for(const b of G.banners) b.t+=dt;
   for(const z of G.zaps) z.t-=dt; G.zaps=G.zaps.filter(z=>z.t>0);
   for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
+  for(const p of G.portals) p.age+=dt; G.portals=G.portals.filter(p=>p.age<p.dur);
   G.lifeShow+=(Math.max(0,G.life)-G.lifeShow)*Math.min(1,dt*(G.time-(G.trayHurtAt??-9)<.35?1:5));   // 白い所は少し待ってから追いかける
   updateFxParts(dt);
   G.banners=G.banners.filter(b=>b.t<b.dur);
@@ -1449,14 +1463,63 @@ function marginPt(){const V=view();for(let k=0;k<6;k++){const x=V.x0+Math.random
 function updateMargin(dt){
   const f=dt*60;
   G.alarm=Math.max(0,G.alarm-dt); G.cheer=Math.max(0,G.cheer-dt);
-  const mode=marginMode(), rate=mode==='fever'?36:mode==='clear'?28:mode==='alarm'?22:0;
-  for(let n=fxN(rate,dt);n>0&&G.msp.length<160;n--){
+  const mode=marginMode(), rate={fever:64,clear:54,alarm:44,cheer:30,boss:9,pinch:7}[mode]||0;
+  // きらきら・火の粉
+  for(let n=fxN(rate,dt);n>0&&G.msp.length<280;n--){
     const p=marginPt(); if(!p) continue;
-    const c=mode==='fever'?RAINBOW[Math.random()*6|0]:mode==='clear'?(Math.random()<.5?GOLD:'#fff7d0'):G.alarmC;
-    G.msp.push({x:p[0],y:p[1],vx:(Math.random()-.5)*.3,vy:mode==='alarm'?-.7-Math.random()*.4:-.2-Math.random()*.3,c,t:.9,ph:Math.random()*6});
+    const c=mode==='fever'?RAINBOW[Math.random()*6|0]:mode==='clear'?(Math.random()<.5?GOLD:'#fff7d0'):mode==='cheer'?G.cheerC:mode==='boss'?G.bossC:mode==='pinch'?'#ff4f5e':G.alarmC;
+    const up=mode==='alarm'||mode==='boss'||mode==='pinch';
+    G.msp.push({x:p[0],y:p[1],vx:(Math.random()-.5)*.3,vy:up?-.7-Math.random()*.5:-.2-Math.random()*.3,c,t:.9,ph:Math.random()*6,big:Math.random()<.25});
   }
   for(const q of G.msp){q.x+=q.vx*f;q.y+=q.vy*f;q.t-=dt}
   G.msp=G.msp.filter(q=>q.t>0);
+  // 花火と紙ふぶき（FEVER・クリア）
+  const party=mode==='fever'||mode==='clear';
+  if(party){
+    for(let n=fxN(mode==='clear'?2.4:1.7,dt);n>0&&G.fw.length<14;n--){
+      const p=marginPt(); if(!p) continue;
+      const cols=mode==='fever'?[RAINBOW[Math.random()*6|0],RAINBOW[Math.random()*6|0]]:[GOLD,'#fff3b0'];
+      const m=reduce?12:22, sp=1.3+Math.random()*.8, ps=[];
+      for(let i=0;i<m;i++){const a=i/m*Math.PI*2+Math.random()*.2,v=sp*(.75+Math.random()*.35);ps.push({x:p[0],y:p[1],vx:Math.cos(a)*v,vy:Math.sin(a)*v,c:cols[i%2]})}
+      G.fw.push({x:p[0],y:p[1],t:0,dur:1.1,ps});
+    }
+    for(let n=fxN(reduce?8:22,dt);n>0&&G.conf.length<90;n--){
+      const p=marginPt(); if(!p) continue;
+      G.conf.push({x:p[0],y:p[1]-10,vx:(Math.random()-.5)*.6,vy:.5+Math.random()*.5,rot:Math.random()*6,vr:(Math.random()-.5)*.3,w:3+Math.random()*2.5,c:mode==='fever'?RAINBOW[Math.random()*6|0]:(Math.random()<.6?GOLD:'#fff7d0'),t:1.6,ph:Math.random()*6});
+    }
+  }
+  for(const w of G.fw){w.t+=dt;for(const q of w.ps){q.x+=q.vx*f;q.y+=q.vy*f;const d=Math.pow(.96,f);q.vx*=d;q.vy=q.vy*d+.025*f}}
+  G.fw=G.fw.filter(w=>w.t<w.dur);
+  for(const q of G.conf){q.x+=(q.vx+Math.sin(G.time*3+q.ph)*.35)*f;q.y+=q.vy*f;q.rot+=q.vr*f;q.t-=dt}
+  G.conf=G.conf.filter(q=>q.t>0);
+}
+// サーチライト：台のうしろから、四すみの光が ゆれながら交差する（台の中にはかからない）
+function drawBeams(mode,t,V){
+  const cfg={fever:[4,1.6,.24],clear:[4,.9,.22],alarm:[4,2.6,0],boss:[2,.55,.13]}[mode]; if(!cfg) return;
+  const [n,sp,al0]=cfg, len=760;
+  for(let i=0;i<n;i++){
+    const left=i%2===0, top=i>=2;
+    const ox=left?V.x0+4:V.x1-4, oy=top?V.y0-4:V.y1+4;
+    const base=top?(left?Math.PI*.5-.5:Math.PI*.5+.5):(left?-Math.PI*.5+.5:-Math.PI*.5-.5);
+    const a=base+(reduce?0:.42*Math.sin(t*sp+i*1.9)*(left?1:-1));
+    const c=mode==='fever'?RAINBOW[(i*2+Math.floor(t*2))%6]:mode==='clear'?(i%2?GOLD:'#fff3b0'):mode==='alarm'?G.alarmC:G.bossC;
+    const al=mode==='alarm'?(reduce?.16:(Math.floor(t*5)+i)%2?.3:.08):al0, w=.085;
+    const g=ctx.createLinearGradient(ox,oy,ox+Math.cos(a)*len,oy+Math.sin(a)*len);
+    g.addColorStop(0,hexA(c,al)); g.addColorStop(.6,hexA(c,al*.35)); g.addColorStop(1,hexA(c,0));
+    ctx.fillStyle=g; ctx.beginPath(); ctx.moveTo(ox,oy);
+    ctx.lineTo(ox+Math.cos(a-w)*len,oy+Math.sin(a-w)*len); ctx.lineTo(ox+Math.cos(a+w)*len,oy+Math.sin(a+w)*len); ctx.closePath(); ctx.fill();
+    glow(c,ox,oy,22,Math.min(1,al*3));
+  }
+}
+// 警告のしましま（中ボス・ボス出現の間、画面の上と下を流れる）
+function drawStripes(t,V){
+  const h=12, off=reduce?0:(t*60)%24, a=reduce?.35:(Math.floor(t*5)%2?.55:.25);
+  for(const y of [V.y0,V.y1-h]){
+    ctx.save(); ctx.beginPath(); ctx.rect(V.x0,y,V.x1-V.x0,h); ctx.clip();
+    ctx.globalAlpha=a; ctx.fillStyle=G.alarmC;
+    for(let x=V.x0-24+off;x<V.x1+24;x+=24){ctx.beginPath();ctx.moveTo(x,y+h);ctx.lineTo(x+12,y+h);ctx.lineTo(x+24,y);ctx.lineTo(x+12,y);ctx.closePath();ctx.fill()}
+    ctx.restore();
+  }
 }
 // 光のかたまり（四すみ・上・左右の柱・下）の色と明るさ
 function washOf(mode,i,t){
@@ -1484,7 +1547,7 @@ function lampOf(mode,u,i,t){
 }
 function drawMargin(t){
   const mode=marginMode();
-  if(!mode&&!G.msp.length) return;
+  if(!mode&&!G.msp.length&&!G.fw.length&&!G.conf.length) return;
   const V=view();
   ctx.save();
   // 台の中はくりぬく（ふちの木の段から外だけ）
@@ -1493,31 +1556,74 @@ function drawMargin(t){
   ctx.clip('evenodd');
   ctx.globalCompositeOperation='lighter';
   if(mode){
+    drawBeams(mode,t,V);
     const spots=[[V.x0+10,V.y0+12,110],[V.x1-10,V.y0+12,110],[CX,Math.min(-6,V.y0+16),110],[V.x0+4,300,70],[V.x1-4,300,70],[V.x0+4,470,70],[V.x1-4,470,70],[CX,H+Math.max(18,(V.y1-H)*.5),150]];
-    spots.forEach(([x,y,R],i)=>{const [c,a]=washOf(mode,i,t);if(a>.01)glow(c,x,y,R,a)});
+    spots.forEach(([x,y,R],i)=>{const [c,a]=washOf(mode,i,t);if(a>.01)glow(c,x,y,R*1.25,Math.min(1,a*1.3))});
+    if(mode==='alarm') drawStripes(t,V);
     rimPts().forEach((L,i)=>{
       const [c,a]=lampOf(mode,L.u,i,t); if(a<.03) return;
-      glow(c,L.x,L.y,9,Math.min(1,a)); ctx.globalAlpha=Math.min(1,a); ctx.fillStyle=mixW(c,.6); circle(L.x,L.y,1.7); ctx.fill(); ctx.globalAlpha=1;
+      const A=Math.min(1,a*1.15);
+      glow(c,L.x,L.y,12.5,A); ctx.globalAlpha=A; ctx.fillStyle=mixW(c,.6); circle(L.x,L.y,2.4); ctx.fill();
+      ctx.fillStyle='#ffffff'; ctx.globalAlpha=A*.8; circle(L.x,L.y,1.1); ctx.fill(); ctx.globalAlpha=1;
     });
   }
   // 余白のきらきら
   for(const q of G.msp){
-    const a=Math.min(1,q.t*2.5)*(.6+.4*Math.sin(G.time*18+q.ph));
-    glow(q.c,q.x,q.y,7,a*.8);
-    ctx.globalAlpha=a; ctx.strokeStyle=mixW(q.c,.5); ctx.lineWidth=1.1;
-    ctx.beginPath(); ctx.moveTo(q.x-3.5,q.y); ctx.lineTo(q.x+3.5,q.y); ctx.moveTo(q.x,q.y-3.5); ctx.lineTo(q.x,q.y+3.5); ctx.stroke();
+    const a=Math.min(1,q.t*2.5)*(.6+.4*Math.sin(G.time*18+q.ph)), s=q.big?5.5:3.5;
+    glow(q.c,q.x,q.y,q.big?11:7,a*.85);
+    ctx.globalAlpha=a; ctx.strokeStyle=mixW(q.c,.5); ctx.lineWidth=q.big?1.5:1.1;
+    ctx.beginPath(); ctx.moveTo(q.x-s,q.y); ctx.lineTo(q.x+s,q.y); ctx.moveTo(q.x,q.y-s); ctx.lineTo(q.x,q.y+s); ctx.stroke();
     ctx.globalAlpha=1;
+  }
+  // 花火
+  for(const w of G.fw){
+    const p=w.t/w.dur, a=1-p;
+    if(p<.15) glow('#ffffff',w.x,w.y,10+26*(1-p/.15),.8*(1-p/.15));
+    ctx.lineWidth=1.6;
+    for(const q of w.ps){
+      glow(q.c,q.x,q.y,6,a*.9);
+      ctx.globalAlpha=a; ctx.strokeStyle=q.c; ctx.beginPath(); ctx.moveTo(q.x-q.vx*5,q.y-q.vy*5); ctx.lineTo(q.x,q.y); ctx.stroke();
+    }
+    ctx.globalAlpha=1;
+  }
+  // 紙ふぶき
+  for(const q of G.conf){
+    ctx.save(); ctx.globalAlpha=Math.max(0,Math.min(1,q.t*2,(1.6-q.t)*6)); ctx.translate(q.x,q.y); ctx.rotate(q.rot);
+    ctx.scale(1,.2+.8*Math.abs(Math.cos(G.time*6+q.ph))); ctx.fillStyle=q.c; ctx.fillRect(-q.w/2,-q.w*.3,q.w,q.w*.6); ctx.restore();
   }
   ctx.restore();
 }
-// FEVER の虹の枠：四角ではなく、台の形（上はアーチ）にそって
+// 台の形（左下 → 左の柱 → 上のアーチ → 右の柱 → 右下）にそった点。u は 0〜1
+function rimAt(u,r,bottom){
+  const side=bottom-CY, arc=Math.PI*r, L=side*2+arc, s=u*L;
+  if(s<side) return [CX-r,bottom-s];
+  if(s<side+arc){const a=Math.PI+(s-side)/r;return [CX+r*Math.cos(a),CY+r*Math.sin(a)]}
+  return [CX+r,CY+(s-side-arc)];
+}
+// FEVER の虹の枠：台の形にそって。太い虹の光がどくどく脈打ち、白い光の玉が虹の尾を引いて走る（14回目）
 function feverFrame(t,c){
   let st=c;
-  if(ctx.createConicGradient){const g=ctx.createConicGradient(t*2.4,CX,CY+150);RAINBOW.concat(RAINBOW[0]).forEach((col,i)=>g.addColorStop(i/6,col));st=g}
-  const path=()=>{const r=RO+3;ctx.beginPath();ctx.moveTo(CX-r,H-3);ctx.lineTo(CX-r,CY);ctx.arc(CX,CY,r,Math.PI,Math.PI*2);ctx.lineTo(CX+r,H-3);ctx.closePath()};
-  ctx.save(); ctx.lineJoin='round'; ctx.strokeStyle=st;
-  ctx.globalAlpha=.35; ctx.lineWidth=10; path(); ctx.stroke();
-  ctx.globalAlpha=1; ctx.lineWidth=3.5; path(); ctx.stroke();
+  if(ctx.createConicGradient){const g=ctx.createConicGradient(t*3.2,CX,CY+150);RAINBOW.concat(RAINBOW[0]).forEach((col,i)=>g.addColorStop(i/6,col));st=g}
+  const B=H+2, path=r=>{ctx.beginPath();ctx.moveTo(CX-r,B);ctx.lineTo(CX-r,CY);ctx.arc(CX,CY,r,Math.PI,Math.PI*2);ctx.lineTo(CX+r,B);ctx.closePath()};
+  const pulse=reduce?1:1+.22*Math.sin(t*9);
+  ctx.save(); ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle=st;
+  ctx.globalCompositeOperation='lighter';
+  ctx.globalAlpha=.16; ctx.lineWidth=30*pulse; path(RO+6); ctx.stroke();
+  ctx.globalAlpha=.3; ctx.lineWidth=17*pulse; path(RO+5); ctx.stroke();
+  ctx.globalAlpha=.75; ctx.lineWidth=9; path(RO+4); ctx.stroke();
+  ctx.globalCompositeOperation='source-over';
+  ctx.globalAlpha=1; ctx.lineWidth=5; path(RO+4); ctx.stroke();
+  ctx.lineWidth=1.6; ctx.strokeStyle='rgba(255,255,255,.85)'; path(RO+4); ctx.stroke();
+  // 走る光の玉（4つ）
+  ctx.globalCompositeOperation='lighter';
+  for(let k=0;k<4;k++){
+    const u0=reduce?k/4+.125:(t*.42+k/4)%1;
+    for(let j=0;j<7;j++){
+      const u=u0-j*.007; if(u<0) continue;
+      const [x,y]=rimAt(u,RO+4,B);
+      glow(j?RAINBOW[(k+j)%6]:'#ffffff',x,y,(j?11:18)*(1-j*.1),1-j*.13);
+    }
+  }
   ctx.restore();
 }
 
@@ -1699,12 +1805,40 @@ function drawTray(){
   heartPath(hx,TRAY_Y,7*beat); ctx.fillStyle='#ff4f6d'; ctx.fill();
   ctx.strokeStyle='rgba(0,0,0,.45)'; ctx.lineWidth=1; ctx.stroke();
 }
-// あらわれるときは、小さい所からぽんとふくらむ
+// 敵の出口：その色の光が うずを巻いてひらき、光の粒が吸いこまれる。敵が出たら しぼんで消える
+function drawPortals(t){
+  if(!G.portals.length) return;
+  ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.lineCap='round';
+  for(const p of G.portals){
+    const o=Math.min(1,p.age/p.open), out=Math.max(0,p.age-p.open)/(p.dur-p.open);
+    const a=out>0?1-out:.35+.65*o, eo=1-Math.pow(1-o,3);
+    const R=p.r*(p.boss?1.5:1.25)*(.4+.9*eo)*(1+out*.5), rot=reduce?0:p.age*5;
+    glow(p.c,p.x,p.y,R*2.1,.65*a);
+    glow('#ffffff',p.x,p.y,R*.9,(out>0?.6:.3*o)*a);
+    ctx.save(); ctx.translate(p.x,p.y);
+    ctx.globalAlpha=a; ctx.strokeStyle=mixW(p.c,.35); ctx.lineWidth=p.boss?3:2.2;
+    ctx.rotate(rot); ctx.setLineDash([R*.55,R*.3]); ctx.beginPath(); ctx.arc(0,0,R,0,Math.PI*2); ctx.stroke();
+    ctx.rotate(-rot*2.6); ctx.strokeStyle=mixW(p.c,.7); ctx.lineWidth=1.4; ctx.setLineDash([R*.25,R*.2]); ctx.beginPath(); ctx.arc(0,0,R*.62,0,Math.PI*2); ctx.stroke();
+    ctx.setLineDash([]);
+    // まわりの光の筋
+    ctx.rotate(rot*1.1); ctx.strokeStyle=mixW(p.c,.5); ctx.lineWidth=1.6;
+    for(let i=0;i<8;i++){const an=i*Math.PI/4;ctx.globalAlpha=a*(.5+.5*Math.sin(p.age*14+i));ctx.beginPath();ctx.moveTo(Math.cos(an)*R*1.12,Math.sin(an)*R*1.12);ctx.lineTo(Math.cos(an)*R*(1.35+.15*o),Math.sin(an)*R*(1.35+.15*o));ctx.stroke()}
+    ctx.restore();
+    // 吸いこまれる光の粒（ひらいている間）
+    if(out===0){
+      ctx.fillStyle=mixW(p.c,.6);
+      for(let i=0;i<10;i++){const k=(p.age*1.7+i/10)%1,an=i*2.4+p.age*4,rr=R*1.9*(1-k);ctx.globalAlpha=a*Math.min(1,k*3)*(1-k*.3);circle(p.x+Math.cos(an)*rr,p.y+Math.sin(an)*rr,1.2+k*1.2);ctx.fill()}
+    }
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+}
+// あらわれるときは、出口から ぽんと飛び出す（大きめにはずんで、少し上へとびはねる）
 function drawEnemy(e){
-  const b=e.born??1;
-  if(b>=.42||reduce){drawEnemyBody(e);return}
-  const p=b/.42, k=1+2.2*Math.pow(p-1,3)+1.2*Math.pow(p-1,2);
-  ctx.save(); ctx.globalAlpha=Math.min(1,p*2.5); ctx.translate(e.x,e.y); ctx.scale(k,k); ctx.translate(-e.x,-e.y);
+  const b=e.born??1, D=.5;
+  if(b>=D||reduce){drawEnemyBody(e);return}
+  const p=b/D, s=2.6, k=1+(s+1)*Math.pow(p-1,3)+s*Math.pow(p-1,2), q=Math.sin(p*Math.PI);
+  ctx.save(); ctx.globalAlpha=Math.min(1,p*3); ctx.translate(e.x,e.y-e.r*.7*q); ctx.scale(k*(1-.14*q),k*(1+.18*q)); ctx.translate(-e.x,-e.y);
   drawEnemyBody(e); ctx.restore();
 }
 function drawEnemyBody(e){
@@ -1838,6 +1972,7 @@ function draw(){
     ctx.globalAlpha=1;
   }
   for(const p of G.pegs) if(p.tower) drawTower(p,t);
+  drawPortals(t);
   for(const e of G.en) drawEnemy(e);
   // タワーの弾
   for(const u of G.bl){ctx.fillStyle=u.c;circle(u.x,u.y,2.8);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.5)';ctx.lineWidth=1;ctx.stroke()}
@@ -2002,7 +2137,7 @@ const TABS={board:['BOARDS','台えらび'],ball:['SHOP','お店・玉'],tower:[
 const SHOP_BALLS=['fire','ice','bolt','poison','lead','bb','heal'], SHOP_TOWERS=['basic','fire','ice','bolt','poison','long'];
 let hubTab='board', toastT=0;
 function openHub(tab){
-  G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; closeSheet(); closeBuy();
+  G.state='hub'; G.fever=0; G.bs=[]; G.bl=[]; G.en=[]; G.pend=[]; G.portals=[]; G.fw=[]; G.conf=[]; closeSheet(); closeBuy();
   writeSave(); hideOverlays(); $('hub').classList.remove('sitting'); $('hub').hidden=false; showTab(tab||hubTab);
 }
 function showTab(tab){
