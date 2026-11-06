@@ -2097,7 +2097,7 @@ function spawn(t,at){
 }
 // 敵をその場に出す（o で中身を上書き）
 function addEnemy(t,x,y,o){
-  const E=ENEMIES[t], S=STAGES[G.stage], hp0=S.hp??1+.45*G.stage, mul=E.boss?hp0*(S.bossHp||1):S.hpW?S.hpW[Math.min(S.hpW.length,G.wave)-1]:hp0+HP_GROW*(G.wave-1)*(S.grow||1), r=E.r*G.bscale;   // hp＝台ごとの敵の強さ、grow＝ウェーブでふえる強さの倍率、bossHp＝中ボス・ボスの強さの倍率、hpW＝ウェーブごとの ざこの強さ（あれば こちら。11/6 草原から）
+  const E=ENEMIES[t], S=STAGES[G.stage], hp0=S.hp??1+.45*G.stage, mul=E.boss?hp0*(S.bossHp||1)*(E.boss===1?S.midHp??1:1):S.hpW?S.hpW[Math.min(S.hpW.length,G.wave)-1]:hp0+HP_GROW*(G.wave-1)*(S.grow||1), r=E.r*G.bscale;   // hp＝台ごとの敵の強さ、grow＝ウェーブでふえる強さの倍率、bossHp＝中ボス・ボスの強さの倍率、hpW＝ウェーブごとの ざこの強さ（あれば こちら。11/6 草原から）、midHp＝中ボスだけの強さの倍率
   const e={id:G.eid++,t,x:inArch(x,y,r),y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r,ph:Math.random()*6.28,slow:0,flash:.12,dead:false,callT:E.call||0,born:0,
     vx:0,ghost:0,trail:[],stun:0,sleep:0,push:0};
   if(E.init) E.init(e);                                       // おばけごとのいたずらの準備

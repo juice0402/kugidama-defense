@@ -14,10 +14,13 @@ function runBoard(i){
   let pick=types.length>1?types.filter(k=>k!=='basic'):types;
   if(opts.towers){const L=opts.towers.filter(k=>G.unlocked[k]&&avail(T.TOWERS[k]));if(L.length)pick=L}   // towers:['holy','tenshi','fire'] … 建てる タワーの ならびを えらぶ（持っている物だけ。なければ ふだんの ならび）
   let n=0,t=0,act=0,lw=0,boss=null,bs=null; const dt=1/60, lives=[];
+  const trk=new Map(), live=[];   // prof：おばけごとに 出た所・いちばん下まで来た所・倒れた時間
+  const prof=()=>{for(const e of G.en){if(e.fake||trk.has(e))continue;const r={e,w:G.wave,y0:e.y,my:e.y,b:T.ENEMIES[e.t].boss||0,t0:t};trk.set(e,r);live.push(r)}
+    for(let i=live.length-1;i>=0;i--){const r=live[i];r.my=Math.max(r.my,r.e.y);if(r.e.dead){r.t1=t;r.kill=r.e.hp<=0;live.splice(i,1)}}};
   while(G.state==='play'&&t<900){
     if(G.wave!==lw){lw=G.wave;lives.push(G.life)}
     {const b=G.en.find(e=>!e.dead&&T.ENEMIES[e.t].boss===2&&!e.fake);if(b){boss=b.hp/b.max;if(bs==null)bs=t}}   // ボスののこりHP・ボスが出た時間
-    T.update(dt); G.time+=dt; t+=dt; act-=dt;
+    if(opts.prof)prof(); T.update(dt); G.time+=dt; t+=dt; act-=dt; if(opts.prof)prof();
     if(act<=0){act=.5;
       const free=order().filter(p=>!p.tower), k=pick[n%pick.length];
       if(free.length&&G.balls>=T.TOWERS[k].cost+10){build(free[0],k);n++}
@@ -25,7 +28,12 @@ function runBoard(i){
         if(gk){const p=G.pegs.find(p=>p.tower&&!p.tower.gm),M=T.GIMMICKS[gk];if(p&&G.balls>=M.cost+30){G.balls-=M.cost;p.tower.gm=gk}}}
     }
   }
-  return {c0,clear:G.state==='clear',wave:G.wave,life:G.life,lives,boss,bt:bs==null?null:Math.round(t-bs)+(G.state==='play'?'+':'')};
+  let pf='';
+  if(opts.prof){const R=[...trk.values()],d=[];   // d＝1〜4ウェーブの ざこが どこまで来たか（出た所0〜受け皿1 の平均）、m＝中ボスを倒すまでの秒（+＝倒せなかった）
+    for(let w=1;w<=4;w++){const A=R.filter(r=>r.w===w&&!r.b);if(!A.length){d.push('-');continue}const y0=Math.min(...A.map(r=>r.y0)),S=A.filter(r=>r.y0<=y0+80);
+      d.push((S.reduce((a,r)=>a+Math.max(0,Math.min(1,(r.my-r.y0)/(580-r.y0))),0)/S.length).toFixed(2))}
+    const M=R.find(r=>r.b===1); pf='#d='+d.join(',')+'#m='+(M?(M.kill?Math.round(M.t1-M.t0):'+'):'-')}
+  return {c0,pf,clear:G.state==='clear',wave:G.wave,life:G.life,lives,boss,bt:bs==null?null:Math.round(t-bs)+(G.state==='play'?'+':'')};
 }
 function shop(){
   const items=[];
@@ -64,7 +72,7 @@ for(let s=opts.from||0;s<=upTo;s++){
   if(!T.stageOpen(s)){res.push('開かない');break}
   if(opts.shop0&&s===opts.from) shop();   // shop0：はじめの1回目の前に お店で買う（その台の品を 持った形で 測る）
   if(opts.deck&&res.length>1) res.push('set:'+G.deck.join(','));
-  for(let k=0;k<tries&&!G.cleared.includes(s);k++){const r=runBoard(T.BOARDS.findIndex(b=>b.stage===s));res.push((r.clear?'C'+r.life:'w'+r.wave+(opts.boss&&r.boss!=null?'('+r.boss.toFixed(2)+')':''))+'@'+r.c0+(opts.bt&&r.bt!=null?'/b'+r.bt:'')+(opts.log?'['+r.lives.join(',')+']':''));shop()}
+  for(let k=0;k<tries&&!G.cleared.includes(s);k++){const r=runBoard(T.BOARDS.findIndex(b=>b.stage===s));res.push((r.clear?'C'+r.life:'w'+r.wave+(opts.boss&&r.boss!=null?'('+r.boss.toFixed(2)+')':''))+'@'+r.c0+(opts.bt&&r.bt!=null?'/b'+r.bt:'')+(opts.log?'['+r.lives.join(',')+']':'')+r.pf);shop()}
   if(!G.cleared.includes(s)) break;
   shop();
 }
