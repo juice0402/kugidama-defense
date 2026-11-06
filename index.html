@@ -1236,25 +1236,25 @@ const ENEMIES={
   kinoko:{gh:1,hp:2.6,sp:.32,r:11,color:'#ff6f7d',reward:5},                  // きのこおばけ（ふつう）：倒すと胞子がとんで、近くの砲台がねむる（玉が当たると起きる）
   kitsune:{gh:1,hp:2,sp:.62,r:9,color:'#ffa64f',reward:5,dodge:.3},           // きつねおばけ（はやい）：ジグザグに走って、砲台の弾をひょいとよける
   hari:{gh:1,hp:9,sp:.22,r:14,color:'#e0a86a',reward:10},                      // はりねずみおばけ（かたい）：玉が当たるとまるまって、しばらく玉が効かない（砲台の弾は効く）
-  kuma:{gh:1,hp:900,sp:.13,r:24,color:'#ffc24f',reward:60,boss:1,call:6,calls:['kinoko','kinoko'],honey:10,tintK:.82},              // 中ボス：はちみつをなめて回復（ツボに玉が当たると落とす）
+  kuma:{gh:1,hp:900,sp:.13,r:24,color:'#ffc24f',reward:60,boss:1,call:8,calls:['kinoko','kinoko'],honey:10,tintK:.82},              // 中ボス：はちみつをなめて回復（ツボに玉が当たると落とす）
   taiboku:{gh:1,hp:1700,sp:.11,r:32,color:'#7ee36a',reward:150,boss:2,call:5,calls:['kinoko','kitsune','hari'],roots:9,ey:.26}, // ボス：根っこで砲台をしばる（玉が当たるとほどける）
   // 洋館のおばけ
   neko:{gh:1,hp:2.4,sp:.32,r:11,color:'#c58bff',reward:4},                    // 黒ねこおばけ（ふつう）：しっぽ2本のねこまた。倒れても1回だけもどってくる（玉が当たると しっぽがとれて、もどれない）
   koumori:{gh:1,hp:2,sp:.55,r:9,color:'#ff6fd8',reward:5},                     // こうもりおばけ（はやい）：天井へ上がって急降下。天井にいる間はねらわれない（玉が当たると落ちてくる）
   yoroi:{gh:1,hp:8,sp:.22,r:14,color:'#a9c8ff',reward:10},                     // よろいのいぬおばけ（かたい）：砲台の弾は半分（玉は全部効く。玉が当たると よろいがずれて、少しの間 全部効く）
-  fukurou:{gh:1,hp:900,sp:.13,r:24,color:'#ffcf6a',reward:60,boss:1,call:6,calls:['neko','neko'],tintK:.82,ey:.16},   // 中ボス：羽ばたきで台の玉をふきとばす（ためている間に玉が当たると止まる）
+  fukurou:{gh:1,hp:900,sp:.13,r:24,color:'#ffcf6a',reward:60,boss:1,call:8,calls:['neko','neko'],tintK:.82,ey:.16},   // 中ボス：羽ばたきで台の玉をふきとばす（ためている間に玉が当たると止まる）
   ookami:{gh:1,hp:1700,sp:.16,r:32,color:'#7fb2ff',reward:150,boss:2,call:5,calls:['neko','koumori','yoroi'],ey:.22},     // ボス：遠ぼえで まわりのおばけが速くなる（玉が当たると止まる）。洋館は足止めが多いので ほかのボスより少し速い
   // 砂漠のおばけ
   mia:{gh:1,hp:2.4,sp:.32,r:11,color:'#ffb062',reward:4},                       // ミーアキャットおばけ（ふつう）：ときどき すなにもぐる。もぐっている間は ねらわれない（玉が当たると出てくる）
   tokage:{gh:1,hp:2,sp:.55,r:9,color:'#5fe8a8',reward:5},                        // トカゲおばけ（はやい）：ダメージを受けると しっぽを切ってダッシュ（玉が当たると しっぽ切りができなくなる）
   rakuda:{gh:1,hp:8.5,sp:.22,r:14,color:'#e8b878',reward:10},                    // らくだおばけ（かたい）：HPが減ると こぶの水で1回回復（玉が当たると こぶの水がこぼれる）
-  sasori:{gh:1,hp:900,sp:.13,r:24,color:'#ff7a5a',reward:60,boss:1,call:6,calls:['mia','mia'],tintK:.82,ey:.16},   // 中ボス：しっぽで砲台を刺して しばらく撃てなくする（ふりあげている間に玉が当たると止まる・刺された砲台は玉でなおる）
+  sasori:{gh:1,hp:900,sp:.13,r:24,color:'#ff7a5a',reward:60,boss:1,call:8,calls:['mia','mia'],tintK:.82,ey:.16},   // 中ボス：しっぽで砲台を刺して しばらく撃てなくする（ふりあげている間に玉が当たると止まる・刺された砲台は玉でなおる）
   sphinx:{gh:1,hp:1700,sp:.15,r:32,color:'#ffd24a',reward:150,boss:2,call:5,calls:['mia','tokage','rakuda'],ey:.16},   // ボス：すなのたてで 砲台の弾などを少しふせぐ（玉が当たると たてがくずれる）
   // 雪山のおばけ
   okojo:{gh:1,hp:2.4,sp:.32,r:11,color:'#dff0ff',reward:4},                     // オコジョおばけ（ふつう）：白くて雪にまぎれる。遠くの砲台からは ねらわれない（玉が当たると しばらく見つかる）
   penguin:{gh:1,hp:2,sp:.46,r:9,color:'#5fb8ff',reward:5},                      // ペンギンおばけ（はやい）：ときどき おなかで すべって速くなる（すべっている間に玉が当たると ころんで止まる）
   tonakai:{gh:1,hp:8.5,sp:.22,r:14,color:'#ff9a7a',reward:10},                  // トナカイおばけ（かたい）：氷のよろいで 砲台の弾などが へる（玉が当たると ひび・3つで割れる。やけどで とける）
-  seiuchi:{gh:1,hp:900,sp:.13,r:24,color:'#a8b8ff',reward:60,boss:1,call:6,calls:['okojo','okojo'],tintK:.82,ey:.16},   // 中ボス：ときどき ねそべって、うしろのおばけを かばう（砲台に ねらわれない。玉が当たると起きる）
+  seiuchi:{gh:1,hp:900,sp:.13,r:24,color:'#a8b8ff',reward:60,boss:1,call:8,calls:['okojo','okojo'],tintK:.82,ey:.16},   // 中ボス：ときどき ねそべって、うしろのおばけを かばう（砲台に ねらわれない。玉が当たると起きる）
   mammoth:{gh:1,hp:1700,sp:.2,r:32,color:'#d49cff',reward:150,boss:2,call:5,calls:['okojo','penguin','tonakai'],ey:.2},  // ボス：鼻で雪玉をつくって 砲台に なげる（こおって撃てない。玉が当たると 雪玉を落とす。砲台は玉で とける）
   // 火山のおばけ
   buta:{gh:1,hp:2.4,sp:.32,r:11,color:'#ff9ac0',reward:4},                      // ブタおばけ（ふつう）：ときどき ほかほか あたたまって回復（火・ようがんで あつい時は はやく・たくさん。玉が当たると しばらく回復しない）
@@ -2262,6 +2262,10 @@ function unbind(p,hit){
   if(hit) sfx.hat();
 }
 Object.assign(STAGES[1],{
+  // 11/6 草原と同じ直し方。直す前は ざこが上ですぐ倒れて（深さ0.1）、中ボス くまが壁（全部の回で まん中89秒・倒せず40/52）→ ざこは ウェーブごとの表で強く（はじめから手ごわく、あとは たいら）、
+  // 中ボスのウェーブの ざこは4割・くまは midHp .4（ボスのHPとかけて 前の1/4ほど）・手下は8秒ごと、ボスのHP .8→.5（ざこの表で手下も強くなるので）
+  // 自動プレイ（from・30回）：1回目は26回失敗（10ウェーブ）・クリアまで まん中4回目（1〜10回目）・ざこの深さ0.14〜0.24・くまは まん中47秒・ボス戦 まん中107秒
+  hpW:[7,11,15,17.5,18,18,18.5,18.5,19,19], bossN:.4, midHp:.4, bossHp:.5,
   build:buildForest,
   setup(L){G.sx.bigs=(L.bigs||[]).map(o=>({...o}));G.sx.mush=(L.mush||[]).map((m,i)=>({...m,r:MUSH.r,cd:.5+i*.4,puff:0,bop:0}))},
   tick(dt){for(const m of G.sx.mush){m.cd=Math.max(0,m.cd-dt);m.puff=Math.max(0,m.puff-dt);m.bop=Math.max(0,m.bop-dt)}},
@@ -4022,6 +4026,10 @@ function drawCandles(t){
   }
 }
 Object.assign(STAGES[2],{
+  // 11/6 草原と同じ直し方。直す前は ざこが上で倒れて（深さ0.11〜0.14）、中ボス ふくろうが長い（全部の回で まん中108秒）→ ざこは ウェーブごとの表で強く（はじめから手ごわく、あとは たいら）、
+  // 中ボスのウェーブの ざこは4割・ふくろうは midHp .38（ボスのHPとかけて 前の1/4ほど）・手下は8秒ごと、ボスのHP .7→.45（ざこの表で手下も強くなるので）
+  // 自動プレイ（from・30回）：1回目は30回とも失敗（ほぼ10ウェーブ）・クリアまで まん中3回目（2〜10回目）・ざこの深さ0.18〜0.27・ふくろうは まん中48秒・ボス戦 まん中96秒
+  hpW:[13.5,21,29.5,34.5,36,37,38,39,40,40], bossN:.4, midHp:.38, bossHp:.45,
   build:buildMansion,
   setup(L){G.sx.candles=(L.candles||[]).map((c,i)=>({...c,r:CANDLE.r,lit:0,cd:.3+i*.2,pop:0,bop:0}))},
   tick(dt){stepCandles(dt)},
@@ -4631,6 +4639,10 @@ function drawTwister(t){
   drawFunnel(w.x,TWISTER.y+10,TWISTER.w*1.75*(1+.15*k),TWISTER.top+12,t,.8+.2*k,'#7dffd0',sway);
 }
 Object.assign(STAGES[3],{
+  // 11/6 草原と同じ直し方。直す前は ざこが上で倒れて（深さ0.14〜0.16）、中ボス さそりが長い（全部の回で まん中109秒・倒せず14/32）→ ざこは ウェーブごとの表で強く（はじめから手ごわく、あとは ゆるやかに）、
+  // 中ボスのウェーブの ざこは4割・さそりは midHp .32（ボスのHPとかけて 前の1/4ほど）・手下は8秒ごと、ボスのHP 1.1→.75（ざこの表で手下も強くなるので）
+  // 自動プレイ（from・30回）：1回目は29回失敗（10ウェーブ）・クリアまで まん中4〜5回目（10回でクリアできないのは2回）・ざこの深さ0.19〜0.21・さそりは まん中51秒・ボス戦 まん中118秒
+  hpW:[6,9.5,13.5,17.5,20,22,23.5,24.5,25.5,26], bossN:.4, midHp:.32, bossHp:.75,
   build:buildDesert,
   setup(){G.sx.tw={x:(TWISTER.x0+TWISTER.x1)/2,dir:Math.random()<.5?-1:1,pulse:0}},
   tick(dt,f){stepTwister(dt,f)},
@@ -5335,6 +5347,10 @@ function drawCover(t){
   }
 }
 Object.assign(STAGES[4],{
+  // 11/6 草原と同じ直し方。雪山は ざこの深さは前から0.2ほどあったが、中ボス セイウチが長い（まん中117秒）→ ざこは ウェーブごとの表で少しだけ強く（はじめの方1.2倍ほど・おわりは前と同じくらい）、
+  // 中ボスのウェーブの ざこは4割・セイウチは midHp .27（前の1/4ほど）・手下は8秒ごと（ボスのHPは そのまま1）
+  // 自動プレイ（from・30回）：1回目は26回失敗（10ウェーブ）・クリアまで まん中3回目（1〜9回目）・ざこの深さ0.20〜0.28・セイウチは まん中56秒・ボス戦 まん中114秒
+  hpW:[5.5,9.5,14,18.5,22,25,27,29,30.5,32], bossN:.4, midHp:.27,
   build:buildSnow,
   setup(){icicleSetup()},
   tick(dt,f){stepIcicles(dt,f)},
