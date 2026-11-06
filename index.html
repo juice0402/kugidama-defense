@@ -245,7 +245,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 @keyframes pop{0%{transform:scale(1.25);box-shadow:0 0 22px var(--neon-c)}100%{transform:none}}
 .tray .lead{text-align:center}
 .empty{padding:18px 14px;border-radius:16px;border:1.5px dashed rgba(255,255,255,.18);text-align:center;color:#a59fc4;font-size:13px;line-height:1.6;display:flex;flex-direction:column;align-items:center;gap:10px}
-.tabs{position:relative;flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));padding-block:6px 8px;padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px));
+.tabs{position:relative;flex:none;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));padding-block:6px 8px;padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px));
   background:linear-gradient(180deg,#120d24,#07050f);border-top:1.5px solid rgba(255,79,216,.55);box-shadow:0 -6px 18px rgba(255,79,216,.18)}
 .tabs button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0 5px;border:0;border-radius:12px;background:none;color:#8f88b0;font:800 11px var(--f-body);cursor:pointer}
 .tabs svg{width:25px;height:25px;display:block}
@@ -269,6 +269,28 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .nbtn.gold{border:0;background:linear-gradient(180deg,#fff0a6,#ffc21f);color:#2a1800;box-shadow:0 4px 0 #a86f00,0 0 16px rgba(255,216,74,.45);display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .nbtn.danger{border:0;background:linear-gradient(180deg,#ff9aa8,#ff3b5c);color:#fff;box-shadow:0 4px 0 #9e1730,0 0 16px rgba(255,59,92,.45)}
 .resetbtn{display:block;margin:26px auto 4px;padding:8px 14px;border:0;background:transparent;color:#8e86b3;font:700 12px var(--f-body);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.tabs button{position:relative}
+.tbadge{position:absolute;top:1px;left:calc(50% + 6px);min-width:17px;height:17px;padding:0 4px;border-radius:99px;background:#ff3b8a;color:#fff;font:800 10px/17px var(--f-body);font-style:normal;box-shadow:0 0 8px rgba(255,59,138,.7)}
+.zseg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.zseg button{position:relative;padding:9px 0;border-radius:12px;border:1.5px solid #3d355e;background:rgba(21,16,43,.8);color:#a59fc4;font:800 13px var(--f-body);cursor:pointer}
+.zseg button.on{border-color:var(--neon-p);color:#fff;box-shadow:0 0 10px rgba(255,79,216,.4),inset 0 0 10px rgba(255,79,216,.18)}
+.tdot{position:absolute;top:5px;right:8px;width:7px;height:7px;border-radius:50%;background:#ff3b8a;box-shadow:0 0 6px #ff3b8a}
+.zprog{display:flex;align-items:center;gap:10px;font:800 13px var(--f-body);color:#d8d2f0} .zprog b{color:#ffe07a;font-size:17px;margin-right:-6px}
+.zprog .bar{flex:1;height:7px;border-radius:99px;background:#241d42;overflow:hidden} .zprog .bar i{display:block;height:100%;background:linear-gradient(90deg,#ff4fd8,#ffe07a);box-shadow:0 0 8px #ff4fd8}
+.zh{font:800 14px var(--f-body);color:#fff;margin:6px 0 -4px;text-shadow:0 0 8px var(--c)} .zh small{font-size:11px;color:#a59fc4;margin-left:4px;text-shadow:none}
+.zlist{gap:8px}
+.zrow{--c:#ff4fd8;display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--c) 50%,#2a2448);background:color-mix(in srgb,var(--c) 9%,#120e26)}
+.zrow>img{width:48px;height:48px;flex:none}
+.zrow .nm{font:800 14px var(--f-body);color:#fff;text-shadow:0 0 6px var(--c)}
+.zrow .ds{margin-top:2px;font-size:12px;line-height:1.5;color:#b8b2d6}
+.zrow.lock{opacity:.6} .zrow.lock>img{filter:brightness(0) drop-shadow(0 0 3px rgba(255,255,255,.35))} .zrow.lock .nm{text-shadow:none;color:#8f88b0}
+.zw{flex-direction:column;align-items:stretch;gap:4px}
+.zpair{display:flex;align-items:center;gap:5px} .zpair b{color:#a59fc4;font-size:12px} .zpair .tg{padding:1px 8px 2px;font-size:10px}
+.znew{margin-left:auto;padding:1px 7px;border-radius:99px;background:#ffe07a;color:#2a1800;font:800 10px var(--f-body)}
+.tg[data-d]{cursor:pointer} .tg.sel{background:color-mix(in srgb,var(--c) 45%,transparent)}
+.tgd{margin-top:6px;padding:8px 10px;border-radius:10px;border:1px solid color-mix(in srgb,var(--c) 60%,transparent);background:color-mix(in srgb,var(--c) 12%,#120e26);font-size:12px;line-height:1.55;color:#ddd8f2}
+.tgd b{display:block;color:#fff;font-size:13px;margin-bottom:1px}
+.tgh{margin-top:4px;font-size:11px}
 .testchip{position:absolute;z-index:3;top:calc(100% - 4px);right:max(16px,env(safe-area-inset-right,0px));padding:3px 10px;border-radius:99px;border:1.5px dashed #6bffb0;background:#06140d;color:#bfffd9;font:800 11px var(--f-body);cursor:pointer;box-shadow:0 0 10px rgba(107,255,176,.35)}
 .test-coins{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-top:6px}
 .test-coins .nbtn{padding:11px 4px;font-size:14px;color:#ffe07a;border-color:#6b5a1e}
@@ -345,6 +367,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
       <button data-tab="tower" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><circle cx="11" cy="14" r="6"/><rect x="8" y="11" width="6" height="6" rx="1.5"/><path d="M14 13l6.5-6.5" stroke-width="2.6" stroke-linecap="round"/></svg>タワー</button>
       <button data-tab="gimmick" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/><circle cx="12" cy="3" r=".9" fill="currentColor"/><circle cx="21" cy="12" r=".9" fill="currentColor"/></svg>ギミック</button>
       <button data-tab="set" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="4" cy="12" r="2.4"/><circle cx="9.3" cy="12" r="2.4"/><circle cx="14.7" cy="12" r="2.4"/><circle cx="20" cy="12" r="2.4"/><path d="M2 16.5h20" stroke-linecap="round"/></svg>セット</button>
+      <button data-tab="zukan" role="tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M12.5 7.2l1 2 2.2.3-1.6 1.5.4 2.2-2-1.1-2 1.1.4-2.2-1.6-1.5 2.2-.3z" fill="currentColor" stroke-width="1"/></svg>図鑑<i class="tbadge" id="zBadge" hidden></i></button>
     </nav>
     <div class="toast" id="toast" role="status" hidden></div>
     <div class="buysheet" id="testSheet" hidden>
@@ -1389,7 +1412,7 @@ function stageOpen(s){const B=BOARDS.find(b=>b.stage===s);return !B||boardState(
 const avail=D=>!D.board||stageOpen(D.board);
 
 // G.sx＝その台だけのもの（木の実・きのこなど。台に入るたびに空にして STAGES[i].setup で入れる）、G.obs＝台の上の小物（OBJK）
-const G={fx:[],obs:[],sx:{},poofs:[],fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:NEW_GIMMICKS(),cleared:[],bought:[],owned:{...START_OWNED},
+const G={waves:[],cfl:null,found:new Set(),fresh:new Set(),fx:[],obs:[],sx:{},poofs:[],fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:NEW_GIMMICKS(),cleared:[],bought:[],owned:{...START_OWNED},
   pegs:[],walls:[],heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
   fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
@@ -1439,6 +1462,10 @@ const sfx={
   gate(){const n=performance.now();if(n-(sfx._g||0)<120)return;sfx._g=n;tone(180,.3,'sine',.018,2.6)},
   pop(){const n=performance.now();if(n-(sfx._p||0)<60)return;sfx._p=n;tone(330,.1,'triangle',.04,2.4)},
   lv(){seq([660,880,1100],60,.09,.03)},
+  buff(){const n=performance.now();if(n-(sfx._bf||0)<90)return;sfx._bf=n;tone(988,.1,'sine',.035,1.5);setTimeout(()=>tone(1480,.09,'sine',.022,1.25),45)},   // 玉で砲台がパワーアップ
+  spk(){const n=performance.now();if(n-(sfx._sk||0)<140)return;sfx._sk=n;tone(130,.32,'sine',.07,.5);seq([523,784,1047,1568],50,.13,.032)},   // とくしゅ効果
+  combo(){const n=performance.now();if(n-(sfx._cb||0)<160)return;sfx._cb=n;tone(98,.55,'triangle',.08,.55);seq([659,988,1319,1976],55,.16,.036);setTimeout(()=>tone(2637,.4,'sine',.02,1.3),230)},   // わざ
+  zing(){const n=performance.now();if(n-(sfx._z||0)<170)return;sfx._z=n;tone(1760,.07,'sine',.014,1.6)},   // わざ・とくしゅ効果が敵に効いた
   build(){tone(300,.14,'triangle',.05,2.5)},
   wave(){seq([392,587],120,.18,.035)},
   fever(){seq([523,659,784,1047,784,1047,1319],90,.14,.04)},
@@ -1618,7 +1645,7 @@ function layoutHeaven(){return {P:WING_P.map(p=>p.slice()),pegR:11,heso:{x:188,y
 
 /* ---------- 台を作る ---------- */
 // 台の上で動いているものを空にする（台に入るとき・ロビーにもどるとき）
-function clearPlay(){G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.rings=[];G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.poofs=[];G.obs=[];G.zones=[]}
+function clearPlay(){G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.rings=[];G.waves=[];G.cfl=null;G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.poofs=[];G.obs=[];G.zones=[]}
 function setupStage(){
   const S=STAGES[G.stage], L=S.layout(), pr=L.pegR||4;
   G.pegs=[]; let id=0;
@@ -2495,27 +2522,27 @@ function towerHit(p,b){
   for(const k in TLOCK) if(T[k]>0) TLOCK[k].free(p,true);  // おばけのいたずら（帽子・ねむり・根っこ）は、玉が当たるととける
   T.xp++; T.pop=.3;
   if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,D.color,14);sfx.lv()}
-  if(B.buff==='pow'){if(T.pow<=0)addText(p.x,p.y-16,'攻撃UP',B.color);T.pow=BUFF_T}
-  if(B.buff==='rapid'){if(T.rapid<=0)addText(p.x,p.y-16,'連射UP',B.color);T.rapid=BUFF_T}
+  if(B.buff==='pow'){if(T.pow<=0)addText(p.x,p.y-16,'攻撃UP',B.color);T.pow=BUFF_T;fxBuff(p,B.color)}
+  if(B.buff==='rapid'){if(T.rapid<=0)addText(p.x,p.y-16,'連射UP',B.color);T.rapid=BUFF_T;fxBuff(p,B.color)}
   let E=B.el;
   if(!E&&b.inf&&b.infFrom!==p.id){E=effEl(b.inf);b.inf=null}   // ツタで属性が宿った玉：属性弾と同じようにつく
   if(!E) return;
   if(T.comboT>0){
-    if(T.combo.split('+').includes(E)){T.comboT=BUFF_T;return}            // 同じわざの属性ならのばす
+    if(T.combo.split('+').includes(E)){T.comboT=BUFF_T;fxBuff(p,comboOf(T.combo).color);return}            // 同じわざの属性ならのばす
     T.comboT=0;                                                            // ほかの属性なら、わざは終わって出なおし
   }
-  if(T.spT>0&&T.sp===E){T.spT=BUFF_T;return}
+  if(T.spT>0&&T.sp===E){T.spT=BUFF_T;fxBuff(p,spOf(E).color);return}
   const now=curEl(T);
-  if(!now){T.el=E;T.elT=BUFF_T;fxBurst(E,p.x,p.y,8);return}  // ふつう・ロングは、弾に属性がつくだけ（文字は出さず、はじける粒で見せる）
+  if(!now){T.el=E;T.elT=BUFF_T;fxBurst(E,p.x,p.y,8);fxBuff(p,ELEM[E].color);return}  // ふつう・ロングは、弾に属性がつくだけ（文字は出さず、はじける粒で見せる）
   if(now===E){
     // 同じ属性が重なると、とくしゅ効果
     const S=spOf(E); T.sp=E; T.spT=BUFF_T; T.el=E; T.elT=BUFF_T;
-    fxBurst(E,p.x,p.y,18); burst(p.x,p.y,S.color,10); G.rings.push({x:p.x,y:p.y,R:30,c:S.color,t:.5}); sfx.lv();
+    fxBurst(E,p.x,p.y,18); fxSpecial(p.x,p.y,S.color); markFound('sp:'+E);
   }else{
     // ちがう属性が出会うと、わざ
     const k=comboKey(now,E), C=comboOf(k);
     T.combo=k; T.comboT=BUFF_T; T.elT=0; T.spT=0;
-    effFx({combo:k},p.x,p.y,11); burst(p.x,p.y,C.color,10); G.rings.push({x:p.x,y:p.y,R:34,c:C.color,t:.5}); sfx.lv();
+    effFx({combo:k},p.x,p.y,11); fxCombo(p.x,p.y,k); markFound(k);
   }
 }
 function hurtEnemy(e,d,dot){
@@ -2570,9 +2597,27 @@ function comboOf(k){
   return GEN[k]={name:A.name+B.name,color:mixHex(A.color,B.color),tint:{},desc:`${A.tag||A.name}と${B.tag||B.name}を いっしょにつける`,fx(e,dmg){applyEl(e,a,2,dmg);applyEl(e,b,2,dmg)}};
 }
 // とくしゅ効果（同じ属性が重なったとき）
-function applySpecial(e,el,dmg){const S=spOf(el);fxBurst(el,e.x,e.y,S.n||6);S.fx(e,dmg)}
+function applySpecial(e,el,dmg){const S=spOf(el);fxBurst(el,e.x,e.y,S.n||6);hitMark(e,S.color);markFound('sp:'+el);S.fx(e,dmg)}
 // わざ（ちがう属性が出会ったとき）
-function applyCombo(e,k,dmg){const C=comboOf(k);effFx({combo:k},e.x,e.y,C.n||4);C.fx(e,dmg)}
+function applyCombo(e,k,dmg){const C=comboOf(k);effFx({combo:k},e.x,e.y,C.n||4);hitMark(e,C.color);markFound(k);C.fx(e,dmg)}
+// 何が起きたか見てわかるように（しょーくん 11/6「弾やタワーが何してるかわからない」→ 文字は出さず、エフェクトと音を大きく）
+// 衝撃の輪（太く光ってひろがる）・色の光（画面がその色にうっすら光る）
+function shock(x,y,c,R,t,w){G.waves.push({x,y,c,R,t,max:t,w:w||5})}
+function glowFlash(c,a){if(!reduce&&(!G.cfl||G.cfl.t<a))G.cfl={c,t:a}}
+// 玉が砲台に属性・攻撃UP・連射UP をつけた（のばした）
+function fxBuff(p,c){shock(p.x,p.y,c,30,.38,3.5);sfx.buff()}
+// 同じ属性が重なって とくしゅ効果
+function fxSpecial(x,y,c){shock(x,y,c,50,.55,7);shock(x,y,'#ffffff',30,.32,3);burst(x,y,c,18);glowFlash(c,.16);sfx.spk()}
+// ちがう属性が出会って わざ（2つの属性の色の輪が2重に）
+function fxCombo(x,y,k){
+  const [a,b]=comboEls(k), C=comboOf(k);
+  shock(x,y,ELEM[a].color,56,.6,7); shock(x,y,ELEM[b].color,80,.78,6); shock(x,y,'#ffffff',34,.32,3);
+  burst(x,y,ELEM[a].color,14); burst(x,y,ELEM[b].color,14); glowFlash(C.color,.22); G.shake=Math.max(G.shake,.12); sfx.combo();
+}
+// わざ・とくしゅ効果が敵に効いた（砲台の弾などで。小さな輪と音）
+function hitMark(e,c){G.rings.push({x:e.x,y:e.y,R:22,c,t:.32});sfx.zing()}
+// 図鑑：見つけた わざ・とくしゅ効果（キーは 'a+b' と 'sp:a'）。fresh＝まだ図鑑で見ていないもの
+function markFound(k){if(!G.found.has(k)){G.found.add(k);G.fresh.add(k)}}
 // 効き目をつける：eff は {combo}|{sp}|{el,lv}。タワーの弾・音の波・ギミック・新しいタワーは全部これ
 function applyEff(e,f,dmg){if(!f)return;if(f.combo)applyCombo(e,f.combo,dmg);else if(f.sp)applySpecial(e,f.sp,dmg);else applyEl(e,f.el,f.lv||1,dmg)}
 // 敵の今の属性（ELEM の has）
@@ -2584,8 +2629,7 @@ function ballElOnEnemy(e,el,dmg){
   if(other){
     const k=comboKey(other,el), C=comboOf(k);
     applyCombo(e,k,Math.max(1,dmg));
-    effFx({combo:k},e.x,e.y,8);
-    burst(e.x,e.y,C.color,6); G.rings.push({x:e.x,y:e.y,R:26,c:C.color,t:.4}); sfx.lv();
+    effFx({combo:k},e.x,e.y,8); fxCombo(e.x,e.y,k);
   }else applyEl(e,el,1,dmg);
   const D=ELEM[el]; if(D.onBall&&!e.dead) D.onBall(e);
 }
@@ -2904,6 +2948,7 @@ function updateFx(dt){
   for(const b of G.banners) b.t+=dt;
   for(const z of G.zaps) z.t-=dt; G.zaps=G.zaps.filter(z=>z.t>0);
   for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
+  for(const w of G.waves) w.t-=dt; G.waves=G.waves.filter(w=>w.t>0); if(G.cfl){G.cfl.t-=dt;if(G.cfl.t<=0)G.cfl=null}
   for(const p of G.portals) p.age+=dt; G.portals=G.portals.filter(p=>p.age<p.dur);
   for(const q of G.poofs) q.t+=dt; G.poofs=G.poofs.filter(q=>q.t<.5);
   G.lifeShow+=(Math.max(0,G.life)-G.lifeShow)*Math.min(1,dt*(G.time-(G.trayHurtAt??-9)<.35?1:5));   // 白い所は少し待ってから追いかける
@@ -9043,7 +9088,7 @@ const allCleared=()=>BOARDS.every(B=>G.cleared.includes(B.stage));
 function showEnding(done){
   hideOverlays(); closeSheet(); closeBuy();
   if(G.stage!==LAST_STAGE()){G.stage=LAST_STAGE();setupStage()}
-  G.bs=[]; G.bl=[]; G.en=[]; G.obs=[]; G.zones=[]; G.fx=[]; G.parts=[]; G.rings=[]; G.texts=[]; G.banners=[]; G.fever=0;
+  G.bs=[]; G.bl=[]; G.en=[]; G.obs=[]; G.zones=[]; G.fx=[]; G.parts=[]; G.rings=[]; G.waves=[]; G.cfl=null; G.texts=[]; G.banners=[]; G.fever=0;
   const list=[], mk=(t,x,y,r,row)=>{if(!ENEMIES[t])return;const e=addEnemy(t,x,y,{born:1,flash:0,laughT:1e9,callT:1e9,parade:true});G.en.pop();e.r=r;e.row=row;e.y0=y;list.push(e)};
   PARADE.forEach((L,row)=>{const y=[372,438,506][row], r=[16,13.5,11.5][row], gap=Math.min(41,330/L.length);L.forEach((t,i)=>mk(t,188+(i-(L.length-1)/2)*gap,y,r,row))});
   mk('ousama',188,262,30,-1);
@@ -9156,6 +9201,13 @@ function draw(){
   // 雷のとびうつり・わざの輪
   if(G.zaps.length){for(const z of G.zaps){ctx.strokeStyle=z.c||ELEM.bolt.color;ctx.lineWidth=z.thin?1.3:2;ctx.globalAlpha=Math.min(1,z.t*(z.thin?10:6));ctx.beginPath();ctx.moveTo(z.x1,z.y1);const n=4;for(let i=1;i<n;i++){const k=i/n;ctx.lineTo(z.x1+(z.x2-z.x1)*k+(Math.random()-.5)*8,z.y1+(z.y2-z.y1)*k+(Math.random()-.5)*8)}ctx.lineTo(z.x2,z.y2);ctx.stroke()}ctx.globalAlpha=1}
   for(const r of G.rings){ctx.globalAlpha=Math.min(1,r.t*3);ctx.strokeStyle=r.c;ctx.lineWidth=2.5;circle(r.x,r.y,r.R*(1.15-r.t));ctx.stroke()}ctx.globalAlpha=1;
+  // 衝撃の輪（わざ・とくしゅ効果・パワーアップ）：うすい光の円と、光る太い輪
+  if(G.waves.length){ctx.save();ctx.globalCompositeOperation='lighter';
+    for(const w of G.waves){const k=1-w.t/w.max, e=1-(1-k)*(1-k), R=w.R*(.25+.85*e), a=w.t/w.max;
+      const gr=ctx.createRadialGradient(w.x,w.y,R*.2,w.x,w.y,R);gr.addColorStop(0,hexA(w.c,0));gr.addColorStop(.75,hexA(w.c,.16*a));gr.addColorStop(1,hexA(w.c,0));
+      ctx.fillStyle=gr;circle(w.x,w.y,R);ctx.fill();
+      ctx.globalAlpha=Math.min(1,a*1.6);ctx.strokeStyle=w.c;ctx.lineWidth=w.w*a+1;ctx.shadowColor=w.c;ctx.shadowBlur=14;circle(w.x,w.y,R);ctx.stroke();ctx.shadowBlur=0;ctx.globalAlpha=1}
+    ctx.restore()}
   // 火花
   if(!fev){for(const q of G.parts){ctx.globalAlpha=Math.min(1,q.t*2);ctx.fillStyle=q.c;circle(q.x,q.y,2.2);ctx.fill()}ctx.globalAlpha=1}
   else{ctx.globalCompositeOperation='lighter';for(const q of G.parts) glow(q.c,q.x,q.y,5,Math.min(1,q.t*2));ctx.globalCompositeOperation='source-over'}
@@ -9183,6 +9235,7 @@ function draw(){
     const s='FEVER '+Math.ceil(G.fever); ctx.strokeText(s,CX,44); ctx.fillStyle=c; ctx.fillText(s,CX,44);
   }
   if(G.flash>0&&!reduce){ctx.fillStyle=`rgba(255,255,255,${G.flash*.5})`;ctx.fillRect(0,0,W,H)}
+  if(G.cfl&&!reduce){ctx.fillStyle=hexA(G.cfl.c,Math.min(.35,G.cfl.t*1.1));ctx.fillRect(0,0,W,H)}
   // 見出し
   for(const b of G.banners){
     const p=b.t/b.dur, a=p<.15?p/.15:p>.78?(1-p)/.22:1, sc=.8+.2*Math.min(1,p/.15);
@@ -9231,7 +9284,7 @@ function itemRow(color,name,desc,price,enabled,onBuy,owned){
 
 /* ---------- セーブ（台えらび・お店・台のクリアのときに、この端末へ保存） ---------- */
 // 台の中では保存しない。ゲームオーバーのときは、台に入る前の保存にもどる
-function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.balls,deck:G.deck,owned:G.owned,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,bought:G.bought,kills:G.kills}))}catch(_){}}
+function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.balls,deck:G.deck,owned:G.owned,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,bought:G.bought,kills:G.kills,found:[...G.found],fresh:[...G.fresh]}))}catch(_){}}
 function readSave(){
   try{
     const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
@@ -9254,13 +9307,14 @@ function loadSave(){
   G.gimmicks=Object.assign(NEW_GIMMICKS(),s.gimmicks||{}); G.cleared=s.cleared.slice(); G.kills=s.kills|0;
   G.bought=s.bought.slice();
   G.owned={...s.owned}; G.deck=s.deck.slice();
+  G.found=new Set(Array.isArray(s.found)?s.found:[]); G.fresh=new Set(Array.isArray(s.fresh)?s.fresh.filter(k=>G.found.has(k)):[]);
   return true;
 }
 function continueRun(){if(!loadSave()){newRun();return} openHub('board')}
 
 /* ---------- 流れ：タイトル → ロビー（台えらび）→ 台であそぶ → クリアでロビーへ ---------- */
 function newRun(){
-  G.balls=TEST?TEST_COINS:START_COINS; G.deck=START_DECK.slice(); G.owned={...START_OWNED}; G.unlocked=NEW_UNLOCKED(); G.gimmicks=NEW_GIMMICKS(); G.cleared=[]; G.bought=[]; G.kills=0;
+  G.balls=TEST?TEST_COINS:START_COINS; G.deck=START_DECK.slice(); G.owned={...START_OWNED}; G.unlocked=NEW_UNLOCKED(); G.gimmicks=NEW_GIMMICKS(); G.cleared=[]; G.bought=[]; G.kills=0; G.found=new Set(); G.fresh=new Set();
   openHub('board');
 }
 const boardName=b=>b.soon||!STAGES[b.stage]?(b.name||'？？？'):STAGES[b.stage].name;
@@ -9311,7 +9365,7 @@ function fitDeck(deck,owned){
 const inSet=k=>G.deck.filter(x=>x===k).length;
 
 /* ---------- ロビー（夜のゲームセンター）：下のタブで 台・玉・タワー・ギミック・セット ---------- */
-const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',gimmick:'お店・ギミック',set:'玉のセット'};
+const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',gimmick:'お店・ギミック',set:'玉のセット',zukan:'図鑑'};
 const SHOP_BALLS=[], SHOP_TOWERS=[];   // お店のならび（finishHooks で作る）：無属性弾 → 回復弾 → 属性弾。台の品は その台が開いてから
 let hubTab='board', toastT=0;
 function openHub(tab){
@@ -9333,7 +9387,7 @@ function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;t.style.
 function renderTab(){
   setCoins();
   const body=$('hubBody'); body.textContent=''; body.className='hub-body'; hallRO?.disconnect(); hallRO=null;
-  ({board:tabBoard,ball:tabBall,tower:tabTower,gimmick:tabGimmick,set:tabSet})[hubTab](body);
+  ({board:tabBoard,ball:tabBall,tower:tabTower,gimmick:tabGimmick,set:tabSet,zukan:tabZukan})[hubTab](body); zBadge();
 }
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
 function paint(e,color){e.style.setProperty('--c',color);e.style.setProperty('--cg',hexA(color,.36));e.style.setProperty('--cs',hexA(color,.15))}
@@ -9448,6 +9502,51 @@ function tabBall(body){
     g.append(card({row:true,icon:icon('ball',k),color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,price:B.price,tap:()=>openBuy('ball',k)}));
   }
   body.append(g);
+}
+// 図鑑のタブ（11/6）：わざ（とくしゅ効果20・わざ190）・玉・タワー・ギミックの説明。わざは見つけると うまる
+let zSeg='waza';
+function zBadge(){const b=$('zBadge'),n=G.fresh.size;b.hidden=!n;b.textContent=n>99?'99+':n}
+const elOpen=k=>Object.values(BALLS).some(B=>B.el===k&&avail(B))||Object.values(TOWERS).some(D=>D.el===k&&avail(D));
+const stageLabel=b=>STAGES[b]?STAGES[b].name+'の台':'つぎの台';
+function tabZukan(body){
+  const seg=el('div','zseg');
+  for(const [k,t] of [['waza','わざ'],['ball','玉'],['tower','タワー'],['gimmick','ギミック']]){
+    const b=el('button',k===zSeg?'on':'',t); if(k==='waza'&&G.fresh.size) b.append(el('i','tdot'));
+    b.onclick=()=>{sfx.tick();zSeg=k;renderTab()}; seg.append(b);
+  }
+  body.append(seg);
+  if(zSeg==='waza') zWaza(body);
+  else{
+    const L=zSeg==='ball'?['normal',...SHOP_BALLS].map(k=>[k,BALLS[k]]):zSeg==='tower'?SHOP_TOWERS.map(k=>[k,TOWERS[k]]):Object.keys(GIMMICKS).map(k=>[k,GIMMICKS[k]]);
+    const g=el('div','list');
+    for(const [k,D] of L){
+      const ok=avail(D), r=el('div','zrow'+(ok?'':' lock')); paint(r,D.color);
+      r.innerHTML=`<img alt="" src="${icon(zSeg,k)}"><div><div class="nm">${ok?D.name:'？？？'}</div><div class="ds">${ok?D.desc:stageLabel(D.board)+'で 手に入るよ'}</div></div>`;
+      g.append(r);
+    }
+    body.append(g);
+  }
+}
+function zWaza(body){
+  const all=EL_ORDER.length*(EL_ORDER.length+1)/2;
+  const pr=el('div','zprog'); pr.innerHTML=`見つけた わざ <b>${G.found.size}</b> / ${all}<span class="bar"><i style="width:${G.found.size/all*100}%"></i></span>`;
+  body.append(pr, el('p','lead','砲台に 同じ属性の玉を2回当てると とくしゅ効果、ちがう属性の玉を当てると わざ。属性がついた おばけに ちがう属性の玉を当てても わざが出るよ'));
+  const pill=k=>elOpen(k)?`<span class="tg" style="--c:${ELEM[k].color}">${ELEM[k].tag}</span>`:'<span class="tg" style="--c:#6d6690">？</span>';
+  const fresh=new Set(G.fresh);
+  EL_ORDER.forEach((a,i)=>{
+    const keys=['sp:'+a,...EL_ORDER.slice(i+1).map(b=>comboKey(a,b))];
+    const got=keys.filter(k=>G.found.has(k)).length;
+    const h=el('div','zh',`${elOpen(a)?ELEM[a].tag:'？？？'}の わざ <small>${got} / ${keys.length}</small>`); h.style.setProperty('--c',ELEM[a].color); body.append(h);
+    const g=el('div','list zlist');
+    for(const k of keys){
+      const sp=k.startsWith('sp:'), D=sp?spOf(a):comboOf(k), [x,y]=sp?[a,a]:comboEls(k), f=G.found.has(k);
+      const r=el('div','zrow zw'+(f?'':' lock')); paint(r,f?D.color:'#6d6690');
+      r.innerHTML=`<div class="zpair">${pill(x)}<b>${sp?'×':'＋'}</b>${pill(y)}${fresh.has(k)?'<span class="znew">NEW</span>':''}</div><div><div class="nm">${f?D.name:'？？？'}</div><div class="ds">${f?(sp?'とくしゅ効果：':'')+D.desc:'まだ 見つけていないよ'}</div></div>`;
+      g.append(r);
+    }
+    body.append(g);
+  });
+  if(G.fresh.size){G.fresh.clear(); writeSave(); zBadge()}   // 見たら NEW は次から消える（いまの画面には出したまま）
 }
 // タワーのタブ
 function tabTower(body){
@@ -9621,23 +9720,35 @@ function towerGauge(k,lv,T){
 }
 const pips=(n,nb)=>{let h='<span class="pips">';for(let i=0;i<5;i++)h+=`<i class="${i<nb?'on':i<n?'up':''}"></i>`;return h+'</span>'};
 const gaugeHtml=(k,lv,T,mini)=>`<div class="gauges${mini?' mini':''}" style="--tc:${TOWERS[k].color}">`+towerGauge(k,lv,T).map(([l,n,nb])=>`<span class="gg"><span class="gl">${l}</span>${pips(n,nb)}</span>`).join('')+'</div>';
-// タグ：属性・とくしゅ効果・わざ・強撃（攻撃UP）・速射（連射UP）。下の細い線がのこり時間
+// タグ：属性・とくしゅ効果・わざ・強撃（攻撃UP）・速射（連射UP）。下の細い線がのこり時間。タップで説明（11/6）
+const elBall=el=>Object.values(BALLS).find(B=>B.el===el);
+const elDesc=el=>{const B=elBall(el),d=B?B.desc:'';const i=d.indexOf('。');return i>=0?d.slice(i+1):d};
+const tagEsc=t=>String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 function towerTags(k,T){
   const D=TOWERS[k], o=[];
-  if(D.el) o.push([ELEM[D.el].tag,ELEM[D.el].color]);
-  if(D.aoe) o.push(['範囲',D.color]);
-  if(D.tag) o.push([D.tag,D.color]);
+  if(D.el) o.push([ELEM[D.el].tag,ELEM[D.el].color,null,`この砲台の弾に「${ELEM[D.el].name}」がつく。${elDesc(D.el)}。同じ属性の玉で とくしゅ効果が出るよ`]);
+  if(D.aoe) o.push(['範囲',D.color,null,'まわりの敵に まとめて当たる']);
+  if(D.tag) o.push([D.tag,D.color,null,D.desc]);
   if(T){
-    if(T.elT>0&&T.el&&T.el!==D.el) o.push([ELEM[T.el].tag,ELEM[T.el].color,T.elT]);
-    if(T.spT>0) o.push([spOf(T.sp).name,spOf(T.sp).color,T.spT]);
-    if(T.comboT>0) o.push([comboOf(T.combo).name,comboOf(T.combo).color,T.comboT]);
-    if(T.pow>0) o.push(['強撃','#ffb36b',T.pow]);
-    if(T.rapid>0) o.push(['速射','#7ff3ff',T.rapid]);
-    if(T.bless>G.time) o.push(['しゅくふく','#ffe08a']);
-    if(G.fever>0) o.push(['FEVER',GOLD]);
+    if(T.elT>0&&T.el&&T.el!==D.el) o.push([ELEM[T.el].tag,ELEM[T.el].color,T.elT,`玉で「${ELEM[T.el].name}」がついた。弾に「${ELEM[T.el].name}」がつく。${elDesc(T.el)}。同じ属性の玉で とくしゅ効果、ちがう属性の玉で わざになるよ`]);
+    if(T.spT>0){const S=spOf(T.sp);o.push([S.name,S.color,T.spT,`とくしゅ効果（${ELEM[T.sp].tag}×${ELEM[T.sp].tag}）：${S.desc}`])}
+    if(T.comboT>0){const C=comboOf(T.combo),[a,b]=comboEls(T.combo);o.push([C.name,C.color,T.comboT,`わざ（${ELEM[a].tag}＋${ELEM[b].tag}）：${C.desc}`])}
+    if(T.pow>0) o.push(['強撃','#ffb36b',T.pow,'鉛玉が当たって、威力がアップ']);
+    if(T.rapid>0) o.push(['速射','#7ff3ff',T.rapid,'BB弾が当たって、連射がアップ']);
+    if(T.bless>G.time) o.push(['祝福','#ffe08a',null,'天使タワーや 光の輪の力で、威力や連射がアップしている']);
+    if(G.fever>0) o.push(['FEVER',GOLD,null,'FEVER中は、どの砲台も 威力と連射が2倍']);
   }
-  return o.length?'<div class="tags">'+o.map(([t,c,left])=>`<span class="tg" style="--c:${c}">${t}${left!=null?`<i style="width:${Math.max(4,Math.min(100,left/BUFF_T*100))|0}%"></i>`:''}</span>`).join('')+'</div>':'';
+  return o.length?'<div class="tags">'+o.map(([t,c,left,d],i)=>`<span class="tg" data-i="${i}"${d?` data-d="${tagEsc(d)}"`:''} style="--c:${c}">${t}${left!=null?`<i style="width:${Math.max(4,Math.min(100,left/BUFF_T*100))|0}%"></i>`:''}</span>`).join('')+'</div>':'';
 }
+// タグをタップ → タグの下に説明（もう一度タップで とじる）
+$('sheetBody').addEventListener('click',e=>{
+  const t=e.target.closest('.tg[data-d]'); if(!t) return;
+  const wrap=t.closest('.tags'), nx=wrap.nextElementSibling, open=nx&&nx.classList.contains('tgd')?nx:null;
+  wrap.querySelectorAll('.tg.sel').forEach(x=>x.classList.remove('sel'));
+  if(open){open.remove(); if(open.dataset.for===t.dataset.i) return}
+  const d=el('div','tgd'); d.dataset.for=t.dataset.i; d.style.setProperty('--c',t.style.getPropertyValue('--c'));
+  d.innerHTML=`<b>${t.childNodes[0].textContent}</b>${tagEsc(t.dataset.d)}`; wrap.after(d); t.classList.add('sel'); sfx.tick();
+});
 function towerRow(k,price,enabled,onBuy){
   const t=TOWERS[k], row=document.createElement('div'); row.className='item trow';
   row.innerHTML=`<img class="tico" alt="" src="${icon('tower',k)}"><div><div class="t">${t.name}</div>${gaugeHtml(k,1,null,true)}${towerTags(k,null)}</div>`;
@@ -9650,7 +9761,7 @@ function openInfo(p){
   const body=$('sheetBody'); body.textContent='';
   const info=document.createElement('div'); info.className='tinfo';
   const lvTop=T.lv>=4, fr=lvTop?1:(T.xp-XP_NEED[T.lv-1])/(XP_NEED[T.lv]-XP_NEED[T.lv-1]);
-  info.innerHTML=gaugeHtml(T.type,T.lv,T)+towerTags(T.type,T)+
+  info.innerHTML=gaugeHtml(T.type,T.lv,T)+towerTags(T.type,T)+'<p class="hint tgh">タグをタップすると、説明が出るよ</p>'+
     `<div class="xpbar" style="--tc:${D.color}"><span class="gl">経験値</span><span class="bar"><i style="width:${Math.max(0,Math.min(1,fr))*100}%"></i></span><b>${lvTop?'MAX':'Lv'+(T.lv+1)+'へ'}</b></div>`;
   body.append(info);
   // ギミック：お店で解放したものを、この砲台につける（1つだけ。つけかえもできる）
