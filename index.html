@@ -9500,6 +9500,7 @@ function playBoard(i){
   closeBuy(); G.stage=BOARDS[i].stage; G.boardIdx=i; hallIdx=i;
   if(G.testLobby!=null){G.balls=G.testLobby;G.testLobby=null}   // ためしモードで「もう一度この台」
   if(TEST&&testEnter>0){writeSave(); G.testLobby=G.balls; G.balls=testEnter; startStage(); return}
+  G.pre={balls:G.balls,kills:G.kills};                        // 「もどる」で ここ（台に入る前）にもどす
   const add=Math.max(0,MIN_COINS-G.balls); G.balls+=add;      // 打てなくならないように、少ないときは足す
   writeSave(); startStage();
   if(add>0) addText(70,40,`コイン +${add}`,GOLD,true);
@@ -9527,7 +9528,7 @@ function stageClear(){
   const res=()=>showResult(`${S.name}の台 クリア！`,lines,'台えらびへ',()=>{hallIdx=Math.min(BOARDS.length-1,(G.boardIdx??0)+(first?1:0));openHub('board')},'お店へ',()=>openHub('ball'));
   if(first&&G.stage===LAST_STAGE()) showEnding(res); else res();   // さいごの台を はじめて クリア → エンディング（タップで とじると クリアの画面）
 }
-// 左下の「もどる」：確かめてから、台をやめて台えらびへ。建てた砲台・打った玉のコインはもどらない（いまのコインはそのまま。FEVER のはらい残りはもらえない）（11/6）
+// 左下の「もどる」：確かめてから、台をやめて台えらびへ。コインは台に入る前にもどる（使った分はもどり、かせいだ分はなくなる。4ウェーブまでかせいで もどるのくり返しをふせぐ。11/6 しょーくん「完全にプレイ前に戻る」）。図鑑で見つけたわざは残す
 const quitIcos={};
 function quitIco(color){
   if(quitIcos[color]) return quitIcos[color];
@@ -9544,12 +9545,14 @@ function openQuit(){
   paint($('quitIn'),S.accent); $('quitIco').src=quitIco(S.accent);
   $('quitKind').textContent='BOARD NO.'+((G.boardIdx??0)+1);
   $('quitDesc').textContent=`${S.name}の台は ここでおわりにして、台えらびにもどるよ。`;
-  $('quitNote').innerHTML=G.testLobby!=null?'ためしモード：ロビーのコインにもどるよ':`使ったコインは もどらないよ（いまの ${COIN}${G.balls} は そのまま）`;
+  $('quitNote').innerHTML=G.testLobby!=null?'ためしモード：ロビーのコインにもどるよ':`コインは 台に入る前の ${COIN}${(G.pre?G.pre.balls:G.balls).toLocaleString()} にもどるよ（この台でかせいだ分は なくなるよ）`;
   $('quit').hidden=false; $('quitNo').focus(); sfx.tick();
 }
 function closeQuit(){$('quit').hidden=true; if(G.state==='play') G.paused=false}
 function quitBoard(){
   $('quit').hidden=true; G.paused=false; G.state='over'; G.fever=0; G.feverPay=0;
+  if(G.testLobby==null&&G.pre){G.balls=G.pre.balls;G.kills=G.pre.kills}   // 台に入る前のコインにもどす（ためしモードは openHub でロビーのコインにもどる）
+  G.pre=null;
   const S=STAGES[G.stage]; hallIdx=G.boardIdx??hallIdx; openHub('board'); toast(`${S.name}の台をやめたよ`);
 }
 $('backBtn').onclick=()=>{ensureAudio();openQuit()};
