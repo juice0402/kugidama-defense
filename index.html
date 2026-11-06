@@ -531,7 +531,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        しゅくふく：砲台の T.bless（G.time より大きい間）は towerDmg×T.blessK・towerCd×T.blessC（天使タワー・金色の玉）。金色の玉 b.gold は pegHit で goldHit（光の輪）
        台の みんなに 効く いたずら（王さまの 遠ぼえ・パンダの 光のたて）は heavenTick・heavenBullet・heavenBall を 天国の おばけの tick・bulletHit・ballHit で よぶ
        エンディング：G.ending の間は draw が drawEnding だけ描く（さいごの台を はじめて クリア → showEnding。hideOverlays で おわる）
-   ・技の文字（11/6 夜）：hitText(x,y,名前,色1,色2,tier)＝わざ（fxCombo）・とくしゅ効果（fxSpecial）・強撃・速射（towerHit）のたびに その場所の少し上へ。格闘ゲーム風の帯（drawHitFight）。大きさは tier で分ける（HIT_PX）・おばけの後ろに描く
+   ・技の文字（11/6 夜）：hitText(x,y,名前,色1,色2,tier)＝わざ（fxCombo）・とくしゅ効果（fxSpecial）・強撃・速射（towerHit）のたびに その場所の少し上へ。格闘ゲーム風の帯（drawHitFight）。大きさは tier で分ける（HIT_PX）・おばけの後ろに描く。文字と帯の絵は hitPrep で出たときに1回だけ用意して hit に持たせる（11/7 軽く。毎フレーム字を測らない）
    ・軽くする道具（11/6）：sprite(key,w,h,ax,ay,paint)＝毎フレーム同じ形の絵は1回だけ描いて使いまわす（砲台の杭・台座・頭。砲身が時間で変わる種類は毎フレーム）／
        fxPath(fill,色,透明度,太さ)＝小さい形を色ごとにまとめて1回で描く（drawFx・ホタル・星・火花。さいごに fxFlush）／余白と FEVER の枠の光は layerOn/layerOff（1/4のピクセル・2フレームに1回）／
        毎フレーム描くものに shadowBlur は使わない。draw のはじめの clearRect は消さない（消すとかえって重い）。ロビーの間は台を描かない・タイトルと結果の間は3フレームに1回
@@ -2697,14 +2697,38 @@ function fxCombo(x,y,k){
 // 文字と帯は sprite で1回だけ描いて使いまわし、毎フレームは うごき（大きさ・かたむき・すけ）だけ（軽さの決まり）
 // 大きさは種類で分ける（しょーくん 11/6 夜「大きすぎるかな」）：わざ25（見せ場）・とくしゅ効果17（前の8割）・強撃と速射10（前の6割。いちばんよく出る）
 // おばけの後ろに描く（おばけが かくれて玉でねらえなくならないように）・当たった所より少し上（HIT_UP）
-const HIT_PX=[0,10,17,25], HIT_UP=14, HIT_MAX=30, hitWait=new Set();
+// 軽さ（しょーくん 11/7「文字がたくさん出ると重い」）：文字の幅と絵は、出たときに1回だけ用意して hit に持たせる（毎フレーム字の形を測らない）。
+// 絵は画面の1.4倍の細かさ（HIT_RES。いちばん大きく出ても ほぼ等倍）で、字のまわりの すきまも 字の形ぴったりに。絵は新しく使った順に HIT_KEEP こまで取っておく
+const HIT_PX=[0,10,17,25], HIT_UP=14, HIT_MAX=30, HIT_RES=1.4, HIT_KEEP=48, hitWait=new Set(), hitM=new Map(), hitUse=new Map();
 const hitFont=px=>`800 ${px}px ${BODYF}`;
-function hitTextW(s,px){ctx.font=hitFont(px);return ctx.measureText(s).width}
+// 字の幅と、字の形のはし（左右・上下）。字が届く前と後は別に覚える
+function hitMeasure(s,px,ok){
+  const k=s+'|'+px+'|'+(ok?1:0); let m=hitM.get(k);
+  if(!m){ctx.font=hitFont(px); const t=ctx.measureText(s), L=t.actualBoundingBoxLeft, R=t.actualBoundingBoxRight, A=t.actualBoundingBoxAscent, D=t.actualBoundingBoxDescent;
+    m={w:t.width, hw:L>=0&&R>=0?Math.max(L,R):null, hh:A>=0&&D>=0?Math.max(A,D):null}; hitM.set(k,m)}
+  return m;
+}
+// 文字と帯の絵を hit に持たせる。字がまだ届いていなければ 0.25秒ごとに見なおして、届いたら作りなおす
+function hitPrep(h){
+  const now=performance.now();
+  if(h.T&&(h.ok||now<h.chk)) return;
+  h.chk=now+250;
+  const ok=hitFontReady(hitFont(h.px),h.s);
+  if(h.T&&!ok) return;
+  const m=hitMeasure(h.s,h.px,ok); h.ok=ok; h.tw=m.w;
+  h.T=hitTxtSpr(h.s,h.c1,h.c2,h.px,m,ok); h.B=hitBandSpr(m.w+h.px*2.4,h.px*1.75,h.c1,h.c2);
+}
+// 技の文字の絵：新しく使った順に HIT_KEEP こまで（いっぱいになったら いちばん前に使ったものから すてる。台に出ている文字は自分の絵を持っているので消えない）
+function hitSprite(key,w,h,ax,ay,paint){
+  hitUse.delete(key); hitUse.set(key,1);
+  if(hitUse.size>HIT_KEEP){const old=hitUse.keys().next().value; hitUse.delete(old); sprCache.delete(old)}
+  return sprite(key,w,h,ax,ay,paint,HIT_RES);
+}
 function hitText(x,y,s,c1,c2,tier){
   if(!G.hits) G.hits=[];
   let n=0; for(const h of G.hits) if(h.age<.4&&Math.abs(h.x0-x)<70&&Math.abs(h.y0-y)<44) n++;   // 近くで同時に出たら上へずらす
-  const px=HIT_PX[tier];
-  G.hits.push({x0:x,y0:y,s,c1,c2,tier,px,tw:hitTextW(s,px),age:0,dur:tier>1?1.1:.85,rot:(Math.random()-.5)*.7,sc:.8+Math.random()*.55,side:Math.random()<.5?-1:1,dy:n*px*1.3,seed:Math.random()*6.28});
+  const px=HIT_PX[tier], h={x0:x,y0:y,s,c1,c2,tier,px,tw:0,age:0,dur:tier>1?1.1:.85,rot:(Math.random()-.5)*.7,sc:.8+Math.random()*.55,side:Math.random()<.5?-1:1,dy:n*px*1.3,seed:Math.random()*6.28};
+  hitPrep(h); G.hits.push(h);
   if(G.hits.length>HIT_MAX) G.hits.shift();
 }
 // 日本語の字は Google Fonts から あとで届く。届く前の形は別のキーにして、届いたら作りなおす
@@ -2714,9 +2738,10 @@ function hitFontReady(font,s){
   if(!ok&&!hitWait.has(font+s)){hitWait.add(font+s);document.fonts.load(font,s).catch(()=>{})}
   return ok;
 }
-function hitTxtSpr(s,c1,c2,px){
-  const f=hitFont(px), ok=hitFontReady(f,s), w=Math.ceil(hitTextW(s,px)+px*1.6), h=Math.ceil(px*2.2);
-  return sprite(`hit|${s}|${c1}|${c2}|${px}|${ok?1:0}`,w,h,w/2,h/2,g=>{
+function hitTxtSpr(s,c1,c2,px,m,ok){
+  // 大きさ：字の形のはし＋ふちどり（px*.18）＋ななめ（-.22）のぶん。測れない端末は前と同じ広さ
+  const hh=m.hh!=null?m.hh+px*.2+1.5:px*1.1, h=Math.ceil(hh*2), w=Math.ceil(m.hw!=null?(m.hw+px*.2+hh*.22+1.5)*2:m.w+px*1.6), f=hitFont(px);
+  return hitSprite(`hit|${s}|${c1}|${c2}|${px}|${ok?1:0}`,w,h,w/2,h/2,g=>{
     g.font=f; g.textAlign='center'; g.textBaseline='middle'; g.lineJoin='round';
     g.transform(1,0,-.22,1,0,0);   // ななめ
     g.lineWidth=px*.36; g.strokeStyle='#05060c'; g.strokeText(s,0,0);
@@ -2728,7 +2753,7 @@ function hitTxtSpr(s,c1,c2,px){
 // 格闘ゲーム：ななめの帯（はしは すける・上下に光の線・下半分は少し暗く）
 function hitBandSpr(w,h,c1,c2){
   w=Math.ceil(w/8)*8; h=Math.ceil(h/4)*4; const sk=h*.5, W2=w+sk+6;
-  return sprite(`hitf|${w}|${h}|${c1}|${c2}`,W2,h+6,W2/2,h/2+3,g=>{
+  return hitSprite(`hitf|${w}|${h}|${c1}|${c2}`,W2,h+6,W2/2,h/2+3,g=>{
     const x0=-(w+sk)/2;
     g.beginPath(); g.moveTo(x0+sk,-h/2); g.lineTo(x0+w+sk,-h/2); g.lineTo(x0+w,h/2); g.lineTo(x0,h/2); g.closePath();
     const gr=g.createLinearGradient(x0,0,x0+w+sk,0); gr.addColorStop(0,hexA(c1,0)); gr.addColorStop(.2,hexA(c1,.95)); gr.addColorStop(.8,hexA(c2,.95)); gr.addColorStop(1,hexA(c2,0));
@@ -2741,6 +2766,7 @@ function hitBandSpr(w,h,c1,c2){
 function drawHits(){
   if(!G.hits||!G.hits.length) return;
   for(const h of G.hits){
+    hitPrep(h);
     const px=h.px, hw=(h.tw/2+px*1.1)*h.sc, a=h.age, out=Math.max(0,(a-(h.dur-.28))/.28);   // さいごの0.28秒で消える
     const x=Math.max(hw+4,Math.min(W-hw-4,h.x0)), y=Math.max(px+46,h.y0-px*1.3-HIT_UP-h.dy-a*16);   // 台の上のはしでは下にずらす
     ctx.save(); ctx.translate(x,y);
@@ -2753,13 +2779,13 @@ function drawHitFight(h,a,out,px){
   const tw=h.tw, bw=tw+px*2.4, bh=px*1.75, wipe=Math.min(1,a/.13), d=h.side;
   ctx.rotate(h.rot); ctx.scale(h.sc,h.sc);   // いろんな角度と大きさで（しょーくん 11/6 夜）
   ctx.globalAlpha=1-out*.5;   // 帯：横から ずばっと入る・さいごは上下につぶれる
-  ctx.save(); ctx.translate(-d*bw/2*(1-wipe),0); ctx.scale(Math.max(.02,wipe),Math.max(.02,1-out)); blit(hitBandSpr(bw,bh,h.c1,h.c2),0,0); ctx.restore();
+  ctx.save(); ctx.translate(-d*bw/2*(1-wipe),0); ctx.scale(Math.max(.02,wipe),Math.max(.02,1-out)); blit(h.B,0,0); ctx.restore();
   if(a>.1&&a<.42){   // 光のすじが走る
     const q=(a-.1)/.32, lx=d*(-bw/2-12+q*(bw+24)), s=bh/2;
     ctx.globalAlpha=(1-q)*.85*(1-out); ctx.fillStyle='#ffffff';
     ctx.beginPath(); ctx.moveTo(lx+s*.5,-s); ctx.lineTo(lx+s*.5+7,-s); ctx.lineTo(lx-s*.5+7,s); ctx.lineTo(lx-s*.5,s); ctx.closePath(); ctx.fill();
   }
-  const tin=Math.min(1,Math.max(0,(a-.03)/.15)), e=1-Math.pow(1-tin,3), off=d*(1-e)*70, T=hitTxtSpr(h.s,h.c1,h.c2,px);
+  const tin=Math.min(1,Math.max(0,(a-.03)/.15)), e=1-Math.pow(1-tin,3), off=d*(1-e)*70, T=h.T;
   if(tin<=0) return;
   if(!reduce&&tin<1){ctx.globalAlpha=.22*(1-out); blit(T,off+d*22,0); ctx.globalAlpha=.42*(1-out); blit(T,off+d*11,0)}   // 残像
   const pop=a>.17&&a<.31?(1-Math.abs((a-.24)/.07))*.14:0;
@@ -3385,9 +3411,10 @@ function barrel(x0,len,w,yo){
 // 止まった絵のキャッシュ（11/6 軽くする）：毎フレーム同じ形のもの（砲台の杭・台座・頭）は、画面の細かさの2倍で1回だけ描いて絵にする。
 // key＝絵の名前、w・h＝大きさ、ax・ay＝絵の中の中心（どれも台の単位）。paint は (0,0) を中心に ctx で描く。画面の大きさが変わったら作りなおす
 const sprCache=new Map(); let sprK=0;
-function sprite(key,w,h,ax,ay,paint){
-  const k=scale*dpr*2; if(k!==sprK){sprCache.clear();sprK=k}
+function sprite(key,w,h,ax,ay,paint,res){
+  const k0=scale*dpr; if(k0!==sprK){sprCache.clear();sprK=k0}
   let o=sprCache.get(key); if(o) return o;
+  const k=k0*(res||2);   // res＝画面の何倍の細かさで描くか（ふだん2。技の文字は HIT_RES）
   const c=document.createElement('canvas'); c.width=Math.max(1,Math.ceil(w*k)); c.height=Math.max(1,Math.ceil(h*k));
   const g=c.getContext('2d'); g.setTransform(k,0,0,k,ax*k,ay*k); g.lineCap='round'; g.lineJoin='round';   // ふだんの描くときと同じ線のつなぎ方
   const keep=ctx; ctx=g; try{paint(g)}finally{ctx=keep}
