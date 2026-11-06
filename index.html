@@ -531,6 +531,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        しゅくふく：砲台の T.bless（G.time より大きい間）は towerDmg×T.blessK・towerCd×T.blessC（天使タワー・金色の玉）。金色の玉 b.gold は pegHit で goldHit（光の輪）
        台の みんなに 効く いたずら（王さまの 遠ぼえ・パンダの 光のたて）は heavenTick・heavenBullet・heavenBall を 天国の おばけの tick・bulletHit・ballHit で よぶ
        エンディング：G.ending の間は draw が drawEnding だけ描く（さいごの台を はじめて クリア → showEnding。hideOverlays で おわる）
+   ・技の文字（11/6 夜）：hitText(x,y,名前,色1,色2,tier)＝わざ（fxCombo）・とくしゅ効果（fxSpecial）・強撃・速射（towerHit）のたびに その場所へ。格闘ゲーム風の帯（drawHitFight）
    ・軽くする道具（11/6）：sprite(key,w,h,ax,ay,paint)＝毎フレーム同じ形の絵は1回だけ描いて使いまわす（砲台の杭・台座・頭。砲身が時間で変わる種類は毎フレーム）／
        fxPath(fill,色,透明度,太さ)＝小さい形を色ごとにまとめて1回で描く（drawFx・ホタル・星・火花。さいごに fxFlush）／余白と FEVER の枠の光は layerOn/layerOff（1/4のピクセル・2フレームに1回）／
        毎フレーム描くものに shadowBlur は使わない。draw のはじめの clearRect は消さない（消すとかえって重い）。ロビーの間は台を描かない・タイトルと結果の間は3フレームに1回
@@ -1703,7 +1704,7 @@ function layoutHeaven(){return {P:WING_P.map(p=>p.slice()),pegR:11,heso:{x:188,y
 
 /* ---------- 台を作る ---------- */
 // 台の上で動いているものを空にする（台に入るとき・ロビーにもどるとき）
-function clearPlay(){G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.rings=[];G.waves=[];G.cfl=null;G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.poofs=[];G.obs=[];G.zones=[]}
+function clearPlay(){G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.hits=[];G.banners=[];G.fx=[];G.zaps=[];G.rings=[];G.waves=[];G.cfl=null;G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.poofs=[];G.obs=[];G.zones=[]}
 function setupStage(){
   const S=STAGES[G.stage], L=S.layout(), pr=L.pegR||4;
   $('app').dataset.board=S.style;   // ハンドルと「もどる」の見た目を台に合わせる（CSS の #app[data-board]）
@@ -2597,8 +2598,8 @@ function towerHit(p,b){
   for(const k in TLOCK) if(T[k]>0) TLOCK[k].free(p,true);  // おばけのいたずら（帽子・ねむり・根っこ）は、玉が当たるととける
   T.xp++; T.pop=.3;
   if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,D.color,14);sfx.lv()}
-  if(B.buff==='pow'){if(T.pow<=0)addText(p.x,p.y-16,'攻撃UP',B.color);T.pow=BUFF_T;fxBuff(p,B.color)}
-  if(B.buff==='rapid'){if(T.rapid<=0)addText(p.x,p.y-16,'連射UP',B.color);T.rapid=BUFF_T;fxBuff(p,B.color)}
+  if(B.buff==='pow'){hitText(p.x,p.y,'強撃',B.color,B.color,1);T.pow=BUFF_T;fxBuff(p,B.color)}
+  if(B.buff==='rapid'){hitText(p.x,p.y,'速射',B.color,B.color,1);T.rapid=BUFF_T;fxBuff(p,B.color)}
   let E=B.el;
   if(!E&&b.inf&&b.infFrom!==p.id){E=effEl(b.inf);b.inf=null}   // ツタで属性が宿った玉：属性弾と同じようにつく
   if(!E) return;
@@ -2612,7 +2613,7 @@ function towerHit(p,b){
   if(now===E){
     // 同じ属性が重なると、とくしゅ効果
     const S=spOf(E); T.sp=E; T.spT=BUFF_T; T.el=E; T.elT=BUFF_T;
-    fxBurst(E,p.x,p.y,18); fxSpecial(p.x,p.y,S.color); markFound('sp:'+E);
+    fxBurst(E,p.x,p.y,18); fxSpecial(p.x,p.y,S.color,S.name); markFound('sp:'+E);
   }else{
     // ちがう属性が出会うと、わざ
     const k=comboKey(now,E), C=comboOf(k);
@@ -2675,19 +2676,92 @@ function comboOf(k){
 function applySpecial(e,el,dmg){const S=spOf(el);fxBurst(el,e.x,e.y,S.n||6);hitMark(e,S.color);markFound('sp:'+el);S.fx(e,dmg)}
 // わざ（ちがう属性が出会ったとき）
 function applyCombo(e,k,dmg){const C=comboOf(k);effFx({combo:k},e.x,e.y,C.n||4);hitMark(e,C.color);markFound(k);C.fx(e,dmg)}
-// 何が起きたか見てわかるように（しょーくん 11/6「弾やタワーが何してるかわからない」→ 文字は出さず、エフェクトと音を大きく）
+// 何が起きたか見てわかるように（しょーくん 11/6「弾やタワーが何してるかわからない」→ エフェクトと音を大きく。夜に「漫画のヒット演出みたいな文字」も足した＝hitText）
 // 衝撃の輪（太く光ってひろがる）・色の光（画面がその色にうっすら光る）
 function shock(x,y,c,R,t,w){G.waves.push({x,y,c,R,t,max:t,w:w||5})}
 function glowFlash(c,a){if(!reduce&&(!G.cfl||G.cfl.t<a))G.cfl={c,t:a}}
 // 玉が砲台に属性・攻撃UP・連射UP をつけた（のばした）
 function fxBuff(p,c){shock(p.x,p.y,c,30,.38,3.5);sfx.buff()}
 // 同じ属性が重なって とくしゅ効果
-function fxSpecial(x,y,c){shock(x,y,c,50,.55,7);shock(x,y,'#ffffff',30,.32,3);burst(x,y,c,18);glowFlash(c,.16);sfx.spk()}
+function fxSpecial(x,y,c,name){shock(x,y,c,50,.55,7);shock(x,y,'#ffffff',30,.32,3);burst(x,y,c,18);glowFlash(c,.16);sfx.spk();if(name)hitText(x,y,name,c,c,2)}
 // ちがう属性が出会って わざ（2つの属性の色の輪が2重に）
 function fxCombo(x,y,k){
   const [a,b]=comboEls(k), C=comboOf(k);
   shock(x,y,ELEM[a].color,56,.6,7); shock(x,y,ELEM[b].color,80,.78,6); shock(x,y,'#ffffff',34,.32,3);
   burst(x,y,ELEM[a].color,14); burst(x,y,ELEM[b].color,14); glowFlash(C.color,.22); G.shake=Math.max(G.shake,.12); sfx.combo();
+  hitText(x,y,C.name,ELEM[a].color,ELEM[b].color,3);
+}
+// ---- 技の文字（11/6 夜。しょーくん「漫画のヒット演出みたいに、ただ文字が出るだけじゃなく、派手で爽快感のあるビジュアルに」）----
+// わざ（tier3）・とくしゅ効果（tier2）・強撃・速射（tier1）が出るたびに、その場所に出す（重なってもOK）。
+// 形は格闘ゲーム風：横からななめの帯が入る・光のすじが走る・金属っぽい文字が残像をひいて すべりこむ（漫画の効果音風とくらべて決めた。「！」はつけない。11/6 夜）
+// 文字と帯は sprite で1回だけ描いて使いまわし、毎フレームは うごき（大きさ・かたむき・すけ）だけ（軽さの決まり）
+const HIT_PX=[0,16,21,25], HIT_MAX=30, hitWait=new Set();
+const hitFont=px=>`800 ${px}px ${BODYF}`;
+function hitTextW(s,px){ctx.font=hitFont(px);return ctx.measureText(s).width}
+function hitText(x,y,s,c1,c2,tier){
+  if(!G.hits) G.hits=[];
+  let n=0; for(const h of G.hits) if(h.age<.4&&Math.abs(h.x0-x)<70&&Math.abs(h.y0-y)<44) n++;   // 近くで同時に出たら上へずらす
+  const px=HIT_PX[tier];
+  G.hits.push({x0:x,y0:y,s,c1,c2,tier,px,tw:hitTextW(s,px),age:0,dur:tier>1?1.1:.85,rot:(Math.random()-.5)*.7,sc:.8+Math.random()*.55,side:Math.random()<.5?-1:1,dy:n*px*1.3,seed:Math.random()*6.28});
+  if(G.hits.length>HIT_MAX) G.hits.shift();
+}
+// 日本語の字は Google Fonts から あとで届く。届く前の形は別のキーにして、届いたら作りなおす
+function hitFontReady(font,s){
+  if(!document.fonts||!document.fonts.check) return true;
+  let ok=true; try{ok=document.fonts.check(font,s)}catch(_){}
+  if(!ok&&!hitWait.has(font+s)){hitWait.add(font+s);document.fonts.load(font,s).catch(()=>{})}
+  return ok;
+}
+function hitTxtSpr(s,c1,c2,px){
+  const f=hitFont(px), ok=hitFontReady(f,s), w=Math.ceil(hitTextW(s,px)+px*1.6), h=Math.ceil(px*2.2);
+  return sprite(`hit|${s}|${c1}|${c2}|${px}|${ok?1:0}`,w,h,w/2,h/2,g=>{
+    g.font=f; g.textAlign='center'; g.textBaseline='middle'; g.lineJoin='round';
+    g.transform(1,0,-.22,1,0,0);   // ななめ
+    g.lineWidth=px*.36; g.strokeStyle='#05060c'; g.strokeText(s,0,0);
+    const gr=g.createLinearGradient(0,-px*.5,0,px*.5); gr.addColorStop(0,'#ffffff'); gr.addColorStop(.42,'#ffffff'); gr.addColorStop(.58,c1); gr.addColorStop(1,shade(c2,.7));
+    g.fillStyle=gr; g.fillText(s,0,0);
+    g.lineWidth=.9; g.strokeStyle='rgba(255,255,255,.75)'; g.strokeText(s,0,0);
+  });
+}
+// 格闘ゲーム：ななめの帯（はしは すける・上下に光の線・下半分は少し暗く）
+function hitBandSpr(w,h,c1,c2){
+  w=Math.ceil(w/8)*8; h=Math.ceil(h/4)*4; const sk=h*.5, W2=w+sk+6;
+  return sprite(`hitf|${w}|${h}|${c1}|${c2}`,W2,h+6,W2/2,h/2+3,g=>{
+    const x0=-(w+sk)/2;
+    g.beginPath(); g.moveTo(x0+sk,-h/2); g.lineTo(x0+w+sk,-h/2); g.lineTo(x0+w,h/2); g.lineTo(x0,h/2); g.closePath();
+    const gr=g.createLinearGradient(x0,0,x0+w+sk,0); gr.addColorStop(0,hexA(c1,0)); gr.addColorStop(.2,hexA(c1,.95)); gr.addColorStop(.8,hexA(c2,.95)); gr.addColorStop(1,hexA(c2,0));
+    g.fillStyle=gr; g.fill();
+    g.save(); g.clip(); g.fillStyle='rgba(4,6,14,.42)'; g.fillRect(x0,h*.04,w+sk,h/2); g.fillStyle='rgba(255,255,255,.18)'; g.fillRect(x0,-h/2,w+sk,h*.16); g.restore();
+    g.strokeStyle='rgba(255,255,255,.95)'; g.lineWidth=1.6; g.beginPath();
+    g.moveTo(x0+sk+w*.12,-h/2); g.lineTo(x0+w+sk-w*.04,-h/2); g.moveTo(x0+w*.04,h/2); g.lineTo(x0+w-w*.12,h/2); g.stroke();
+  });
+}
+function drawHits(){
+  if(!G.hits||!G.hits.length) return;
+  for(const h of G.hits){
+    const px=h.px, hw=(h.tw/2+px*1.1)*h.sc, a=h.age, out=Math.max(0,(a-(h.dur-.28))/.28);   // さいごの0.28秒で消える
+    const x=Math.max(hw+4,Math.min(W-hw-4,h.x0)), y=Math.max(px+46,h.y0-px*1.3-h.dy-a*16);
+    ctx.save(); ctx.translate(x,y);
+    drawHitFight(h,a,out,px);
+    ctx.restore();
+  }
+  ctx.globalAlpha=1;
+}
+function drawHitFight(h,a,out,px){
+  const tw=h.tw, bw=tw+px*2.4, bh=px*1.75, wipe=Math.min(1,a/.13), d=h.side;
+  ctx.rotate(h.rot); ctx.scale(h.sc,h.sc);   // いろんな角度と大きさで（しょーくん 11/6 夜）
+  ctx.globalAlpha=1-out*.5;   // 帯：横から ずばっと入る・さいごは上下につぶれる
+  ctx.save(); ctx.translate(-d*bw/2*(1-wipe),0); ctx.scale(Math.max(.02,wipe),Math.max(.02,1-out)); blit(hitBandSpr(bw,bh,h.c1,h.c2),0,0); ctx.restore();
+  if(a>.1&&a<.42){   // 光のすじが走る
+    const q=(a-.1)/.32, lx=d*(-bw/2-12+q*(bw+24)), s=bh/2;
+    ctx.globalAlpha=(1-q)*.85*(1-out); ctx.fillStyle='#ffffff';
+    ctx.beginPath(); ctx.moveTo(lx+s*.5,-s); ctx.lineTo(lx+s*.5+7,-s); ctx.lineTo(lx-s*.5+7,s); ctx.lineTo(lx-s*.5,s); ctx.closePath(); ctx.fill();
+  }
+  const tin=Math.min(1,Math.max(0,(a-.03)/.15)), e=1-Math.pow(1-tin,3), off=d*(1-e)*70, T=hitTxtSpr(h.s,h.c1,h.c2,px);
+  if(tin<=0) return;
+  if(!reduce&&tin<1){ctx.globalAlpha=.22*(1-out); blit(T,off+d*22,0); ctx.globalAlpha=.42*(1-out); blit(T,off+d*11,0)}   // 残像
+  const pop=a>.17&&a<.31?(1-Math.abs((a-.24)/.07))*.14:0;
+  ctx.globalAlpha=1-out; ctx.translate(off,0); ctx.scale(1+pop,(1+pop)*(1-out*.7)); blit(T,0,0);
 }
 // わざ・とくしゅ効果が敵に効いた（砲台の弾などで。小さな輪と音）
 function hitMark(e,c){G.rings.push({x:e.x,y:e.y,R:22,c,t:.32});sfx.zing()}
@@ -3020,6 +3094,7 @@ function updateFx(dt){
   G.parts=G.parts.filter(q=>q.t>0);
   for(const t of G.texts){t.y-=.5*f;t.t-=dt*1.1}
   G.texts=G.texts.filter(t=>t.t>0);
+  if(G.hits&&G.hits.length){for(const h of G.hits)h.age+=dt;G.hits=G.hits.filter(h=>h.age<h.dur)}
   for(const b of G.banners) b.t+=dt;
   for(const z of G.zaps) z.t-=dt; G.zaps=G.zaps.filter(z=>z.t>0);
   for(const r of G.rings) r.t-=dt; G.rings=G.rings.filter(r=>r.t>0);
@@ -9267,7 +9342,7 @@ const allCleared=()=>BOARDS.every(B=>G.cleared.includes(B.stage));
 function showEnding(done){
   hideOverlays(); closeSheet(); closeBuy();
   if(G.stage!==LAST_STAGE()){G.stage=LAST_STAGE();setupStage()}
-  G.bs=[]; G.bl=[]; G.en=[]; G.obs=[]; G.zones=[]; G.fx=[]; G.parts=[]; G.rings=[]; G.waves=[]; G.cfl=null; G.texts=[]; G.banners=[]; G.fever=0;
+  G.bs=[]; G.bl=[]; G.en=[]; G.obs=[]; G.zones=[]; G.fx=[]; G.parts=[]; G.rings=[]; G.waves=[]; G.cfl=null; G.texts=[]; G.hits=[]; G.banners=[]; G.fever=0;
   const list=[], mk=(t,x,y,r,row)=>{if(!ENEMIES[t])return;const e=addEnemy(t,x,y,{born:1,flash:0,laughT:1e9,callT:1e9,parade:true});G.en.pop();e.r=r;e.row=row;e.y0=y;list.push(e)};
   PARADE.forEach((L,row)=>{const y=[372,438,506][row], r=[16,13.5,11.5][row], gap=Math.min(41,330/L.length);L.forEach((t,i)=>mk(t,188+(i-(L.length-1)/2)*gap,y,r,row))});
   mk('ousama',188,262,30,-1);
@@ -9406,6 +9481,7 @@ function draw(){
     ctx.fillStyle=tx.c; ctx.fillText(tx.s,tx.x,tx.y);
   }
   ctx.globalAlpha=1;
+  drawHits();
   // フィーバー
   if(fev){
     const c=RAINBOW[Math.floor(t*8)%6];
