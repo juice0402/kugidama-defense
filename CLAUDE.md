@@ -1,4 +1,4 @@
-# くぎだまディフェンス（記号 pachi）
+# パチおば（記号 pachi・旧名 くぎだまディフェンス）
 
 - ゲームは index.html 1ファイル（HTML・CSS・JS を全部入れる）。外部はGoogle Fontsだけ
 - 企画と決まったことは claude.ai プロジェクト「ネット副業」の claude/pachi-game-idea.md

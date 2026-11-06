@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>くぎだまディフェンス</title>
+<title>パチおば</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -103,8 +103,9 @@ canvas{position:absolute;inset:0;display:block;touch-action:none}
 .overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:rgba(8,12,22,.82);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .panel{width:100%;max-width:440px;max-height:100%;overflow:auto;border:1.5px solid var(--line);border-radius:20px;background:var(--panel);padding:18px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 .logo{font-family:var(--f-disp);font-weight:500;line-height:1;text-align:center;margin:6px 0 0}
-.logo .a{display:block;font-size:clamp(44px,15vw,64px);color:var(--moon);text-shadow:0 0 24px rgba(216,242,106,.35)}
-.logo .b{display:block;font-size:clamp(20px,7vw,30px);color:var(--leaf);letter-spacing:.12em;margin-top:8px}
+.logo .a,.logo .b{font-size:clamp(52px,18vw,76px)}
+.logo .a{color:var(--moon);text-shadow:0 0 24px rgba(216,242,106,.35)}
+.logo .b{color:var(--leaf);text-shadow:0 0 24px rgba(124,220,138,.35)}
 #title .panel{max-width:340px;gap:30px;padding:34px 22px 26px}
 #startBtn{font-size:20px;padding:15px 16px;letter-spacing:.25em;animation:startGlow 1.8s ease-in-out infinite}
 @keyframes startGlow{50%{box-shadow:0 0 26px rgba(216,242,106,.55)}}
@@ -344,7 +345,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 <body>
 
 <div id="app">
-  <canvas id="cv" aria-label="くぎだまディフェンスの台"></canvas>
+  <canvas id="cv" aria-label="パチおばの台"></canvas>
   <header class="hud">
     <div class="money" id="money" role="img" aria-label="お金 0"><i class="coin"></i><b id="balls">0</b></div>
     <div class="hud-r">
@@ -362,7 +363,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 
   <div class="overlay" id="title">
     <div class="panel">
-      <h1 class="logo"><span class="a">くぎだま</span><span class="b">ディフェンス</span></h1>
+      <h1 class="logo"><span class="a">パチ</span><span class="b">おば</span></h1>
       <button class="btn primary" id="startBtn">スタート</button>
       <p class="test-tag" id="titleTest" hidden>ためしモード</p>
     </div>
@@ -9434,7 +9435,7 @@ function hud(){
   const set=(id,v)=>{if(hc[id]!==v){hc[id]=v;$(id).textContent=v;return true}return false};
   if(set('balls',G.balls)){$('money').classList.toggle('empty',G.balls<=0);$('money').setAttribute('aria-label','お金 '+G.balls)}
   set('wave',`WAVE ${G.wave}/${WAVES}`);
-  if(hc.life!==G.life){hc.life=G.life;cv.setAttribute('aria-label',`くぎだまディフェンスの台。ライフ ${G.life}/${LIFE_MAX}`)}
+  if(hc.life!==G.life){hc.life=G.life;cv.setAttribute('aria-label',`パチおばの台。ライフ ${G.life}/${LIFE_MAX}`)}
 }
 function setStrength(s){
   G.strength=Math.max(0,Math.min(1,s));
