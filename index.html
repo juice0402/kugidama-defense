@@ -51,7 +51,7 @@ canvas{position:absolute;inset:0;display:block;touch-action:none}
 
 /* 台の下：右にハンドルだけ */
 .bottom{position:absolute;z-index:2;left:max(8px,env(safe-area-inset-left,0px));right:max(4px,env(safe-area-inset-right,0px));bottom:2px;
-  display:flex;justify-content:flex-end;align-items:flex-end;pointer-events:none}
+  display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
 .chip{display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:99px;border:1px solid var(--line);color:var(--ink);background:var(--deep);font:700 11px var(--f-body)}
 .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:currentColor;box-shadow:inset 0 -2px 0 rgba(0,0,0,.28);flex:none}
 .dot.big{width:14px;height:14px}
@@ -60,15 +60,46 @@ canvas{position:absolute;inset:0;display:block;touch-action:none}
 /* ハンドル：本物の台のように右下の丸いダイヤル。回すと強さだけが変わる（玉はずっと出ている） */
 .handle{pointer-events:auto;display:flex;align-items:flex-end;touch-action:none;cursor:grab;outline:none}
 .handle:focus-visible .dial{outline:2px solid var(--fire);outline-offset:4px}
-.dial{width:72px;height:72px;margin:9px;border-radius:50%;position:relative;flex:none;border:3px solid #7a5232;
-  background:radial-gradient(circle at 40% 32%,#6a4a2e,#3a2616 72%);box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 -4px 0 rgba(0,0,0,.25)}
+.dial{width:72px;height:72px;margin:9px;border-radius:50%;position:relative;flex:none;border:3px solid var(--d-edge);
+  background:var(--d-bg);box-shadow:0 4px 10px rgba(0,0,0,.6),inset 0 -4px 0 rgba(0,0,0,.25),var(--d-glow)}
 .ring{position:absolute;inset:-9px;border-radius:50%;--p:.5;
-  background:conic-gradient(from 225deg,var(--fire) 0deg,var(--neon-cyan) calc(var(--p)*270deg),rgba(255,255,255,.14) calc(var(--p)*270deg) 270deg,transparent 270deg);
+  background:conic-gradient(from 225deg,var(--d-r1) 0deg,var(--d-r2) calc(var(--p)*270deg),rgba(255,255,255,.14) calc(var(--p)*270deg) 270deg,transparent 270deg);
   -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px));mask:radial-gradient(farthest-side,transparent calc(100% - 5px),#000 calc(100% - 4px))}
-.dial::after{content:"";position:absolute;inset:12px;border-radius:50%;border:1px dashed rgba(243,230,181,.32)}
-.dial-knob{position:absolute;left:50%;top:50%;width:5px;height:26px;margin-left:-2.5px;margin-top:-26px;border-radius:3px;background:var(--moon);box-shadow:0 0 6px rgba(243,230,181,.6);transform-origin:50% 100%}
+.dial::after{content:"";position:absolute;inset:12px;border-radius:50%;border:var(--d-dash);background:var(--d-in) center/100% 100% no-repeat}
+.dial-knob{position:absolute;z-index:2;left:50%;top:50%;width:5px;height:26px;margin-left:-2.5px;margin-top:-26px;border-radius:3px;background:var(--d-knob);box-shadow:0 0 6px var(--d-knobg);transform-origin:50% 100%}
 .dial-lbl{position:absolute;bottom:-8px;font-size:10px;font-weight:800;color:var(--ink);text-shadow:0 1px 2px #000}
 .dial-lbl.l{left:2px} .dial-lbl.r{right:2px}
+/* 台ごとのハンドルと「もどる」（#app の data-board＝台の style。setupStage でつける）。どれもコードの絵 */
+.bottom{--d-edge:#7a5232;--d-bg:radial-gradient(circle at 40% 32%,#6a4a2e,#3a2616 72%);--d-r1:var(--fire);--d-r2:var(--neon-cyan);--d-knob:var(--moon);--d-knobg:rgba(243,230,181,.6);
+  --d-glow:0 0 0 transparent;--d-in:none;--d-dash:1px dashed rgba(243,230,181,.32);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 22C12 16 11 12 8 9' stroke='%235fbf4a' stroke-width='1.6' fill='none'/%3E%3Cpath d='M8 9C4 9 3 6 3 4C6 4 8 6 8 9Z' fill='%236fd35a'/%3E%3Cpath d='M11.5 14C15 14 18 12 19 9C15.5 9 12.5 11 11.5 14Z' fill='%238be06a'/%3E%3Ccircle cx='15' cy='18' r='3.2' fill='%23ff7ad9'/%3E%3Ccircle cx='14' cy='17' r='1' fill='%23fff' opacity='.85'/%3E%3C/svg%3E");--d-decog:rgba(255,122,217,.8)}
+.dial::before{content:"";position:absolute;z-index:1;left:50%;bottom:-11px;width:26px;height:26px;margin-left:-13px;background:var(--d-deco) center/contain no-repeat;filter:drop-shadow(0 0 4px var(--d-decog));pointer-events:none}
+#app[data-board="forest"] .bottom{--d-edge:#3b2615;--d-bg:radial-gradient(circle at 40% 32%,rgba(255,236,190,.2),rgba(0,0,0,.42) 80%),repeating-radial-gradient(circle,#93693f 0 2.5px,#6b4a2a 2.5px 5px);
+  --d-glow:0 0 0 2px #3f8a46,0 0 10px rgba(126,240,176,.45);--d-r1:#b8ff7a;--d-r2:#4fffd0;--d-knob:#d6ffe6;--d-knobg:rgba(126,240,176,.85);--d-dash:1px solid rgba(40,22,8,.45);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9.5 13h5l1 8h-7z' fill='%23f3ead2'/%3E%3Cpath d='M3 13C3 7 7 4 12 4C17 4 21 7 21 13Z' fill='%235ef2b8'/%3E%3Ccircle cx='8' cy='9' r='1.6' fill='%23fff' opacity='.9'/%3E%3Ccircle cx='14' cy='7.5' r='1.2' fill='%23fff' opacity='.9'/%3E%3Ccircle cx='16.5' cy='10.5' r='1.4' fill='%23fff' opacity='.9'/%3E%3C/svg%3E");--d-decog:rgba(141,255,207,.9)}
+#app[data-board="mansion"] .bottom{--d-edge:#c9a24a;--d-bg:radial-gradient(circle at 40% 32%,#5a2452,#1c0820 76%);--d-glow:0 0 0 1px #6e5420,0 0 12px rgba(255,95,210,.45);
+  --d-r1:#ff5fd2;--d-r2:#ffd27a;--d-knob:#ffd98a;--d-knobg:rgba(255,190,90,.85);--d-dash:2px dotted rgba(255,215,140,.6);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5C14.6 4.8 14.6 7.4 12 9C9.4 7.4 9.4 4.8 12 1.5Z' fill='%23ffc04d'/%3E%3Cpath d='M12 4.3C13 5.8 13 7 12 8C11 7 11 5.8 12 4.3Z' fill='%23fff6cf'/%3E%3Crect x='9.5' y='9.5' width='5' height='10' rx='1' fill='%23f5ecdc'/%3E%3Cpath d='M6.5 19.5h11l-1.6 3h-7.8z' fill='%23d8b24e'/%3E%3C/svg%3E");--d-decog:rgba(255,184,77,.95)}
+#app[data-board="desert"] .bottom{--d-edge:#e9b24a;--d-bg:radial-gradient(circle at 40% 30%,#e8bd7a,#9a6430 80%);--d-glow:0 0 0 1px #7a4e1c,0 0 10px rgba(255,201,79,.45);
+  --d-r1:#ffc94f;--d-r2:#ff7a3d;--d-knob:#2f5fd0;--d-knobg:rgba(255,214,110,.95);--d-in:repeating-conic-gradient(rgba(255,244,214,.24) 0 9deg,transparent 9deg 18deg);--d-dash:1px dashed rgba(90,50,18,.55);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 3L23 21H1Z' fill='%23f6cd78'/%3E%3Cpath d='M12 3L23 21H13Z' fill='%23c98b3a'/%3E%3Cpath d='M8.3 15Q12 12 15.7 15Q12 18 8.3 15Z' fill='%232a1a08'/%3E%3Ccircle cx='12' cy='15' r='1.5' fill='%233fe0d0'/%3E%3C/svg%3E");--d-decog:rgba(255,210,122,.9)}
+#app[data-board="snow"] .bottom{--d-edge:#eef8ff;--d-bg:radial-gradient(circle at 36% 28%,#ffffff 0,#d4eeff 20%,#7dbde6 58%,#2f6596 94%);--d-glow:0 0 12px rgba(168,228,255,.65);
+  --d-r1:#ffffff;--d-r2:#7fd6ff;--d-knob:#1f5fa8;--d-knobg:rgba(255,255,255,.95);--d-dash:1px solid rgba(255,255,255,.65);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='1.7' stroke-linecap='round'%3E%3Cpath d='M12 2.5v19M3.8 7.2l16.4 9.6M3.8 16.8l16.4-9.6'/%3E%3Cpath d='M9.4 4.2 12 6.8l2.6-2.6M9.4 19.8 12 17.2l2.6 2.6M3.6 10.6l3.5-.9-.9-3.5M20.4 13.4l-3.5.9.9 3.5M3.6 13.4l3.5.9-.9 3.5M20.4 10.6l-3.5-.9.9-3.5'/%3E%3C/svg%3E");--d-decog:rgba(120,200,255,1)}
+#app[data-board="volcano"] .bottom{--d-edge:#4a1a16;--d-bg:radial-gradient(circle,#160c0e 0 24%,transparent 52%),conic-gradient(from 10deg,transparent 0 50deg,rgba(255,110,40,.9) 50deg 52deg,transparent 52deg 140deg,rgba(255,160,50,.85) 140deg 141.6deg,transparent 141.6deg 215deg,rgba(255,110,40,.9) 215deg 217deg,transparent 217deg 300deg,rgba(255,160,50,.85) 300deg 301.6deg,transparent 301.6deg),radial-gradient(circle at 40% 32%,#3a2a2e,#120a0c 76%);
+  --d-glow:0 0 0 1px #ff5a3d,0 0 12px rgba(255,90,40,.6);--d-r1:#ff3d5a;--d-r2:#ffc23d;--d-knob:#ffb03d;--d-knobg:rgba(255,120,40,.95);--d-dash:1px dashed rgba(255,130,70,.4);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5C15 5.5 19 8.5 19 14A7 7 0 0 1 5 14C5 10.5 7 9 8 6.5C9 9 10 10 11 10C11 7 11 4.5 12 1.5Z' fill='%23ff4f3a'/%3E%3Cpath d='M12 9C14 11.5 16 13 16 15.5A4 4 0 0 1 8 15.5C8 13.5 9.5 12.5 10 11C10.8 12.5 11.5 12.8 12 13C12 11.5 11.8 10.3 12 9Z' fill='%23ffc23d'/%3E%3C/svg%3E");--d-decog:rgba(255,90,40,.95)}
+#app[data-board="castle"] .bottom{--d-edge:#55506e;--d-bg:radial-gradient(circle at 40% 32%,#3c3054,#100b1c 76%);--d-glow:0 0 0 1px #2a2540,0 0 12px rgba(181,107,255,.55);
+  --d-r1:#b56bff;--d-r2:#b6ff3d;--d-knob:#d4ff7a;--d-knobg:rgba(182,255,61,.85);--d-in:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 8L75 84L9 37H91L25 84Z' fill='none' stroke='%23c08bff' stroke-width='3.5' stroke-linejoin='round' opacity='.6'/%3E%3C/svg%3E");--d-dash:1px solid rgba(181,107,255,.55);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 9C13.5 9 14.2 10 14.5 11C16 8.5 19 8 22.5 9C20.8 10.5 20.3 12.5 20.8 15C19.2 13.5 17.6 13.5 16 15C15.2 13.8 14 13.6 13 15L12 16.6L11 15C10 13.6 8.8 13.8 8 15C6.4 13.5 4.8 13.5 3.2 15C3.7 12.5 3.2 10.5 1.5 9C5 8 8 8.5 9.5 11C9.8 10 10.5 9 12 9Z' fill='%232a1f3d' stroke='%23c89bff' stroke-width='.9' stroke-linejoin='round'/%3E%3Cpath d='M10.6 9.2L10.8 7.2L11.7 8.9M13.4 9.2L13.2 7.2L12.3 8.9' fill='%232a1f3d' stroke='%23c89bff' stroke-width='.7'/%3E%3Ccircle cx='11' cy='11.3' r='.85' fill='%23b6ff3d'/%3E%3Ccircle cx='13' cy='11.3' r='.85' fill='%23b6ff3d'/%3E%3C/svg%3E");--d-decog:rgba(181,107,255,.95)}
+#app[data-board="space"] .bottom{--d-edge:#a9c2d6;--d-bg:radial-gradient(1.2px 1.2px at 30% 40%,#fff 50%,transparent 60%),radial-gradient(1px 1px at 66% 28%,#fff 50%,transparent 60%),radial-gradient(1.4px 1.4px at 58% 70%,#bff 50%,transparent 60%),radial-gradient(1px 1px at 24% 70%,#fff 50%,transparent 60%),radial-gradient(1px 1px at 76% 56%,#ffd6f4 50%,transparent 60%),radial-gradient(circle at 40% 32%,#27326e,#070a1e 76%);
+  --d-glow:0 0 0 1px #3c5468,0 0 12px rgba(62,240,255,.5);--d-r1:#3ef0ff;--d-r2:#ff4fd8;--d-knob:#7af0ff;--d-knobg:rgba(62,240,255,.9);--d-dash:1px dashed rgba(122,240,255,.4);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg transform='rotate%28-16 12 12%29' fill='none' stroke-width='1.7'%3E%3Cpath d='M1 13A11 3.2 0 0 1 23 13' stroke='%233ef0ff'/%3E%3Ccircle cx='12' cy='12' r='6' fill='%23ff6fd2' stroke='none'/%3E%3Cpath d='M7 10Q12 8.6 17 10' stroke='%23ffc2ef' stroke-width='1' opacity='.75'/%3E%3Cpath d='M1 13A11 3.2 0 0 0 23 13' stroke='%233ef0ff'/%3E%3C/g%3E%3C/svg%3E");--d-decog:rgba(62,240,255,.9)}
+#app[data-board="heaven"] .bottom{--d-edge:#f2d27a;--d-bg:radial-gradient(circle at 36% 28%,#ffffff,#f6efe2 45%,#d6c8ec 92%);--d-glow:0 0 14px rgba(255,240,168,.6);
+  --d-r1:#fff0a8;--d-r2:#ffb8e6;--d-knob:#d9a02e;--d-knobg:rgba(255,220,120,.9);--d-dash:1px dashed rgba(200,160,80,.6);--d-deco:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='%23fff' stroke='%23e8c45a' stroke-width='.8' stroke-linejoin='round'%3E%3Cpath d='M11 15C8.5 10 4.5 8.5 1 9.5C2.5 10.5 3 11.6 2.4 12.6C4 12.5 4.6 13.3 4.1 14.5C6 14.1 7.2 14.9 7.1 16.2C8.6 15.6 10 15.6 11 15Z'/%3E%3Cpath transform='translate%2824 0%29 scale%28-1 1%29' d='M11 15C8.5 10 4.5 8.5 1 9.5C2.5 10.5 3 11.6 2.4 12.6C4 12.5 4.6 13.3 4.1 14.5C6 14.1 7.2 14.9 7.1 16.2C8.6 15.6 10 15.6 11 15Z'/%3E%3C/g%3E%3Ccircle cx='12' cy='15' r='2.2' fill='%23ffd84a'/%3E%3C/svg%3E");--d-decog:rgba(255,224,138,.95)}
+#app[data-board="mansion"] .dial::before,#app[data-board="volcano"] .dial::before{animation:flick 1.6s ease-in-out infinite}
+@keyframes flick{0%,100%{opacity:1;transform:scale(1)}40%{opacity:.82;transform:scale(.94,1.04)}70%{opacity:.95;transform:scale(1.03,.97)}}
+/* もどる：左下。ハンドルと同じ見た目の丸い板。押すと確かめのシート */
+.back{pointer-events:auto;display:flex;flex-direction:column;align-items:center;margin:0 0 7px 2px;padding:0;border:0;background:transparent;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;outline:none}
+.back-plate{width:42px;height:42px;border-radius:50%;border:2.5px solid var(--d-edge);background:var(--d-bg);display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.6),inset 0 -3px 0 rgba(0,0,0,.22),var(--d-glow);transition:transform .1s}
+.back svg{width:21px;height:21px;color:var(--d-knob);filter:drop-shadow(0 0 3px var(--d-knobg))}
+.back-lbl{margin-top:-5px;font:800 10px var(--f-body);color:var(--ink);text-shadow:0 1px 2px #000,0 0 4px #000}
+.back:active .back-plate{transform:scale(.9)}
+.back:focus-visible .back-plate{outline:2px solid var(--fire);outline-offset:3px}
+#quitIco{width:96px;height:96px}
+@media (prefers-reduced-motion:reduce){.dial::before{animation:none!important}}
 .overlay{position:absolute;inset:0;z-index:5;display:grid;place-items:center;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));background:rgba(8,12,22,.82);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
 .panel{width:100%;max-width:440px;max-height:100%;overflow:auto;border:1.5px solid var(--line);border-radius:20px;background:var(--panel);padding:18px 16px;display:flex;flex-direction:column;gap:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 .logo{font-family:var(--f-disp);font-weight:500;line-height:1;text-align:center;margin:6px 0 0}
@@ -323,6 +354,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
     </div>
   </header>
   <div class="bottom">
+    <button class="back" id="backBtn" aria-label="台をやめて 台えらびにもどる"><span class="back-plate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h4a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 18 20h-4"/><path d="M15 12H4.5M8.5 7.5 4 12l4.5 4.5"/></svg></span><span class="back-lbl">もどる</span></button>
     <div class="handle" id="handle" tabindex="0" role="slider" aria-label="ハンドル。回して玉を打つ強さを変える" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50">
       <div class="dial" id="dial" aria-hidden="true"><div class="ring" id="ring"></div><div class="dial-knob" id="dialKnob"></div><span class="dial-lbl l">弱</span><span class="dial-lbl r">強</span></div>
     </div>
@@ -397,6 +429,18 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
         <p class="note" id="buyNote"></p>
         <div class="buy-btns"><button class="nbtn" id="buyNo">やめる</button><button class="nbtn gold" id="buyYes"></button></div>
       </div>
+    </div>
+  </div>
+
+  <div class="buysheet" id="quit" hidden>
+    <div class="buy-back" id="quitBack"></div>
+    <div class="buy-in" id="quitIn" role="dialog" aria-modal="true" aria-labelledby="quitName">
+      <img id="quitIco" alt="">
+      <div class="buy-kind" id="quitKind"></div>
+      <h3 id="quitName">台をやめて もどる？</h3>
+      <p id="quitDesc"></p>
+      <p class="note" id="quitNote"></p>
+      <div class="buy-btns"><button class="nbtn" id="quitNo">つづける</button><button class="nbtn danger" id="quitYes">やめて もどる</button></div>
     </div>
   </div>
 
@@ -1657,6 +1701,7 @@ function layoutHeaven(){return {P:WING_P.map(p=>p.slice()),pegR:11,heso:{x:188,y
 function clearPlay(){G.bs=[];G.en=[];G.bl=[];G.parts=[];G.texts=[];G.banners=[];G.fx=[];G.zaps=[];G.rings=[];G.waves=[];G.cfl=null;G.pend=[];G.portals=[];G.fw=[];G.conf=[];G.poofs=[];G.obs=[];G.zones=[]}
 function setupStage(){
   const S=STAGES[G.stage], L=S.layout(), pr=L.pegR||4;
+  $('app').dataset.board=S.style;   // ハンドルと「もどる」の見た目を台に合わせる（CSS の #app[data-board]）
   G.pegs=[]; let id=0;
   for(const [x,y] of L.P) G.pegs.push({id:id++,x,y,r:pr,tower:null,fixed:false,flash:0});
   for(const [x,y] of L.F||[]) G.pegs.push({id:id++,x,y,r:4,tower:null,fixed:true,flash:0});
@@ -9396,6 +9441,35 @@ function stageClear(){
   const res=()=>showResult(`${S.name}の台 クリア！`,lines,'台えらびへ',()=>{hallIdx=Math.min(BOARDS.length-1,(G.boardIdx??0)+(first?1:0));openHub('board')},'お店へ',()=>openHub('ball'));
   if(first&&G.stage===LAST_STAGE()) showEnding(res); else res();   // さいごの台を はじめて クリア → エンディング（タップで とじると クリアの画面）
 }
+// 左下の「もどる」：確かめてから、台をやめて台えらびへ。建てた砲台・打った玉のコインはもどらない（いまのコインはそのまま。FEVER のはらい残りはもらえない）（11/6）
+const quitIcos={};
+function quitIco(color){
+  if(quitIcos[color]) return quitIcos[color];
+  const c=document.createElement('canvas'); c.width=c.height=160; const g=c.getContext('2d');
+  g.shadowColor=color; g.shadowBlur=16; g.strokeStyle=color; g.lineWidth=10; g.lineCap='round'; g.lineJoin='round';
+  g.beginPath(); g.moveTo(94,30); g.lineTo(118,30); g.quadraticCurveTo(128,30,128,40); g.lineTo(128,120); g.quadraticCurveTo(128,130,118,130); g.lineTo(94,130); g.stroke();
+  g.beginPath(); g.moveTo(102,80); g.lineTo(32,80); g.moveTo(58,54); g.lineTo(32,80); g.lineTo(58,106); g.stroke();
+  return quitIcos[color]=c.toDataURL();
+}
+function openQuit(){
+  if(G.state!=='play'||G.ending) return;
+  closeSheet(); G.paused=true;
+  const S=STAGES[G.stage];
+  paint($('quitIn'),S.accent); $('quitIco').src=quitIco(S.accent);
+  $('quitKind').textContent='BOARD NO.'+((G.boardIdx??0)+1);
+  $('quitDesc').textContent=`${S.name}の台は ここでおわりにして、台えらびにもどるよ。`;
+  $('quitNote').innerHTML=G.testLobby!=null?'ためしモード：ロビーのコインにもどるよ':`使ったコインは もどらないよ（いまの ${COIN}${G.balls} は そのまま）`;
+  $('quit').hidden=false; $('quitNo').focus(); sfx.tick();
+}
+function closeQuit(){$('quit').hidden=true; if(G.state==='play') G.paused=false}
+function quitBoard(){
+  $('quit').hidden=true; G.paused=false; G.state='over'; G.fever=0; G.feverPay=0;
+  const S=STAGES[G.stage]; hallIdx=G.boardIdx??hallIdx; openHub('board'); toast(`${S.name}の台をやめたよ`);
+}
+$('backBtn').onclick=()=>{ensureAudio();openQuit()};
+$('quitNo').onclick=closeQuit; $('quitBack').onclick=closeQuit;
+$('quitYes').onclick=()=>{ensureAudio();quitBoard()};
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('quit').hidden)closeQuit()});
 function gameOver(){
   G.state='over'; closeSheet(); G.balls+=G.feverPay; G.feverPay=0; G.fever=0; writeSave();
   const S=STAGES[G.stage], i=G.boardIdx??0;
