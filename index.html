@@ -2382,8 +2382,8 @@ function addText(x,y,s,c,big){G.texts.push({x,y,s,c,big:!!big,t:1})}
 function banner(text,color,dur,y){G.banners.push({text,color,t:0,dur,y:y||250})}
 /* ---------- 属性のエフェクト（文字のかわりに見た目で伝える） ----------
    火＝ゆらめく炎、氷＝きらきらの結晶と冷気、雷＝バチバチの小さな稲妻、毒＝ぶくぶくのあわ */
-const FX_MAX=reduce?140:340;
-function fxAdd(o){if(G.fx.length<FX_MAX){o.t=0;G.fx.push(o)}}
+const FX_MAX=reduce?140:340, FX_FEV=reduce?110:230;   // FEVER 中の粒の上限（11/6 処理落ち対策）
+function fxAdd(o){if(G.fx.length<(G.fever>0?FX_FEV:FX_MAX)){o.t=0;G.fx.push(o)}}
 // 1秒に rate 個のわりあいで、この1コマに出す数
 const fxN=(rate,dt)=>{const n=rate*dt*(reduce?.4:1);let c=Math.floor(n);if(Math.random()<n-c)c++;return c};
 // 属性の粒をひとつ。x,y のまわり R の中から。c で色を変えられる（わざ用）。粒の形は ELEM[el].part の FXK
@@ -3053,7 +3053,7 @@ function marginPt(){const V=view();for(let k=0;k<6;k++){const x=V.x0+Math.random
 function updateMargin(dt){
   const f=dt*60;
   G.alarm=Math.max(0,G.alarm-dt); G.cheer=Math.max(0,G.cheer-dt);
-  const mode=marginMode(), rate={fever:64,clear:54,alarm:44,cheer:30,boss:9,pinch:7}[mode]||0;
+  const mode=marginMode(), rate={fever:36,clear:54,alarm:44,cheer:30,boss:9,pinch:7}[mode]||0;
   // きらきら・火の粉
   for(let n=fxN(rate,dt);n>0&&G.msp.length<280;n--){
     const p=marginPt(); if(!p) continue;
@@ -3066,14 +3066,14 @@ function updateMargin(dt){
   // 花火と紙吹雪（FEVER・クリア）
   const party=mode==='fever'||mode==='clear';
   if(party){
-    for(let n=fxN(mode==='clear'?2.4:1.7,dt);n>0&&G.fw.length<14;n--){
+    for(let n=fxN(mode==='clear'?2.4:1.7,dt);n>0&&G.fw.length<(mode==='clear'?14:9);n--){
       const p=marginPt(); if(!p) continue;
       const cols=mode==='fever'?[RAINBOW[Math.random()*6|0],RAINBOW[Math.random()*6|0]]:[GOLD,'#fff3b0'];
-      const m=reduce?12:22, sp=1.3+Math.random()*.8, ps=[];
+      const m=reduce?12:mode==='clear'?22:16, sp=1.3+Math.random()*.8, ps=[];
       for(let i=0;i<m;i++){const a=i/m*Math.PI*2+Math.random()*.2,v=sp*(.75+Math.random()*.35);ps.push({x:p[0],y:p[1],vx:Math.cos(a)*v,vy:Math.sin(a)*v,c:cols[i%2]})}
       G.fw.push({x:p[0],y:p[1],t:0,dur:1.1,ps});
     }
-    for(let n=fxN(reduce?8:22,dt);n>0&&G.conf.length<90;n--){
+    for(let n=fxN(reduce?8:mode==='fever'?16:22,dt);n>0&&G.conf.length<(mode==='fever'?60:90);n--){
       const p=marginPt(); if(!p) continue;
       G.conf.push({x:p[0],y:p[1]-10,vx:(Math.random()-.5)*.6,vy:.5+Math.random()*.5,rot:Math.random()*6,vr:(Math.random()-.5)*.3,w:3+Math.random()*2.5,c:mode==='fever'?RAINBOW[Math.random()*6|0]:(Math.random()<.6?GOLD:'#fff7d0'),t:1.6,ph:Math.random()*6});
     }
@@ -3135,27 +3135,43 @@ function lampOf(mode,u,i,t){
   }
   return [0,0];
 }
-function drawMargin(t){
+// 光の重ね描き用のキャンバス（画面の1/dpr＝CSSの1ピクセルの細かさ）。余白の光と FEVER の枠の光はここに描いて、1回で重ねる（11/6 FEVER の処理落ち対策：
+// 大きい光を ふつうの細かさで たくさん描くと重いので、1/4 のピクセルで描く。光はもともと ぼかしなので見た目はほぼ同じ）
+const lay=document.createElement('canvas'); let layC=null;
+function layerOn(){
+  const w=Math.max(1,Math.round(cv.width/dpr)), h=Math.max(1,Math.round(cv.height/dpr));
+  if(lay.width!==w||lay.height!==h){lay.width=w;lay.height=h}
+  if(!layC) layC=lay.getContext('2d');
+  const m=ctx.getTransform(); layC.setTransform(1,0,0,1,0,0); layC.clearRect(0,0,w,h);
+  layC.setTransform(m.a/dpr,m.b/dpr,m.c/dpr,m.d/dpr,m.e/dpr,m.f/dpr); layC.lineCap='round';
+  const main=ctx; ctx=layC; return main;
+}
+function layerOff(main){ctx=main; ctx.save(); ctx.setTransform(1,0,0,1,0,0); ctx.globalCompositeOperation='lighter'; ctx.globalAlpha=1; ctx.drawImage(lay,0,0,cv.width,cv.height); ctx.restore()}
+function drawMargin(t,fev){
   const mode=marginMode();
-  if(!mode&&!G.msp.length&&!G.fw.length&&!G.conf.length) return;
-  const V=view();
+  if(!mode&&!fev&&!G.msp.length&&!G.fw.length&&!G.conf.length) return;
+  // 重い場面（FEVER・クリア・出現の警告）は重ね描き用のキャンバスへ。ほかは前と同じく、台の中をくりぬいて（clip）ふつうに描く
+  const V=view(), r=RO+1, useLay=fev||mode==='fever'||mode==='clear'||mode==='alarm', main=useLay?layerOn():null;
   ctx.save();
-  // 台の中はくりぬく（ふちの木の段から外だけ）
-  ctx.beginPath(); ctx.rect(V.x0-4,V.y0-4,V.x1-V.x0+8,V.y1-V.y0+8);
-  const r=RO+1; ctx.moveTo(CX-r,H-4); ctx.lineTo(CX-r,CY); ctx.arc(CX,CY,r,Math.PI,Math.PI*2); ctx.lineTo(CX+r,H-4); ctx.closePath();
-  ctx.clip('evenodd');
+  if(!useLay){
+    ctx.beginPath(); ctx.rect(V.x0-4,V.y0-4,V.x1-V.x0+8,V.y1-V.y0+8);
+    ctx.moveTo(CX-r,H-4); ctx.lineTo(CX-r,CY); ctx.arc(CX,CY,r,Math.PI,Math.PI*2); ctx.lineTo(CX+r,H-4); ctx.closePath();
+    ctx.clip('evenodd');
+  }
   ctx.globalCompositeOperation='lighter';
   if(mode){
     drawBeams(mode,t,V);
     const spots=[[V.x0+10,V.y0+12,110],[V.x1-10,V.y0+12,110],[CX,Math.min(-6,V.y0+16),110],[V.x0+4,300,70],[V.x1-4,300,70],[V.x0+4,470,70],[V.x1-4,470,70],[CX,H+Math.max(18,(V.y1-H)*.5),150]];
     spots.forEach(([x,y,R],i)=>{const [c,a]=washOf(mode,i,t);if(a>.01)glow(c,x,y,R*1.25,Math.min(1,a*1.3))});
     if(mode==='alarm') drawStripes(t,V);
+    // ランプ：光は1つずつ、明るいランプの白いしんは まとめて1回で描く（描く回数をへらす）
+    const cores=[];
     rimPts().forEach((L,i)=>{
       const [c,a]=lampOf(mode,L.u,i,t); if(a<.03) return;
       const A=Math.min(1,a*1.15);
-      glow(c,L.x,L.y,12.5,A); ctx.globalAlpha=A; ctx.fillStyle=mixW(c,.6); circle(L.x,L.y,2.4); ctx.fill();
-      ctx.fillStyle='#ffffff'; ctx.globalAlpha=A*.8; circle(L.x,L.y,1.1); ctx.fill(); ctx.globalAlpha=1;
+      glow(c,L.x,L.y,12.5,A); if(A>.45) cores.push(L);
     });
+    if(cores.length){ctx.globalAlpha=.9;ctx.fillStyle='#ffffff';ctx.beginPath();for(const L of cores){ctx.moveTo(L.x+2,L.y);ctx.arc(L.x,L.y,2,0,Math.PI*2)}ctx.fill();ctx.globalAlpha=1}
   }
   // 余白のきらきら
   for(const q of G.msp){
@@ -3166,22 +3182,43 @@ function drawMargin(t){
     ctx.globalAlpha=1;
   }
   // 花火
+  // （前は粒ごとに光と線を描いていた。いまは光は花火ごとに1つ、線と頭は色ごとにまとめる＝描く回数が 1/10 くらい）
   for(const w of G.fw){
-    const p=w.t/w.dur, a=1-p;
+    const p=w.t/w.dur, a=1-p, q0=w.ps[0];
     if(p<.15) glow('#ffffff',w.x,w.y,10+26*(1-p/.15),.8*(1-p/.15));
-    ctx.lineWidth=1.6;
-    for(const q of w.ps){
-      glow(q.c,q.x,q.y,6,a*.9);
-      ctx.globalAlpha=a; ctx.strokeStyle=q.c; ctx.beginPath(); ctx.moveTo(q.x-q.vx*5,q.y-q.vy*5); ctx.lineTo(q.x,q.y); ctx.stroke();
+    glow(q0.c,w.x,w.y,Math.hypot(q0.x-w.x,q0.y-w.y)*1.2+12,a*.5);
+    ctx.globalAlpha=a; ctx.lineWidth=1.8;
+    for(let s=0;s<2;s++){
+      const col=w.ps[s].c; ctx.strokeStyle=col; ctx.beginPath();
+      for(let i=s;i<w.ps.length;i+=2){const q=w.ps[i];ctx.moveTo(q.x-q.vx*5,q.y-q.vy*5);ctx.lineTo(q.x,q.y)}
+      ctx.stroke(); ctx.fillStyle=mixW(col,.45); ctx.beginPath();
+      for(let i=s;i<w.ps.length;i+=2){const q=w.ps[i];ctx.moveTo(q.x+1.7,q.y);ctx.arc(q.x,q.y,1.7,0,Math.PI*2)}
+      ctx.fill();
     }
     ctx.globalAlpha=1;
   }
   // 紙吹雪
-  for(const q of G.conf){
-    ctx.save(); ctx.globalAlpha=Math.max(0,Math.min(1,q.t*2,(1.6-q.t)*6)); ctx.translate(q.x,q.y); ctx.rotate(q.rot);
-    ctx.scale(1,.2+.8*Math.abs(Math.cos(G.time*6+q.ph))); ctx.fillStyle=q.c; ctx.fillRect(-q.w/2,-q.w*.3,q.w,q.w*.6); ctx.restore();
+  if(G.conf.length){
+    const m=ctx.getTransform();
+    for(const q of G.conf){
+      const co=Math.cos(q.rot), si=Math.sin(q.rot), sy=.2+.8*Math.abs(Math.cos(G.time*6+q.ph));
+      ctx.setTransform(m.a*co,m.d*si,-m.a*si*sy,m.d*co*sy,m.a*q.x+m.e,m.d*q.y+m.f);
+      ctx.globalAlpha=Math.max(0,Math.min(1,q.t*2,(1.6-q.t)*6)); ctx.fillStyle=q.c; ctx.fillRect(-q.w/2,-q.w*.3,q.w,q.w*.6);
+    }
+    ctx.setTransform(m); ctx.globalAlpha=1;
   }
   ctx.restore();
+  if(!useLay) return;
+  // 台の中はくりぬく（ふちの木の段から外だけ）
+  ctx.save(); ctx.globalCompositeOperation='destination-out'; ctx.globalAlpha=1;
+  ctx.beginPath(); ctx.moveTo(CX-r,H-4); ctx.lineTo(CX-r,CY); ctx.arc(CX,CY,r,Math.PI,Math.PI*2); ctx.lineTo(CX+r,H-4); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  if(fev){
+    // 台の中のうすい金色（前は ふつうのキャンバスで台の中をぬっていた）と、枠の太い光（台のふちにかかってよいので、くりぬいたあと）
+    ctx.save(); ctx.globalCompositeOperation='lighter'; ctx.fillStyle=hexA('#ffd56a',reduce?.03:.06); fieldPath(ctx,RO,H-6); ctx.fill(); ctx.restore();
+    feverGlow(t);
+  }
+  layerOff(main);
 }
 // 台の形（左下 → 左の柱 → 上のアーチ → 右の柱 → 右下）にそった点。u は 0〜1
 function rimAt(u,r,bottom){
@@ -3191,21 +3228,15 @@ function rimAt(u,r,bottom){
   return [CX+r,CY+(s-side-arc)];
 }
 // FEVER の虹の枠：台の形にそって。太い虹の光がどくどく脈打ち、白い光の玉が虹の尾を引いて走る（14回目）
-function feverFrame(t,c){
-  let st=c;
-  if(ctx.createConicGradient){const g=ctx.createConicGradient(t*3.2,CX,CY+150);RAINBOW.concat(RAINBOW[0]).forEach((col,i)=>g.addColorStop(i/6,col));st=g}
-  const B=H+2, path=r=>{ctx.beginPath();ctx.moveTo(CX-r,B);ctx.lineTo(CX-r,CY);ctx.arc(CX,CY,r,Math.PI,Math.PI*2);ctx.lineTo(CX+r,B);ctx.closePath()};
-  const pulse=reduce?1:1+.22*Math.sin(t*9);
-  ctx.save(); ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle=st;
+const rainbowConic=t=>{if(!ctx.createConicGradient)return null;const g=ctx.createConicGradient(t*3.2,CX,CY+150);RAINBOW.concat(RAINBOW[0]).forEach((col,i)=>g.addColorStop(i/6,col));return g};
+const framePath=(r,B)=>{ctx.beginPath();ctx.moveTo(CX-r,B);ctx.lineTo(CX-r,CY);ctx.arc(CX,CY,r,Math.PI,Math.PI*2);ctx.lineTo(CX+r,B);ctx.closePath()};
+function feverGlow(t){
+  const B=H+2, pulse=reduce?1:1+.22*Math.sin(t*9);
+  ctx.save(); ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle=rainbowConic(t)||RAINBOW[Math.floor(t*8)%6];
   ctx.globalCompositeOperation='lighter';
-  ctx.globalAlpha=.16; ctx.lineWidth=30*pulse; path(RO+6); ctx.stroke();
-  ctx.globalAlpha=.3; ctx.lineWidth=17*pulse; path(RO+5); ctx.stroke();
-  ctx.globalAlpha=.75; ctx.lineWidth=9; path(RO+4); ctx.stroke();
-  ctx.globalCompositeOperation='source-over';
-  ctx.globalAlpha=1; ctx.lineWidth=5; path(RO+4); ctx.stroke();
-  ctx.lineWidth=1.6; ctx.strokeStyle='rgba(255,255,255,.85)'; path(RO+4); ctx.stroke();
+  ctx.globalAlpha=.16; ctx.lineWidth=30*pulse; framePath(RO+6,B); ctx.stroke();
+  ctx.globalAlpha=.3; ctx.lineWidth=17*pulse; framePath(RO+5,B); ctx.stroke();
   // 走る光の玉（4つ）
-  ctx.globalCompositeOperation='lighter';
   for(let k=0;k<4;k++){
     const u0=reduce?k/4+.125:(t*.42+k/4)%1;
     for(let j=0;j<7;j++){
@@ -3214,6 +3245,16 @@ function feverFrame(t,c){
       glow(j?RAINBOW[(k+j)%6]:'#ffffff',x,y,(j?11:18)*(1-j*.1),1-j*.13);
     }
   }
+  ctx.restore();
+}
+function feverFrame(t,c){
+  const B=H+2;
+  ctx.save(); ctx.lineJoin='round'; ctx.lineCap='round'; ctx.strokeStyle=rainbowConic(t)||c;
+  ctx.globalCompositeOperation='lighter';
+  ctx.globalAlpha=.75; ctx.lineWidth=9; framePath(RO+4,B); ctx.stroke();
+  ctx.globalCompositeOperation='source-over';
+  ctx.globalAlpha=1; ctx.lineWidth=5; framePath(RO+4,B); ctx.stroke();
+  ctx.lineWidth=1.6; ctx.strokeStyle='rgba(255,255,255,.85)'; framePath(RO+4,B); ctx.stroke();
   ctx.restore();
 }
 
@@ -9251,7 +9292,7 @@ function draw(){
   if(fev&&Q){const c=RAINBOW[Math.floor(t*8)%6];glow(c,Q.x,Q.y+6,26,.7)}
   for(const fr of G.fruits) glow(fr.c,fr.x,fr.y,fr.r*(fev?6:4.6),(fev?.6:.18)+.22*Math.sin(t*1.6+fr.ph));
   ctx.globalCompositeOperation='source-over';
-  drawMargin(t);
+  drawMargin(t,fev&&G.state==='play');
 
     // 杭に玉が当たった・発射・ねらい（光らせずに線で見せる）
     for(const p of G.pegs) if(!p.tower&&p.flash>0){ctx.strokeStyle=`rgba(243,230,181,${Math.min(.9,p.flash*4)})`;ctx.lineWidth=2;circle(p.x,p.y,p.r+2+(.22-p.flash)*14);ctx.stroke()}
@@ -9298,7 +9339,7 @@ function draw(){
     for(const w of G.waves){const k=1-w.t/w.max, e=1-(1-k)*(1-k), R=w.R*(.25+.85*e), a=w.t/w.max;
       const gr=ctx.createRadialGradient(w.x,w.y,R*.2,w.x,w.y,R);gr.addColorStop(0,hexA(w.c,0));gr.addColorStop(.75,hexA(w.c,.16*a));gr.addColorStop(1,hexA(w.c,0));
       ctx.fillStyle=gr;circle(w.x,w.y,R);ctx.fill();
-      ctx.globalAlpha=Math.min(1,a*1.6);ctx.strokeStyle=w.c;ctx.lineWidth=w.w*a+1;ctx.shadowColor=w.c;ctx.shadowBlur=14;circle(w.x,w.y,R);ctx.stroke();ctx.shadowBlur=0;ctx.globalAlpha=1}
+      ctx.strokeStyle=w.c;circle(w.x,w.y,R);ctx.globalAlpha=Math.min(1,a*1.6)*.28;ctx.lineWidth=(w.w*a+1)*2.4+9;ctx.stroke();ctx.globalAlpha=Math.min(1,a*1.6);ctx.lineWidth=w.w*a+1;ctx.stroke();ctx.globalAlpha=1}
     ctx.restore()}
   // 火花
   if(!fev){for(const q of G.parts){ctx.globalAlpha=Math.min(1,q.t*2);ctx.fillStyle=q.c;circle(q.x,q.y,2.2);ctx.fill()}ctx.globalAlpha=1}
@@ -9321,7 +9362,6 @@ function draw(){
   // フィーバー
   if(fev){
     const c=RAINBOW[Math.floor(t*8)%6];
-    ctx.fillStyle=hexA('#ffd56a',reduce?.03:.06); fieldPath(ctx,RO,H-6); ctx.fill();
     feverFrame(t,c);
     ctx.font=`500 16px ${DISPF}`; ctx.lineWidth=4; ctx.strokeStyle='rgba(8,12,22,.9)';
     const s='FEVER '+Math.ceil(G.fever); ctx.strokeText(s,CX,44); ctx.fillStyle=c; ctx.fillText(s,CX,44);
@@ -9336,7 +9376,7 @@ function draw(){
     ctx.font=`500 ${size}px ${DISPF}`;
     let fill=b.color;
     if(big){const g=ctx.createLinearGradient(-120,0,120,0);RAINBOW.forEach((c,i)=>g.addColorStop(((i+t*3)%6)/6,c));fill=g}
-    if(big){ctx.shadowColor=PINK;ctx.shadowBlur=18}
+    if(big){ctx.globalCompositeOperation='lighter';ctx.drawImage(glowSprite(PINK),-170,-46,340,92);ctx.globalCompositeOperation='source-over';ctx.globalAlpha=a*.55;ctx.lineWidth=13;ctx.strokeStyle=PINK;ctx.strokeText(b.text,0,0);ctx.globalAlpha=a}
     ctx.lineWidth=5; ctx.strokeStyle='rgba(8,12,22,.92)'; ctx.strokeText(b.text,0,0);
     ctx.fillStyle=fill; ctx.fillText(b.text,0,0); ctx.restore();
   }
