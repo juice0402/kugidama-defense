@@ -379,7 +379,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
       <div class="buy-in" role="dialog" aria-modal="true" aria-labelledby="testTitle" style="--c:#6bffb0;--cg:rgba(107,255,176,.3)">
         <div class="buy-kind">TEST</div>
         <h3 id="testTitle">ためしモード</h3>
-        <p>全部の台が開いているよ。セーブは本番と別だから、ここで何をしても本番のセーブはそのまま。台の中では、右上の ⏩ で次のウェーブへとばせるよ</p>
+        <p>全部の台・玉・タワー・ギミックが開いているよ（玉は5こずつ）。セーブは本番と別だから、ここで何をしても本番のセーブはそのまま。台の中では、右上の ⏩ で次のウェーブへとばせるよ</p>
         <div class="test-lb">台に入るときのコイン（台を出ると、ロビーのコインにもどる）</div>
         <div class="test-enter"><button class="nbtn" data-e="150">150</button><button class="nbtn" data-e="300">300</button><button class="nbtn" data-e="600">600</button><button class="nbtn" data-e="0">ロビーのまま</button></div>
         <div class="test-lb">ロビーのコイン</div>
@@ -9381,6 +9381,7 @@ const SHOP_BALLS=[], SHOP_TOWERS=[];   // お店のならび（finishHooks で�
 let hubTab='board', toastT=0;
 function openHub(tab){
   if(G.testLobby!=null){G.balls=G.testLobby;G.testLobby=null}   // ためしモード：台を出たら ロビーのコインにもどす
+  if(TEST) testUnlock();
   G.state='hub'; G.fever=0; clearPlay(); closeSheet(); closeBuy();
   writeSave(); hideOverlays(); $('hub').classList.remove('sitting'); $('hub').hidden=false; showTab(tab||hubTab);
 }
@@ -9847,6 +9848,12 @@ document.querySelector('#title .logo').onclick=()=>{
   const now=performance.now(); logoTaps=logoTaps.filter(t=>now-t<2500); logoTaps.push(now);
   if(logoTaps.length>=5){logoTaps=[]; ensureAudio(); setTest(!TEST); sfx.tick()}
 };
+// ためしモード：玉（5こずつ）・タワー・ギミックを全部持っている形に（台は boardState で全部開く）
+function testUnlock(){
+  for(const k of Object.keys(BALLS)) if(k!=='normal') G.owned[k]=Math.max(G.owned[k]||0,5);
+  for(const k of Object.keys(TOWERS)) G.unlocked[k]=true;
+  for(const k of Object.keys(GIMMICKS)) G.gimmicks[k]=true;
+}
 function setTest(on){
   TEST=on; try{on?localStorage.setItem('kugidama-test','1'):localStorage.removeItem('kugidama-test')}catch(_){}
   SAVE_KEY=on?'kugidama-test-v1':'kugidama-save-v1'; faceCache.clear(); testMarks();
