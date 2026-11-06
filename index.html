@@ -531,7 +531,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        しゅくふく：砲台の T.bless（G.time より大きい間）は towerDmg×T.blessK・towerCd×T.blessC（天使タワー・金色の玉）。金色の玉 b.gold は pegHit で goldHit（光の輪）
        台の みんなに 効く いたずら（王さまの 遠ぼえ・パンダの 光のたて）は heavenTick・heavenBullet・heavenBall を 天国の おばけの tick・bulletHit・ballHit で よぶ
        エンディング：G.ending の間は draw が drawEnding だけ描く（さいごの台を はじめて クリア → showEnding。hideOverlays で おわる）
-   ・技の文字（11/6 夜）：hitText(x,y,名前,色1,色2,tier)＝わざ（fxCombo）・とくしゅ効果（fxSpecial）・強撃・速射（towerHit）のたびに その場所へ。格闘ゲーム風の帯（drawHitFight）
+   ・技の文字（11/6 夜）：hitText(x,y,名前,色1,色2,tier)＝わざ（fxCombo）・とくしゅ効果（fxSpecial）・強撃・速射（towerHit）のたびに その場所の少し上へ。格闘ゲーム風の帯（drawHitFight）。大きさは tier で分ける（HIT_PX）・おばけの後ろに描く
    ・軽くする道具（11/6）：sprite(key,w,h,ax,ay,paint)＝毎フレーム同じ形の絵は1回だけ描いて使いまわす（砲台の杭・台座・頭。砲身が時間で変わる種類は毎フレーム）／
        fxPath(fill,色,透明度,太さ)＝小さい形を色ごとにまとめて1回で描く（drawFx・ホタル・星・火花。さいごに fxFlush）／余白と FEVER の枠の光は layerOn/layerOff（1/4のピクセル・2フレームに1回）／
        毎フレーム描くものに shadowBlur は使わない。draw のはじめの clearRect は消さない（消すとかえって重い）。ロビーの間は台を描かない・タイトルと結果の間は3フレームに1回
@@ -2695,7 +2695,9 @@ function fxCombo(x,y,k){
 // わざ（tier3）・とくしゅ効果（tier2）・強撃・速射（tier1）が出るたびに、その場所に出す（重なってもOK）。
 // 形は格闘ゲーム風：横からななめの帯が入る・光のすじが走る・金属っぽい文字が残像をひいて すべりこむ（漫画の効果音風とくらべて決めた。「！」はつけない。11/6 夜）
 // 文字と帯は sprite で1回だけ描いて使いまわし、毎フレームは うごき（大きさ・かたむき・すけ）だけ（軽さの決まり）
-const HIT_PX=[0,16,21,25], HIT_MAX=30, hitWait=new Set();
+// 大きさは種類で分ける（しょーくん 11/6 夜「大きすぎるかな」）：わざ25（見せ場）・とくしゅ効果17（前の8割）・強撃と速射10（前の6割。いちばんよく出る）
+// おばけの後ろに描く（おばけが かくれて玉でねらえなくならないように）・当たった所より少し上（HIT_UP）
+const HIT_PX=[0,10,17,25], HIT_UP=14, HIT_MAX=30, hitWait=new Set();
 const hitFont=px=>`800 ${px}px ${BODYF}`;
 function hitTextW(s,px){ctx.font=hitFont(px);return ctx.measureText(s).width}
 function hitText(x,y,s,c1,c2,tier){
@@ -2740,7 +2742,7 @@ function drawHits(){
   if(!G.hits||!G.hits.length) return;
   for(const h of G.hits){
     const px=h.px, hw=(h.tw/2+px*1.1)*h.sc, a=h.age, out=Math.max(0,(a-(h.dur-.28))/.28);   // さいごの0.28秒で消える
-    const x=Math.max(hw+4,Math.min(W-hw-4,h.x0)), y=Math.max(px+46,h.y0-px*1.3-h.dy-a*16);
+    const x=Math.max(hw+4,Math.min(W-hw-4,h.x0)), y=Math.max(px+46,h.y0-px*1.3-HIT_UP-h.dy-a*16);   // 台の上のはしでは下にずらす
     ctx.save(); ctx.translate(x,y);
     drawHitFight(h,a,out,px);
     ctx.restore();
@@ -9445,6 +9447,7 @@ function draw(){
   for(const p of G.pegs) if(p.tower) drawTower(p,t);
   for(const o of G.obs){const K=OBJK[o.k];if(K&&K.draw)K.draw(o,t)}
   drawPortals(t);
+  drawHits();                                   // 技の文字は おばけの後ろ（しょーくん 11/6 夜）
   for(const e of G.en) drawEnemy(e);
   drawPoofs();
   for(const o of G.obs){const K=OBJK[o.k];if(K&&K.top)K.top(o,t)}
@@ -9481,7 +9484,6 @@ function draw(){
     ctx.fillStyle=tx.c; ctx.fillText(tx.s,tx.x,tx.y);
   }
   ctx.globalAlpha=1;
-  drawHits();
   // フィーバー
   if(fev){
     const c=RAINBOW[Math.floor(t*8)%6];
