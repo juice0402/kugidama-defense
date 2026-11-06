@@ -292,6 +292,10 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .tgd b{display:block;color:#fff;font-size:13px;margin-bottom:1px}
 .tgh{margin-top:4px;font-size:11px}
 .testchip{position:absolute;z-index:3;top:calc(100% - 4px);right:max(16px,env(safe-area-inset-right,0px));padding:3px 10px;border-radius:99px;border:1.5px dashed #6bffb0;background:#06140d;color:#bfffd9;font:800 11px var(--f-body);cursor:pointer;box-shadow:0 0 10px rgba(107,255,176,.35)}
+.test-lb{width:100%;margin-top:8px;font:800 11px var(--f-body);color:#9ee8bf;text-align:left}
+.test-enter{display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr;gap:6px;width:100%;margin-top:4px}
+.test-enter .nbtn{padding:10px 2px;font-size:13px}
+.test-enter .nbtn.on{border-color:#6bffb0;color:#fff;background:rgba(107,255,176,.16);box-shadow:0 0 10px rgba(107,255,176,.35)}
 .test-coins{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;margin-top:6px}
 .test-coins .nbtn{padding:11px 4px;font-size:14px;color:#ffe07a;border-color:#6b5a1e}
 .test-tag{margin:-14px 0 0;text-align:center;font:800 13px var(--f-body);color:#6bffb0;text-shadow:0 0 8px rgba(107,255,176,.6)}
@@ -376,6 +380,9 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
         <div class="buy-kind">TEST</div>
         <h3 id="testTitle">ためしモード</h3>
         <p>全部の台が開いているよ。セーブは本番と別だから、ここで何をしても本番のセーブはそのまま。台の中では、右上の ⏩ で次のウェーブへとばせるよ</p>
+        <div class="test-lb">台に入るときのコイン（台を出ると、ロビーのコインにもどる）</div>
+        <div class="test-enter"><button class="nbtn" data-e="150">150</button><button class="nbtn" data-e="300">300</button><button class="nbtn" data-e="600">600</button><button class="nbtn" data-e="0">ロビーのまま</button></div>
+        <div class="test-lb">ロビーのコイン</div>
         <div class="test-coins"><button class="nbtn" data-c="1000">＋1,000</button><button class="nbtn" data-c="10000">＋10,000</button><button class="nbtn" data-c="0">150にする</button></div>
         <div class="buy-btns" style="grid-template-columns:1fr 1fr"><button class="nbtn" id="testOff">ためしをやめる</button><button class="nbtn gold" id="testClose">とじる</button></div>
       </div>
@@ -1403,6 +1410,8 @@ const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,
 let TEST=false; try{TEST=localStorage.getItem('kugidama-test')==='1'}catch(_){}
 let SAVE_KEY=TEST?'kugidama-test-v1':'kugidama-save-v1';
 const TEST_COINS=5000;
+// ためしモードで台に入るときのコイン（0＝ロビーのまま）。台の中は このコインで遊び、台を出ると ロビーのコイン（G.testLobby）にもどる（11/6）
+let testEnter=300; try{const v=localStorage.getItem('kugidama-test-coin');if(v!=null&&!isNaN(+v))testEnter=+v}catch(_){}
 const NEW_UNLOCKED=()=>Object.fromEntries(Object.keys(TOWERS).map(k=>[k,k==='basic']));
 const NEW_GIMMICKS=()=>Object.fromEntries(Object.keys(GIMMICKS).map(k=>[k,false]));
 // 台のようす：soon まだ・lock 前の台をクリアしていない・buy コインで買える・open 遊べる
@@ -9284,7 +9293,7 @@ function itemRow(color,name,desc,price,enabled,onBuy,owned){
 
 /* ---------- セーブ（台えらび・お店・台のクリアのときに、この端末へ保存） ---------- */
 // 台の中では保存しない。ゲームオーバーのときは、台に入る前の保存にもどる
-function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.balls,deck:G.deck,owned:G.owned,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,bought:G.bought,kills:G.kills,found:[...G.found],fresh:[...G.fresh]}))}catch(_){}}
+function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.testLobby??G.balls,deck:G.deck,owned:G.owned,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,bought:G.bought,kills:G.kills,found:[...G.found],fresh:[...G.fresh]}))}catch(_){}}
 function readSave(){
   try{
     const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
@@ -9320,6 +9329,8 @@ function newRun(){
 const boardName=b=>b.soon||!STAGES[b.stage]?(b.name||'？？？'):STAGES[b.stage].name;
 function playBoard(i){
   closeBuy(); G.stage=BOARDS[i].stage; G.boardIdx=i; hallIdx=i;
+  if(G.testLobby!=null){G.balls=G.testLobby;G.testLobby=null}   // ためしモードで「もう一度この台」
+  if(TEST&&testEnter>0){writeSave(); G.testLobby=G.balls; G.balls=testEnter; startStage(); return}
   const add=Math.max(0,MIN_COINS-G.balls); G.balls+=add;      // 打てなくならないように、少ないときは足す
   writeSave(); startStage();
   if(add>0) addText(70,40,`コイン +${add}`,GOLD,true);
@@ -9369,6 +9380,7 @@ const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',
 const SHOP_BALLS=[], SHOP_TOWERS=[];   // お店のならび（finishHooks で作る）：無属性弾 → 回復弾 → 属性弾。台の品は その台が開いてから
 let hubTab='board', toastT=0;
 function openHub(tab){
+  if(G.testLobby!=null){G.balls=G.testLobby;G.testLobby=null}   // ためしモード：台を出たら ロビーのコインにもどす
   G.state='hub'; G.fever=0; clearPlay(); closeSheet(); closeBuy();
   writeSave(); hideOverlays(); $('hub').classList.remove('sitting'); $('hub').hidden=false; showTab(tab||hubTab);
 }
@@ -9841,7 +9853,9 @@ function setTest(on){
 }
 function testMarks(){$('titleTest').hidden=!TEST;$('testChip').hidden=!TEST;$('skipWave').hidden=!TEST}
 testMarks();
-$('testChip').onclick=()=>{ensureAudio();sfx.tick();$('testSheet').hidden=false;$('testClose').focus()};
+const testEnterMarks=()=>{for(const b of $('testSheet').querySelectorAll('[data-e]'))b.classList.toggle('on',+b.dataset.e===testEnter)};
+$('testChip').onclick=()=>{ensureAudio();sfx.tick();testEnterMarks();$('testSheet').hidden=false;$('testClose').focus()};
+for(const b of $('testSheet').querySelectorAll('[data-e]')) b.onclick=()=>{testEnter=+b.dataset.e;try{localStorage.setItem('kugidama-test-coin',String(testEnter))}catch(_){} testEnterMarks();sfx.tick()};
 const closeTest=()=>{$('testSheet').hidden=true};
 $('testClose').onclick=closeTest; $('testBack').onclick=closeTest;
 for(const b of $('testSheet').querySelectorAll('[data-c]')) b.onclick=()=>{
