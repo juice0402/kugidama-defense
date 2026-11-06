@@ -1230,7 +1230,7 @@ const ENEMIES={
   wata2:{gh:1,spr:'wata',hp:.4,sp:.4,r:7,color:'#f4e27c',reward:2},                       // 分かれた小さいわたげ
   usagi:{gh:1,hp:2,sp:.62,r:9,color:'#ff9ac8',reward:5},                      // うさぎおばけ（はやい）：ぴょんぴょん前へ
   kakashi:{gh:1,hp:9,sp:.22,r:14,color:'#f0b85a',reward:10},                  // かかしおばけ（かたい）：近くの砲台に麦わら帽子をかぶせる
-  tanuki:{gh:1,hp:900,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:6,calls:['wata','wata'],dorn:12,tintK:.82},              // 中ボス：葉っぱで化けて分身
+  tanuki:{gh:1,hp:450,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:8,calls:['wata','wata'],dorn:12,tintK:.82},              // 中ボス：葉っぱで化けて分身
   uma:{gh:1,hp:1700,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['wata','usagi','kakashi'],dash:10,ey:.28},    // ボス：すけすけになって猛ダッシュ
   // 森のおばけ
   kinoko:{gh:1,hp:2.6,sp:.32,r:11,color:'#ff6f7d',reward:5},                  // きのこおばけ（ふつう）：倒すと胞子がとんで、近くの砲台がねむる（玉が当たると起きる）
@@ -2060,7 +2060,7 @@ const view=()=>({x0:-ox/scale,y0:-oy/scale,x1:(VW-ox)/scale,y1:(VH-oy)/scale});
 function waveList(stage,w){
   const F=STAGES[stage].foes;   // ふつう・はやい・かたい・中ボス・ボス
   const boss=w===MID_WAVE?F[3]:w===WAVES?F[4]:null;
-  const n=Math.round((WAVE_N[0]+w*WAVE_N[1]+stage*3)*(boss?.6:1)), list=boss?[boss]:[];
+  const n=Math.round((WAVE_N[0]+w*WAVE_N[1]+stage*3)*(STAGES[stage].nK||1)*(boss?STAGES[stage].bossN??.6:1)), list=boss?[boss]:[];   // nK＝台ごとの敵の数の倍率、bossN＝中ボス・ボスのウェーブの ざこの数の割合
   for(let i=0;i<n;i++){
     const r=Math.random();
     list.push(w>=3&&r<.2?F[2]:w>=2&&r<.45?F[1]:F[0]);
@@ -2097,7 +2097,7 @@ function spawn(t,at){
 }
 // 敵をその場に出す（o で中身を上書き）
 function addEnemy(t,x,y,o){
-  const E=ENEMIES[t], S=STAGES[G.stage], hp0=S.hp??1+.45*G.stage, mul=E.boss?hp0*(S.bossHp||1):hp0+HP_GROW*(G.wave-1)*(S.grow||1), r=E.r*G.bscale;   // hp＝台ごとの敵の強さ、grow＝ウェーブでふえる強さの倍率、bossHp＝中ボス・ボスの強さの倍率
+  const E=ENEMIES[t], S=STAGES[G.stage], hp0=S.hp??1+.45*G.stage, mul=E.boss?hp0*(S.bossHp||1):S.hpW?S.hpW[Math.min(S.hpW.length,G.wave)-1]:hp0+HP_GROW*(G.wave-1)*(S.grow||1), r=E.r*G.bscale;   // hp＝台ごとの敵の強さ、grow＝ウェーブでふえる強さの倍率、bossHp＝中ボス・ボスの強さの倍率、hpW＝ウェーブごとの ざこの強さ（あれば こちら。11/6 草原から）
   const e={id:G.eid++,t,x:inArch(x,y,r),y,hp:E.hp*mul,max:E.hp*mul,sp:E.sp*(1+.1*G.stage),r,ph:Math.random()*6.28,slow:0,flash:.12,dead:false,callT:E.call||0,born:0,
     vx:0,ghost:0,trail:[],stun:0,sleep:0,push:0};
   if(E.init) E.init(e);                                       // おばけごとのいたずらの準備
@@ -2183,6 +2183,9 @@ function drawNuts(t){
   }
 }
 Object.assign(STAGES[0],{
+  // 11/6 しょーくん「ざこが弱すぎて中ボスまで退屈」「中ボスで一気にゲームオーバー」→ ざこは ウェーブごとに表で強く（はじめから手ごわく、あとは ゆるやかに）、
+  // 中ボスのウェーブの ざこは4割（中ボスに集中できるように）。自動プレイ：1回目は失敗（ほぼボスまで）・クリアは2〜6回目（まん中3回目）
+  hpW:[4,6.5,9,11,11.5,12.5,13.5,14.5,15.5,16], bossN:.4,
   build:buildMeadow,
   setup(){G.sx.nuts=[];G.sx.nutT=4},
   tick(dt,f){const X=G.sx;X.nutT-=dt;if(X.nutT<=0){X.nutT=NUT.every*(.7+Math.random()*.6);dropNut()}stepNuts(f,dt)},
