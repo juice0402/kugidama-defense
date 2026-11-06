@@ -1231,7 +1231,7 @@ const ENEMIES={
   usagi:{gh:1,hp:2,sp:.62,r:9,color:'#ff9ac8',reward:5},                      // うさぎおばけ（はやい）：ぴょんぴょん前へ
   kakashi:{gh:1,hp:9,sp:.22,r:14,color:'#f0b85a',reward:10},                  // かかしおばけ（かたい）：近くの砲台に麦わら帽子をかぶせる
   tanuki:{gh:1,hp:450,sp:.13,r:24,color:'#ff9a4f',reward:60,boss:1,call:8,calls:['wata','wata'],dorn:12,tintK:.82},              // 中ボス：葉っぱで化けて分身
-  uma:{gh:1,hp:1700,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['wata','usagi','kakashi'],dash:10,ey:.28},    // ボス：すけすけになって猛ダッシュ
+  uma:{gh:1,hp:1400,sp:.11,r:32,color:'#d65cff',reward:150,boss:2,call:5,calls:['wata','usagi','kakashi'],dash:10,ey:.28},    // ボス：すけすけになって猛ダッシュ
   // 森のおばけ
   kinoko:{gh:1,hp:2.6,sp:.32,r:11,color:'#ff6f7d',reward:5},                  // きのこおばけ（ふつう）：倒すと胞子がとんで、近くの砲台がねむる（玉が当たると起きる）
   kitsune:{gh:1,hp:2,sp:.62,r:9,color:'#ffa64f',reward:5,dodge:.3},           // きつねおばけ（はやい）：ジグザグに走って、砲台の弾をひょいとよける
@@ -2184,8 +2184,9 @@ function drawNuts(t){
 }
 Object.assign(STAGES[0],{
   // 11/6 しょーくん「ざこが弱すぎて中ボスまで退屈」「中ボスで一気にゲームオーバー」→ ざこは ウェーブごとに表で強く（はじめから手ごわく、あとは ゆるやかに）、
-  // 中ボスのウェーブの ざこは4割（中ボスに集中できるように）。自動プレイ：1回目は失敗（ほぼボスまで）・クリアは2〜6回目（まん中3回目）
-  hpW:[4,6.5,9,11,11.5,12.5,13.5,14.5,15.5,16], bossN:.4,
+  // 中ボスのウェーブの ざこは4割（中ボスに集中できるように）。そのあと「やっぱり敵が柔らかい」→ はじめの方を1.5倍・おわりの方は たいらに・ボス馬 HP1700→1400
+  // 自動プレイ（はじめの玉セット）：1回目は6回とも失敗（9〜10ウェーブ）・クリアは2〜6回目（まん中4〜5回目。人は自動プレイより強いので、だいたい3回目ごろのつもり）
+  hpW:[6,9.75,13.5,16.5,17,17.5,18,18.5,19,19], bossN:.4,
   build:buildMeadow,
   setup(){G.sx.nuts=[];G.sx.nutT=4},
   tick(dt,f){const X=G.sx;X.nutT-=dt;if(X.nutT<=0){X.nutT=NUT.every*(.7+Math.random()*.6);dropNut()}stepNuts(f,dt)},
