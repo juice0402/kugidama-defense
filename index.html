@@ -416,7 +416,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
         <div class="test-lb">台に入るときのコイン（台を出ると、ロビーのコインにもどる）</div>
         <div class="test-enter"><button class="nbtn" data-e="150">150</button><button class="nbtn" data-e="300">300</button><button class="nbtn" data-e="600">600</button><button class="nbtn" data-e="0">ロビーのまま</button></div>
         <div class="test-lb">ロビーのコイン</div>
-        <div class="test-coins"><button class="nbtn" data-c="1000">＋1,000</button><button class="nbtn" data-c="10000">＋10,000</button><button class="nbtn" data-c="0">150にする</button></div>
+        <div class="test-coins"><button class="nbtn" data-c="1000">＋1,000</button><button class="nbtn" data-c="10000">＋10,000</button><button class="nbtn" data-c="0">300にする</button></div>
         <div class="buy-btns" style="grid-template-columns:1fr 1fr"><button class="nbtn" id="testOff">ためしをやめる</button><button class="nbtn gold" id="testClose">とじる</button></div>
       </div>
     </div>
@@ -541,37 +541,37 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
 // 玉：タワーに当たるとバフをつける（デッキビルド）。属性弾はタワーにも敵にも属性をつける
 const BALLS={
   normal:{name:'通常弾',color:'#dfe6ec',e:.5,g:.16,r:5,dmg:1,price:0,desc:'タワーに当てると経験値がたまる'},
-  fire:{name:'火炎弾',color:'#ff7a3d',el:'fire',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「火」をつける。燃えた敵は少しずつダメージ'},
-  ice:{name:'氷結弾',color:'#8fe3ff',el:'ice',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「氷」をつける。こおった敵はおそくなる'},
-  bolt:{name:'雷弾',color:'#ffe14f',el:'bolt',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「雷」をつける。近くの敵にもとびうつる'},
-  poison:{name:'毒弾',color:'#c08bff',el:'poison',e:.5,g:.16,r:5,dmg:1,price:200,desc:'「毒」をつける。重なって長くつづく'},
-  lead:{name:'鉛玉',color:'#8e98a6',e:.28,g:.2,r:6.5,dmg:3,price:200,buff:'pow',desc:'重くて跳ねない。敵に3ダメージ。タワーの攻撃力アップ'},
-  heal:{name:'回復弾',color:'#7dffb0',e:.5,g:.16,r:5,dmg:1,price:150,heal:4,desc:'ヘソに入るとライフが4回復。ほかは通常弾と同じ'},
-  bb:{name:'BB弾',color:'#f4f1e8',e:.88,g:.12,r:4,dmg:.5,price:200,buff:'rapid',desc:'軽くてよく跳ねる。タワーの連射アップ'},
+  fire:{name:'火炎弾',color:'#ff7a3d',el:'fire',e:.5,g:.16,r:5,dmg:1,price:400,desc:'「火」をつける。燃えた敵は少しずつダメージ'},
+  ice:{name:'氷結弾',color:'#8fe3ff',el:'ice',e:.5,g:.16,r:5,dmg:1,price:400,desc:'「氷」をつける。こおった敵はおそくなる'},
+  bolt:{name:'雷弾',color:'#ffe14f',el:'bolt',e:.5,g:.16,r:5,dmg:1,price:400,desc:'「雷」をつける。近くの敵にもとびうつる'},
+  poison:{name:'毒弾',color:'#c08bff',el:'poison',e:.5,g:.16,r:5,dmg:1,price:400,desc:'「毒」をつける。重なって長くつづく'},
+  lead:{name:'鉛玉',color:'#8e98a6',e:.28,g:.2,r:6.5,dmg:3,price:400,buff:'pow',desc:'重くて跳ねない。敵に3ダメージ。タワーの攻撃力アップ'},
+  heal:{name:'回復弾',color:'#7dffb0',e:.5,g:.16,r:5,dmg:1,price:300,heal:4,desc:'ヘソに入るとライフが4回復。ほかは通常弾と同じ'},
+  bb:{name:'BB弾',color:'#f4f1e8',e:.88,g:.12,r:4,dmg:.5,price:400,buff:'rapid',desc:'軽くてよく跳ねる。タワーの連射アップ'},
   // 森の台が開くと お店にならぶ（board＝その台の番号）
-  water:{name:'水弾',color:'#4fb8ff',el:'water',e:.5,g:.16,r:5,dmg:1,price:200,board:1,desc:'「水」をつける。ぬれた敵は少し押しもどされる'},
-  vine:{name:'蔓弾',color:'#6fe36a',el:'vine',e:.5,g:.16,r:5,dmg:1,price:200,board:1,desc:'「蔓」をつける。からまった敵は少し止まる'},
+  water:{name:'水弾',color:'#4fb8ff',el:'water',e:.5,g:.16,r:5,dmg:1,price:400,board:1,desc:'「水」をつける。ぬれた敵は少し押しもどされる'},
+  vine:{name:'蔓弾',color:'#6fe36a',el:'vine',e:.5,g:.16,r:5,dmg:1,price:400,board:1,desc:'「蔓」をつける。からまった敵は少し止まる'},
   // 洋館の台が開くと お店にならぶ
-  sound:{name:'音波弾',color:'#ff7ad9',el:'sound',e:.5,g:.16,r:5,dmg:1,price:225,board:2,desc:'「音」をつける。音の衝撃で まわりの敵にも少しダメージ、敵は少しひるむ'},
-  shadow:{name:'暗黒弾',color:'#8a6cff',el:'shadow',e:.5,g:.16,r:5,dmg:1,price:225,board:2,desc:'「闇」をつける。こんらんした敵は、少しうしろ向きに歩く'},
+  sound:{name:'音波弾',color:'#ff7ad9',el:'sound',e:.5,g:.16,r:5,dmg:1,price:450,board:2,desc:'「音」をつける。音の衝撃で まわりの敵にも少しダメージ、敵は少しひるむ'},
+  shadow:{name:'暗黒弾',color:'#8a6cff',el:'shadow',e:.5,g:.16,r:5,dmg:1,price:450,board:2,desc:'「闇」をつける。こんらんした敵は、少しうしろ向きに歩く'},
   // 砂漠の台が開くと お店にならぶ
-  sand:{name:'砂塵弾',color:'#f2b866',el:'sand',e:.5,g:.16,r:5,dmg:1,price:250,board:3,desc:'「砂」をつける。すなをかぶった敵は いたずらできなくなって、少しおそくなる'},
-  wind:{name:'疾風弾',color:'#7dffd0',el:'wind',e:.5,g:.16,r:5,dmg:1,price:250,board:3,desc:'「風」をつける。敵を台のまん中の方へ ふきとばして、ついている属性を近くの敵にうつす'},
+  sand:{name:'砂塵弾',color:'#f2b866',el:'sand',e:.5,g:.16,r:5,dmg:1,price:500,board:3,desc:'「砂」をつける。すなをかぶった敵は いたずらできなくなって、少しおそくなる'},
+  wind:{name:'疾風弾',color:'#7dffd0',el:'wind',e:.5,g:.16,r:5,dmg:1,price:500,board:3,desc:'「風」をつける。敵を台のまん中の方へ ふきとばして、ついている属性を近くの敵にうつす'},
   // 雪山の台が開くと お店にならぶ
-  snow:{name:'雪弾',color:'#eef4ff',el:'snow',e:.5,g:.16,r:5,dmg:1,price:275,board:4,desc:'「雪」をつける。雪が3つ つもると 雪だるまになって しばらく止まる'},
-  crystal:{name:'結晶弾',color:'#a8b0ff',el:'crystal',e:.5,g:.16,r:5,dmg:1,price:275,board:4,desc:'「結晶」をつける。結晶がついた敵に もう一度 玉や弾が当たると、割れて大ダメージ'},
+  snow:{name:'雪弾',color:'#eef4ff',el:'snow',e:.5,g:.16,r:5,dmg:1,price:550,board:4,desc:'「雪」をつける。雪が3つ つもると 雪だるまになって しばらく止まる'},
+  crystal:{name:'結晶弾',color:'#a8b0ff',el:'crystal',e:.5,g:.16,r:5,dmg:1,price:550,board:4,desc:'「結晶」をつける。結晶がついた敵に もう一度 玉や弾が当たると、割れて大ダメージ'},
   // 火山の台が開くと お店にならぶ（deco＝玉の上の絵。火山の区切りでつける）
-  magma:{name:'溶岩弾',color:'#ff3d8a',el:'magma',e:.5,g:.16,r:5,dmg:1,price:300,board:5,desc:'「溶岩」をつける。重いダメージで よろいをわって、しばらく ダメージが ふえる'},
-  bomb:{name:'炸裂弾',color:'#ff4a4a',el:'bomb',e:.5,g:.16,r:5,dmg:1,price:300,board:5,desc:'「炸裂」をつける。少しあとで 爆発して、まわりの敵にも ダメージ'},
+  magma:{name:'溶岩弾',color:'#ff3d8a',el:'magma',e:.5,g:.16,r:5,dmg:1,price:600,board:5,desc:'「溶岩」をつける。重いダメージで よろいをわって、しばらく ダメージが ふえる'},
+  bomb:{name:'炸裂弾',color:'#ff4a4a',el:'bomb',e:.5,g:.16,r:5,dmg:1,price:600,board:5,desc:'「炸裂」をつける。少しあとで 爆発して、まわりの敵にも ダメージ'},
   // 魔王城の台が開くと お店にならぶ（deco は魔王城の区切りでつける）
-  curse:{name:'呪詛弾',color:'#b6ff3d',el:'curse',e:.5,g:.16,r:5,dmg:1,price:325,board:6,desc:'「呪」をつける。のろわれた敵は 受けるダメージが ふえる（3つまで重なる）。倒れると 近くの敵に のりうつる'},
-  chain:{name:'鉄鎖弾',color:'#ffc94d',el:'chain',e:.5,g:.16,r:5,dmg:1,price:325,board:6,desc:'「鎖」をつける。近くの敵と くさりで つないで、どちらかが 受けた ダメージが もう1体にも つたわる'},
+  curse:{name:'呪詛弾',color:'#b6ff3d',el:'curse',e:.5,g:.16,r:5,dmg:1,price:650,board:6,desc:'「呪」をつける。のろわれた敵は 受けるダメージが ふえる（3つまで重なる）。倒れると 近くの敵に のりうつる'},
+  chain:{name:'鉄鎖弾',color:'#ffc94d',el:'chain',e:.5,g:.16,r:5,dmg:1,price:650,board:6,desc:'「鎖」をつける。近くの敵と くさりで つないで、どちらかが 受けた ダメージが もう1体にも つたわる'},
   // 宇宙の台が開くと お店にならぶ（deco は宇宙の区切りでつける）
-  gravity:{name:'重力弾',color:'#6a78ff',el:'gravity',e:.5,g:.16,r:5,dmg:1,price:350,board:7,desc:'「重力」をつける。まわりの敵を 1か所に 引きよせて、少し おそくする'},
-  star:{name:'流星弾',color:'#fff0a0',el:'star',e:.5,g:.16,r:5,dmg:1,price:350,board:7,desc:'「流星」をつける。少しあとで 空から 星が ふってきて、まわりの敵にも ダメージ'},
+  gravity:{name:'重力弾',color:'#6a78ff',el:'gravity',e:.5,g:.16,r:5,dmg:1,price:700,board:7,desc:'「重力」をつける。まわりの敵を 1か所に 引きよせて、少し おそくする'},
+  star:{name:'流星弾',color:'#fff0a0',el:'star',e:.5,g:.16,r:5,dmg:1,price:700,board:7,desc:'「流星」をつける。少しあとで 空から 星が ふってきて、まわりの敵にも ダメージ'},
   // 天国の台が開くと お店にならぶ（deco は天国の区切りでつける）
-  holy:{name:'聖光弾',color:'#fff6dc',el:'holy',e:.5,g:.16,r:5,dmg:1,price:375,board:8,desc:'「光」をつける。おはらいで すけすけ・にせもの・いたずらを けして、中ボス・ボスには 大きな ダメージ'},
-  rainbow:{name:'七色弾',color:'#ff9de2',el:'rainbow',e:.5,g:.16,r:5,dmg:1,price:375,board:8,desc:'「虹」をつける。当たるたびに ちがう属性が出る（どれが出るかは おたのしみ）'},
+  holy:{name:'聖光弾',color:'#fff6dc',el:'holy',e:.5,g:.16,r:5,dmg:1,price:750,board:8,desc:'「光」をつける。おはらいで すけすけ・にせもの・いたずらを けして、中ボス・ボスには 大きな ダメージ'},
+  rainbow:{name:'七色弾',color:'#ff9de2',el:'rainbow',e:.5,g:.16,r:5,dmg:1,price:750,board:8,desc:'「虹」をつける。当たるたびに ちがう属性が出る（どれが出るかは おたのしみ）'},
 };
 // 属性。タワーの上で2つの属性が出会うと「わざ」。敵の状態：火 burn/burnD・氷 slow/slowF/freeze・雷 shock（と stun）・毒 psnT/psnD・水 wet（push）・つる vineT/root/rootCD/thorn
 const ELEM={
@@ -1209,35 +1209,35 @@ const LIFE_MAX=10;                            // ライフ（上のバー）
 const BUFF_T=10;                              // 玉でついた属性・とくしゅ効果・わざ・攻撃UP・連射UP がつづく秒数
 const TOWERS={
   basic:{name:'ノーマルタワー',color:'#a6e38c',range:78,rate:.9,dmg:1.7,cost:30,muz:1.8,desc:'近くの敵を自動で撃つ'},
-  fire:{name:'火炎タワー',color:'#ff8a4a',range:74,rate:.95,dmg:2.9,cost:45,el:'fire',unlock:400,muz:1.5,desc:'弾でやけど。火炎弾が当たると「爆発」'},
-  ice:{name:'氷結タワー',color:'#a8dcff',range:72,rate:1,dmg:2,cost:45,el:'ice',unlock:400,muz:1.75,desc:'弾でおそく。氷結弾が当たると「氷霧」'},
-  bolt:{name:'雷タワー',color:'#ffe14f',range:76,rate:1.1,dmg:2.6,cost:50,el:'bolt',unlock:400,muz:1.6,desc:'弾がとびうつる。雷弾が当たると「稲妻」'},
-  poison:{name:'毒タワー',color:'#c08bff',range:70,rate:1,dmg:1.7,cost:40,el:'poison',unlock:400,muz:1.3,desc:'弾でどく。毒弾が当たると「毒沼」'},
-  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:3.7,cost:55,unlock:300,muz:2.4,desc:'遠くまで届く。撃つのはゆっくり'},
+  fire:{name:'火炎タワー',color:'#ff8a4a',range:74,rate:.95,dmg:2.9,cost:45,el:'fire',unlock:800,muz:1.5,desc:'弾でやけど。火炎弾が当たると「爆発」'},
+  ice:{name:'氷結タワー',color:'#a8dcff',range:72,rate:1,dmg:2,cost:45,el:'ice',unlock:800,muz:1.75,desc:'弾でおそく。氷結弾が当たると「氷霧」'},
+  bolt:{name:'雷タワー',color:'#ffe14f',range:76,rate:1.1,dmg:2.6,cost:50,el:'bolt',unlock:800,muz:1.6,desc:'弾がとびうつる。雷弾が当たると「稲妻」'},
+  poison:{name:'毒タワー',color:'#c08bff',range:70,rate:1,dmg:1.7,cost:40,el:'poison',unlock:800,muz:1.3,desc:'弾でどく。毒弾が当たると「毒沼」'},
+  long:{name:'ロングタワー',color:'#d8b0ff',range:150,rate:1.6,dmg:3.7,cost:55,unlock:600,muz:2.4,desc:'遠くまで届く。撃つのはゆっくり'},
   // 森の台が開くと お店にならぶ。サウンドタワーは弾を撃たずに、まわりの敵みんなに音の波（shoot は森の区切り）
-  water:{name:'水タワー',color:'#4fb8ff',range:74,rate:.9,dmg:1.9,cost:45,el:'water',unlock:400,board:1,muz:1.7,desc:'弾でぬらして押しもどす。水弾が当たると「大波」'},
-  sound:{name:'サウンドタワー',color:'#ff8fe0',range:62,rate:1.5,dmg:1.6,cost:50,unlock:400,board:1,aoe:1,muz:.6,desc:'弾を撃たずに、まわりの敵みんなに音の波'},
+  water:{name:'水タワー',color:'#4fb8ff',range:74,rate:.9,dmg:1.9,cost:45,el:'water',unlock:800,board:1,muz:1.7,desc:'弾でぬらして押しもどす。水弾が当たると「大波」'},
+  sound:{name:'サウンドタワー',color:'#ff8fe0',range:62,rate:1.5,dmg:1.6,cost:50,unlock:800,board:1,aoe:1,muz:.6,desc:'弾を撃たずに、まわりの敵みんなに音の波'},
   // 洋館の台が開くと お店にならぶ。鏡タワーの弾は おばけで はね返る（BULLETK.mirror は洋館の区切り）
-  shadow:{name:'暗黒タワー',color:'#8a6cff',range:74,rate:1,dmg:2.2,cost:50,el:'shadow',unlock:450,board:2,muz:1.75,desc:'弾でこんらん（少しうしろ向きに歩く）。暗黒弾が当たると「闇霧」'},
-  mirror:{name:'鏡タワー',color:'#bff4ff',range:78,rate:1.2,dmg:2.3,cost:55,unlock:450,board:2,muz:1.6,bullet:'mirror',desc:'光の弾が おばけで はね返って、3体まで当たる'},
+  shadow:{name:'暗黒タワー',color:'#8a6cff',range:74,rate:1,dmg:2.2,cost:50,el:'shadow',unlock:900,board:2,muz:1.75,desc:'弾でこんらん（少しうしろ向きに歩く）。暗黒弾が当たると「闇霧」'},
+  mirror:{name:'鏡タワー',color:'#bff4ff',range:78,rate:1.2,dmg:2.3,cost:55,unlock:900,board:2,muz:1.6,bullet:'mirror',desc:'光の弾が おばけで はね返って、3体まで当たる'},
   // 砂漠の台が開くと お店にならぶ。竜巻タワーの弾は ゆっくり進んで、通り道のおばけみんなに当たる（BULLETK.tornado は砂漠の区切り）。tag＝お店のタグ
-  sand:{name:'砂塵タワー',color:'#f2b866',range:74,rate:1,dmg:2.3,cost:55,el:'sand',unlock:500,board:3,muz:1.7,desc:'弾で すなかぶり（いたずらできない・少しおそい）。砂塵弾が当たると「砂地獄」'},
-  tornado:{name:'竜巻タワー',color:'#7dffd0',range:80,rate:1.6,dmg:2.5,cost:60,unlock:500,board:3,muz:1.55,bullet:'tornado',tag:'貫通',desc:'ゆっくり進む たつまきを撃つ。通り道のおばけ みんなに当たる'},
+  sand:{name:'砂塵タワー',color:'#f2b866',range:74,rate:1,dmg:2.3,cost:55,el:'sand',unlock:1000,board:3,muz:1.7,desc:'弾で すなかぶり（いたずらできない・少しおそい）。砂塵弾が当たると「砂地獄」'},
+  tornado:{name:'竜巻タワー',color:'#7dffd0',range:80,rate:1.6,dmg:2.5,cost:60,unlock:1000,board:3,muz:1.55,bullet:'tornado',tag:'貫通',desc:'ゆっくり進む たつまきを撃つ。通り道のおばけ みんなに当たる'},
   // 雪山の台が開くと お店にならぶ。散弾タワーは 3方向に撃つ（shoot と BULLETK.sandan は雪山の区切り）
-  snow:{name:'雪タワー',color:'#eef4ff',range:76,rate:.95,dmg:2.8,cost:60,el:'snow',unlock:550,board:4,muz:1.7,desc:'弾で 雪がつもる（3つで 雪だるま＝しばらく止まる）。雪弾が当たると「吹雪」'},
-  sandan:{name:'散弾タワー',color:'#ff9fc0',range:78,rate:1.05,dmg:2.4,cost:65,unlock:550,board:4,muz:1.6,tag:'3方向',desc:'弾を3方向に撃つ。まん中は ねらった敵へ、左右の弾は まっすぐとんで 当たった敵に'},
+  snow:{name:'雪タワー',color:'#eef4ff',range:76,rate:.95,dmg:2.8,cost:60,el:'snow',unlock:1100,board:4,muz:1.7,desc:'弾で 雪がつもる（3つで 雪だるま＝しばらく止まる）。雪弾が当たると「吹雪」'},
+  sandan:{name:'散弾タワー',color:'#ff9fc0',range:78,rate:1.05,dmg:2.4,cost:65,unlock:1100,board:4,muz:1.6,tag:'3方向',desc:'弾を3方向に撃つ。まん中は ねらった敵へ、左右の弾は まっすぐとんで 当たった敵に'},
   // 火山の台が開くと お店にならぶ。溶岩タワーは 重い ようがんの弾（BULLETK.lava）、砲弾タワーは 山なりに撃って 落ちた所で 爆発（shoot と BULLETK.shell は火山の区切り）
-  magma:{name:'溶岩タワー',color:'#ff3d8a',range:72,rate:1.2,dmg:2.6,cost:65,el:'magma',unlock:600,board:5,muz:1.65,bullet:'lava',desc:'重い ようがんの弾（よろいをわって、しばらく ダメージが ふえる）。溶岩弾が当たると「溶岩溜まり」'},
-  houdan:{name:'砲弾タワー',color:'#ffb03d',range:100,rate:1.9,dmg:2.6,cost:70,unlock:600,board:5,muz:1.45,aoe:1,tag:'山なり',desc:'山なりに 弾を撃って、落ちた所で 爆発（まわりの敵みんなに当たる）。とおくまで とどく'},
+  magma:{name:'溶岩タワー',color:'#ff3d8a',range:72,rate:1.2,dmg:2.6,cost:65,el:'magma',unlock:1200,board:5,muz:1.65,bullet:'lava',desc:'重い ようがんの弾（よろいをわって、しばらく ダメージが ふえる）。溶岩弾が当たると「溶岩溜まり」'},
+  houdan:{name:'砲弾タワー',color:'#ffb03d',range:100,rate:1.9,dmg:2.6,cost:70,unlock:1200,board:5,muz:1.45,aoe:1,tag:'山なり',desc:'山なりに 弾を撃って、落ちた所で 爆発（まわりの敵みんなに当たる）。とおくまで とどく'},
   // 魔王城の台が開くと お店にならぶ。呪詛タワーの弾は BULLETK.hex、魔法陣タワーは 撃たずに 通り道に わなを置く（shoot と OBJK.mtrap は魔王城の区切り）
-  curse:{name:'呪詛タワー',color:'#b6ff3d',range:74,rate:1,dmg:2.4,cost:70,el:'curse',unlock:650,board:6,muz:1.7,bullet:'hex',desc:'弾で のろい（受けるダメージが ふえる。重なる・倒れると 近くの敵に のりうつる）。呪詛弾が当たると「呪輪」'},
-  mahou:{name:'魔法陣タワー',color:'#c070ff',range:84,rate:1.6,dmg:3,cost:75,unlock:650,board:6,muz:1.2,aoe:1,tag:'罠',desc:'弾を撃たずに、おばけの通り道に わなの まほうじんを置く。ふんだ おばけと まわりに ダメージ、少し 止まる'},
+  curse:{name:'呪詛タワー',color:'#b6ff3d',range:74,rate:1,dmg:2.4,cost:70,el:'curse',unlock:1300,board:6,muz:1.7,bullet:'hex',desc:'弾で のろい（受けるダメージが ふえる。重なる・倒れると 近くの敵に のりうつる）。呪詛弾が当たると「呪輪」'},
+  mahou:{name:'魔法陣タワー',color:'#c070ff',range:84,rate:1.6,dmg:3,cost:75,unlock:1300,board:6,muz:1.2,aoe:1,tag:'罠',desc:'弾を撃たずに、おばけの通り道に わなの まほうじんを置く。ふんだ おばけと まわりに ダメージ、少し 止まる'},
   // 宇宙の台が開くと お店にならぶ。重力タワーの弾は BULLETK.grav、光線タワーは ためてから まっすぐ1本の光で つらぬく（shoot・tick と OBJK.laser は宇宙の区切り）
-  gravity:{name:'重力タワー',color:'#6a78ff',range:76,rate:1.05,dmg:2.5,cost:75,el:'gravity',unlock:700,board:7,muz:1.65,bullet:'grav',desc:'弾で じゅうりょく（まわりの敵を 1か所に 引きよせて、少し おそく）。重力弾が当たると「ブラックホール」'},
-  laser:{name:'光線タワー',color:'#ff5ad8',range:96,rate:1.6,dmg:4.5,cost:80,unlock:700,board:7,muz:2,tag:'貫通',desc:'光を ためてから、まっすぐ 1本の レーザー。通り道の おばけ みんなに 一気に当たる（とおくまで とどく）'},
+  gravity:{name:'重力タワー',color:'#6a78ff',range:76,rate:1.05,dmg:2.5,cost:75,el:'gravity',unlock:1400,board:7,muz:1.65,bullet:'grav',desc:'弾で じゅうりょく（まわりの敵を 1か所に 引きよせて、少し おそく）。重力弾が当たると「ブラックホール」'},
+  laser:{name:'光線タワー',color:'#ff5ad8',range:96,rate:1.6,dmg:4.5,cost:80,unlock:1400,board:7,muz:2,tag:'貫通',desc:'光を ためてから、まっすぐ 1本の レーザー。通り道の おばけ みんなに 一気に当たる（とおくまで とどく）'},
   // 天国の台が開くと お店にならぶ。聖光タワーの弾は BULLETK.holy、天使タワーは 撃たずに とどく中の 砲台を しゅくふく（tick は天国の区切り）
-  holy:{name:'聖光タワー',color:'#ffe9a0',range:76,rate:1.05,dmg:2.6,cost:80,el:'holy',unlock:750,board:8,muz:1.85,bullet:'holy',desc:'弾で ひかり（おはらい：すけすけ・にせもの・いたずらを けす。中ボス・ボスに つよい）。聖光弾が当たると「聖柱」'},
-  tenshi:{name:'天使タワー',color:'#ffb8e8',range:72,rate:1,dmg:0,cost:85,unlock:750,board:8,muz:.8,tag:'支援',desc:'自分は 撃たずに、とどく中の 砲台を つよくする（はやく・つよく。レベルで もっと）。玉で ついた 効き目も まわりの 砲台に 分ける'},
+  holy:{name:'聖光タワー',color:'#ffe9a0',range:76,rate:1.05,dmg:2.6,cost:80,el:'holy',unlock:1500,board:8,muz:1.85,bullet:'holy',desc:'弾で ひかり（おはらい：すけすけ・にせもの・いたずらを けす。中ボス・ボスに つよい）。聖光弾が当たると「聖柱」'},
+  tenshi:{name:'天使タワー',color:'#ffb8e8',range:72,rate:1,dmg:0,cost:85,unlock:1500,board:8,muz:.8,tag:'支援',desc:'自分は 撃たずに、とどく中の 砲台を つよくする（はやく・つよく。レベルで もっと）。玉で ついた 効き目も まわりの 砲台に 分ける'},
 };
 const SOUND_FX=2;                             // サウンドタワー：玉でついた とくしゅ効果・わざが出る敵の数（属性は波の中の敵みんなに）
 // ギミック：どの砲台にも1つつけられる（お店で解放 → 台の上で砲台をタップして、コインでつける）。属性のある砲台につけると、ギミックにも属性が宿る
@@ -1260,16 +1260,16 @@ const ANGEL={k:[1.2,1.26,1.32,1.4], cd:[.85,.81,.77,.72], every:2, keep:4};   //
 const HALO={y:-18, w:15, t:6, float:2.5, lift:.55, drag:.015, xp:1, long:1.5, k:1.25, keep:4, coin:1, ringR:44, cd:.4};   // 光の輪：輪の高さ（杭のまん中から）・輪の はば（半分）・金色の玉の秒・ふわっと おちる秒・そのとき重さを消す割合・速さがへる割合・金色の玉が当たった砲台：経験値＋・バフの のび（倍）・しゅくふくの ダメージ倍率・その秒・コイン＋・宿った技の広さ・つぎまで（秒）
 // ならび：お店・砲台のシートの順。自動プレイ（dev/sim）は いちばん下の持っているギミックを全部の砲台につける（sim.js の gm で えらべる）。雪山のジャンプ台は 蟻地獄の上に置いた（蟻地獄の方が強い。記録の雪山）。火山の噴火口は いちばん下（蟻地獄・ジャンプ台と分けて測って そろえた。記録の火山）
 const GIMMICKS={
-  bumper:{name:'バンパー',color:'#e8f4ff',unlock:300,cost:20,pad:BUMP_R,ring:2.5,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい。属性のある砲台なら、はね返すたびに属性の輪がはじける'},
-  spinner:{name:'回転十字',color:'#cfd6e0',unlock:350,cost:25,desc:'まわりで十字がまわって、当たった玉をはじきとばす。十字に当たっても砲台に当たったことになる。属性のある砲台なら、うでが属性をまとう'},
-  ivy:{name:'引き寄せ蔦',color:'#7ee36a',unlock:350,cost:25,board:1,desc:'近くを通る玉をツタが引きよせる。この砲台に玉が集まって育ちやすい。属性のある砲台なら、引きよせた玉に属性が宿って、つぎに当たった砲台・おばけに運ぶ'},
-  warp:{name:'ワープ扉',color:'#d58bff',unlock:400,cost:30,board:2,pad:WARP.pad,ring:2,desc:'玉がとびらに入ると、台の上の方へワープ（砲台に当たったことになる）。属性のある砲台なら、ワープした玉に効き目が宿って、つぎに当たった砲台・おばけに運ぶ'},
-  jump:{name:'ジャンプ台',color:'#9fe8ff',unlock:500,cost:40,board:4,pad:1.5,ring:2,desc:'杭の上に ばねのジャンプ台。上から乗った玉を ぴょーんと はね上げて、ふわっと落とす（もう一度 杭に当たれる・砲台の経験値も少し多め）。属性のある砲台なら、はね上げた玉に効き目が宿って、まいあがる 雪けむりで まわりのおばけにも'},
-  ari:{name:'蟻地獄',color:'#f2b866',unlock:450,cost:35,board:3,ring:2,desc:'砲台のまわりに すなのうず。近くを通る玉は うずを巻いて ゆっくり落ちる（この砲台に何度も当たりやすい）。属性のある砲台なら、玉がうずにいる間、まわりのおばけに その効き目'},
-  funka:{name:'噴火口',color:'#ff6a5a',unlock:550,cost:45,board:5,pad:FUNKA.pad,ring:2.5,desc:'杭の上に 小さな 噴火口。上から入った玉を ためて、3つ たまると 上へ いっせいに ふき上げる（もう一度 杭に当たれる）。属性のある砲台なら、ふき上げた玉に その効き目が宿って、ふき上げるときに まわりの おばけにも効く'},
-  bunshin:{name:'分身ミラー',color:'#d8c8ff',unlock:600,cost:50,board:6,pad:BUNSHIN.pad,ring:2.5,desc:'杭のまわりに 魔法の かがみ。当たった玉が 2つに 分かれる（分身の玉は 少しで きえて、ヘソには 入らない・コインは かからない）。属性のある砲台なら、分身の玉に その効き目が宿って、分かれるときに まわりの おばけにも効く'},
-  wakusei:{name:'惑星リング',color:'#ffd27a',unlock:650,cost:55,board:7,pad:WAKU.pad,ring:3,desc:'杭のまわりに わくせいの わっか。当たった玉は 砲台の まわりを 1周 まわってから とんでいく（まわりの 杭や おばけに 当たりやすい）。属性のある砲台なら、まわっている間 まわりの おばけに その効き目、とんでいく玉にも 効き目が 宿る'},
-  halo:{name:'光の輪',color:'#ffe08a',unlock:700,cost:60,board:8,ring:2.5,desc:'砲台の 上に 光の輪。玉が 輪を くぐると 金色の玉に なる（その玉が 砲台に当たると 経験値が 多めで、バフが 長く・つよく なって、コインも 少し もらえる）。属性のある砲台なら、くぐった玉に 効き目が 宿って、くぐるときに まわりの おばけにも 効く'},
+  bumper:{name:'バンパー',color:'#e8f4ff',unlock:600,cost:20,pad:BUMP_R,ring:2.5,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい。属性のある砲台なら、はね返すたびに属性の輪がはじける'},
+  spinner:{name:'回転十字',color:'#cfd6e0',unlock:700,cost:25,desc:'まわりで十字がまわって、当たった玉をはじきとばす。十字に当たっても砲台に当たったことになる。属性のある砲台なら、うでが属性をまとう'},
+  ivy:{name:'引き寄せ蔦',color:'#7ee36a',unlock:700,cost:25,board:1,desc:'近くを通る玉をツタが引きよせる。この砲台に玉が集まって育ちやすい。属性のある砲台なら、引きよせた玉に属性が宿って、つぎに当たった砲台・おばけに運ぶ'},
+  warp:{name:'ワープ扉',color:'#d58bff',unlock:800,cost:30,board:2,pad:WARP.pad,ring:2,desc:'玉がとびらに入ると、台の上の方へワープ（砲台に当たったことになる）。属性のある砲台なら、ワープした玉に効き目が宿って、つぎに当たった砲台・おばけに運ぶ'},
+  jump:{name:'ジャンプ台',color:'#9fe8ff',unlock:1000,cost:40,board:4,pad:1.5,ring:2,desc:'杭の上に ばねのジャンプ台。上から乗った玉を ぴょーんと はね上げて、ふわっと落とす（もう一度 杭に当たれる・砲台の経験値も少し多め）。属性のある砲台なら、はね上げた玉に効き目が宿って、まいあがる 雪けむりで まわりのおばけにも'},
+  ari:{name:'蟻地獄',color:'#f2b866',unlock:900,cost:35,board:3,ring:2,desc:'砲台のまわりに すなのうず。近くを通る玉は うずを巻いて ゆっくり落ちる（この砲台に何度も当たりやすい）。属性のある砲台なら、玉がうずにいる間、まわりのおばけに その効き目'},
+  funka:{name:'噴火口',color:'#ff6a5a',unlock:1100,cost:45,board:5,pad:FUNKA.pad,ring:2.5,desc:'杭の上に 小さな 噴火口。上から入った玉を ためて、3つ たまると 上へ いっせいに ふき上げる（もう一度 杭に当たれる）。属性のある砲台なら、ふき上げた玉に その効き目が宿って、ふき上げるときに まわりの おばけにも効く'},
+  bunshin:{name:'分身ミラー',color:'#d8c8ff',unlock:1200,cost:50,board:6,pad:BUNSHIN.pad,ring:2.5,desc:'杭のまわりに 魔法の かがみ。当たった玉が 2つに 分かれる（分身の玉は 少しで きえて、ヘソには 入らない・コインは かからない）。属性のある砲台なら、分身の玉に その効き目が宿って、分かれるときに まわりの おばけにも効く'},
+  wakusei:{name:'惑星リング',color:'#ffd27a',unlock:1300,cost:55,board:7,pad:WAKU.pad,ring:3,desc:'杭のまわりに わくせいの わっか。当たった玉は 砲台の まわりを 1周 まわってから とんでいく（まわりの 杭や おばけに 当たりやすい）。属性のある砲台なら、まわっている間 まわりの おばけに その効き目、とんでいく玉にも 効き目が 宿る'},
+  halo:{name:'光の輪',color:'#ffe08a',unlock:1400,cost:60,board:8,ring:2.5,desc:'砲台の 上に 光の輪。玉が 輪を くぐると 金色の玉に なる（その玉が 砲台に当たると 経験値が 多めで、バフが 長く・つよく なって、コインも 少し もらえる）。属性のある砲台なら、くぐった玉に 効き目が 宿って、くぐるときに まわりの おばけにも 効く'},
 };
 // おばけ（イタズラ好きの白いおばけに動物の特ちょう。gh＝おばけの絵）。台ごとの顔ぶれは STAGES の foes（ふつう・はやい・かたい・中ボス・ボス）
 // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）。いたずらはフック（草原・森の区切り）
@@ -1448,7 +1448,13 @@ const BOARDS=[
   {stage:7,price:4000,need:6,desc:'ネオンな宇宙。らせん銀河の杭と、まわる わくせい',thumb:'radial-gradient(circle at 72% 24%,#ffd27a 0 5%,transparent 6%),radial-gradient(20% 5% at 72% 24%,transparent 0 55%,#ff8ad8 62% 78%,transparent 84%),radial-gradient(circle at 46% 58%,#ffe0f4 0 3%,rgba(255,90,216,.45) 10%,transparent 34%),radial-gradient(circle at 70% 70%,rgba(62,240,255,.35),transparent 30%),linear-gradient(#010208 0 30%,#060a2c 31% 70%,#160c3a 71%)'},
   {stage:8,price:5000,need:7,desc:'ネオンな夜明けの天国。天使の羽の杭と、鳴らすと 砲台が はやく撃つ 天使のラッパ',thumb:'radial-gradient(ellipse 30% 9% at 50% 22%,transparent 0 55%,#ffd96a 62% 72%,transparent 80%),radial-gradient(circle at 50% 78%,#fff0c0 0 4%,rgba(255,200,150,.6) 9%,transparent 22%),linear-gradient(#0e0828 0 22%,#2c1650 23% 48%,#8a3a88 49% 62%,#ffb08a 63% 72%,#6c4c9e 73% 86%,#4c3480 87%)'},
 ];
-const START_COINS=150, MIN_COINS=100;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
+// お金のバランス（11/7 しょーくん「1ゲーム終わったら、新しいタワー1個か弾2種類買えるくらい」）：
+//  ・台の中のお金（おばけのコイン・砲台の値段・1発1コイン）は そのまま（むずかしさが変わらないように）
+//  ・FEVER のコインを半分（前は 入ったとき60・FEVER中のヘソ1回10）。入ったときに FEVER_PAY を少しずつ・FEVER 中にヘソに入るたび FEVER_HIT
+//  ・お店の値段を2倍（弾 400＋50×(n−1)・タワー 800＋100×(n−1)・ギミック 600〜1400。n＝台の番号で森が1。台の値段は そのまま）
+//  ・台に入るとき MIN_COINS（前は100）まで足す：お店で使いきっても、ためしモードと同じ300で遊べる（使いきると すぐ負けて かせげなくなるのを ふせぐ）
+const FEVER_PAY=30, FEVER_HIT=5;
+const START_COINS=300, MIN_COINS=300;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
 const XP_NEED=[0,12,36,80];                  // Lv2・Lv3・Lv4（最大）になる経験値。いちばん上のまん中の杭に最初に建てると、5ウェーブごろに最大
 const BOSS_RES=.3;                            // 中ボス・ボスの状態異常の耐性（やけど・どく・おそい・しびれ・止まるが3割早くとけ、おそさも3割弱い）
 const BOSS_HOLD={max:2.5, guard:3, back:.5}; // 中ボス・ボスの止まりにくさ：止まっている時間（しびれ・ねむり・こおり・根っこ…）が max 秒たまると「がまん」→ guard 秒は止める効き目を受けつけない。動いている間は1秒に back 秒ずつへる
@@ -2813,8 +2819,8 @@ function ballElOnEnemy(e,el,dmg){
 function heso(q,b){
   const hl=b&&BALLS[b.t].heal;
   if(hl&&G.life<LIFE_MAX){const n=Math.min(hl,LIFE_MAX-G.life);G.life+=n;addText(q.x,q.y-30,'ライフ +'+n,'#7dffb0',true);burst(q.x,q.y,'#7dffb0',22);sfx.lv()}
-  if(G.fever>0){G.balls+=10;addText(q.x,q.y-12,'+10',GOLD,true);burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}
-  G.fever=8; G.feverPay=60; G.feverPayT=0; G.flash=.6;
+  if(G.fever>0){G.balls+=FEVER_HIT;addText(q.x,q.y-12,'+'+FEVER_HIT,GOLD,true);burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}
+  G.fever=8; G.feverPay=FEVER_PAY; G.feverPayT=0; G.flash=.6;
   banner('FEVER!!','rainbow',2.2,250); burst(q.x,q.y+6,'rainbow',40); sfx.fever();
 }
 // ヘソ：受け口のふちの2本の柱。間から落ちた玉が入る
@@ -9628,7 +9634,7 @@ function stageClear(){
     if(B.need!==G.stage) continue;
     const st=boardState(B); if(st==='soon') continue;
     const nm=STAGES[B.stage].name;
-    if(st==='buy') lines.push(`<b class="newb">${nm}の台が買えるようになったよ</b>`,`台えらびで ${COIN}${B.price} でアンロック`);
+    if(st==='buy') lines.push(`<b class="newb">${nm}の台が買えるようになったよ</b>`,`台えらびで ${COIN}${B.price.toLocaleString()} でアンロック`);
     else{lines.push(`<b class="newb">${nm}の台が開いたよ！</b>`);const n=newItems(B.stage);if(n.length)lines.push(`お店に ${n.join('・')} がふえた`)}
   }
   const res=()=>showResult(`${S.name}の台 クリア！`,lines,'台えらびへ',()=>{hallIdx=Math.min(BOARDS.length-1,(G.boardIdx??0)+(first?1:0));openHub('board')},'お店へ',()=>openHub('ball'));
@@ -9716,7 +9722,7 @@ function card(o){
   const c=el('button','card'); paint(c,o.color);
   if(o.row) c.classList.add('row');
   c.innerHTML=`<span class="ico"><img alt="" src="${o.icon}"></span>${o.cnt?`<span class="cnt">${o.cnt}</span>`:''}<span class="mid"><span class="nm">${o.name}</span><span class="ds">${o.desc}</span></span>`+
-    (o.own?`<span class="tagown">${o.own}</span>`:o.price!=null?`<span class="price${G.balls<o.price?' short':''}">${COIN}${o.price}</span>`:'');
+    (o.own?`<span class="tagown">${o.own}</span>`:o.price!=null?`<span class="price${G.balls<o.price?' short':''}">${COIN}${o.price.toLocaleString()}</span>`:'');
   c.onclick=()=>{ensureAudio();o.tap()}; return c;
 }
 // アイコンは台と同じ絵（玉・砲台・ギミック）をキャンバスに描いて使う
@@ -9779,7 +9785,7 @@ function tabBoard(body){
     const cab=el('button','cab');
     cab.setAttribute('aria-label',soon?`まだ遊べない台（アンロック ${B.price}コイン）`:lock?`${S.name}の台（${STAGES[B.need].name}の台をクリアすると開く）`:buyable?`${S.name}の台（${B.price}コインでアンロック）`:`${S.name}の台に座る`);
     cab.innerHTML=`<span class="topper"><span class="tno">NO.${i+1}</span><span class="tname"><b>${soon?'？？？':S.name+'<small>の台</small>'}</b></span>${done?'<span class="stamp">CLEAR</span>':''}</span>`+
-      `<span class="cframe"><span class="cface" style="background:${face?`url(${face})`:B.thumb}">${soon?'<span class="shutter">COMING<br>SOON</span>':lock?`<span class="shutter lockd">${STAGES[B.need].name}の台を<br>クリアで開く</span>`:buyable?`<span class="shutter buyd"><span>${COIN}${B.price}<br>でアンロック</span></span>`:''}</span></span>`;
+      `<span class="cframe"><span class="cface" style="background:${face?`url(${face})`:B.thumb}">${soon?'<span class="shutter">COMING<br>SOON</span>':lock?`<span class="shutter lockd">${STAGES[B.need].name}の台を<br>クリアで開く</span>`:buyable?`<span class="shutter buyd"><span>${COIN}${B.price.toLocaleString()}<br>でアンロック</span></span>`:''}</span></span>`;
     const go=()=>{ensureAudio(); if(i!==hallIdx){goSlot(i,true);return} if(soon||buyable) openBoardBuy(i); else if(lock) openBoardLock(i); else sit(i)};
     cab.onclick=go;
     s.append(cab); aisle.append(s);
@@ -9933,7 +9939,7 @@ function openBuy(kind,k){
     kind==='tower'?`台で建てるのは ${COIN}${D.cost}・とどく広さ ${D.range}`:`砲台につけるのは ${COIN}${D.cost}・1つの砲台に1つ`;
   const y=$('buyYes');
   if(own){y.disabled=true;y.textContent=k==='basic'?'さいしょから持ってる':'持ってる';buyFn=null}
-  else{y.disabled=G.balls<price;y.innerHTML=G.balls<price?'コインがたりない':`${COIN}${price} で買う`;buyFn=()=>buy(kind,k,price)}
+  else{y.disabled=G.balls<price;y.innerHTML=G.balls<price?'コインがたりない':`${COIN}${price.toLocaleString()} で買う`;buyFn=()=>buy(kind,k,price)}
   $('buy').hidden=false; (own?$('buyNo'):y).focus();
 }
 // まだできていない台：値段と「アンロックしますか？」を出す（中身ができるまでボタンは押せない）
@@ -9954,10 +9960,10 @@ function openBoardBuy(i){
   const y=$('buyYes');
   if(soon){
     $('buyNote').textContent='まだ準備中。できたらアンロックできるようになるよ';
-    y.disabled=true; y.innerHTML=`${COIN}${B.price} でアンロック`; buyFn=null;
+    y.disabled=true; y.innerHTML=`${COIN}${B.price.toLocaleString()} でアンロック`; buyFn=null;
   }else{
     const n=newItems(B.stage); $('buyNote').textContent=n.length?'アンロックすると、お店にふえる：'+n.join('・'):'アンロックすると遊べるようになるよ';
-    y.disabled=st!=='buy'||G.balls<B.price; y.innerHTML=G.balls<B.price?'コインがたりない':`${COIN}${B.price} でアンロック`; buyFn=()=>buyBoard(i);
+    y.disabled=st!=='buy'||G.balls<B.price; y.innerHTML=G.balls<B.price?'コインがたりない':`${COIN}${B.price.toLocaleString()} でアンロック`; buyFn=()=>buyBoard(i);
   }
   $('buy').hidden=false; (y.disabled?$('buyNo'):y).focus();
 }
