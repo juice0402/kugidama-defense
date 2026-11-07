@@ -108,9 +108,11 @@ body{height:100%;margin:0;background:var(--frame);color:var(--ink);font-family:v
 .logo .a{color:var(--moon);text-shadow:0 0 24px rgba(216,242,106,.35)}
 .logo .b{color:var(--leaf);text-shadow:0 0 24px rgba(124,220,138,.35)}
 #title .panel{max-width:340px;gap:30px;padding:34px 22px 26px}
-#startBtn{font-size:20px;padding:15px 16px;letter-spacing:.25em;animation:startGlow 1.8s ease-in-out infinite}
-@keyframes startGlow{50%{box-shadow:0 0 26px rgba(216,242,106,.55)}}
-@media (prefers-reduced-motion:reduce){#startBtn{animation:none}}
+/* スタートの光：box-shadow を動かすと毎フレーム描きなおしになるので、光の層の透明度だけ（11/7 軽く） */
+#startBtn{position:relative;font-size:20px;padding:15px 16px;letter-spacing:.25em}
+#startBtn::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 26px rgba(216,242,106,.55);opacity:0;pointer-events:none;animation:startGlow 1.8s ease-in-out infinite;will-change:opacity}
+@keyframes startGlow{50%{opacity:1}}
+@media (prefers-reduced-motion:reduce){#startBtn::after{animation:none}}
 .btnrow{display:flex;flex-direction:column;gap:8px}
 .btn{font:800 16px var(--f-body);padding:12px 16px;border-radius:14px;border:1.5px solid var(--line);background:transparent;color:var(--ink);cursor:pointer}
 .btn.primary{background:var(--fire);border-color:var(--fire);color:var(--night);box-shadow:0 4px 14px rgba(216,242,106,.22)}
@@ -167,9 +169,12 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .wallet.spend{animation:spend .45s ease-out}
 @keyframes spend{0%{transform:scale(1.14);box-shadow:0 0 26px rgba(255,216,74,.7)}100%{transform:none}}
 .bulbs{position:relative;flex:none;height:10px;margin:0 max(10px,env(safe-area-inset-left,0px)) 0 max(10px,env(safe-area-inset-right,0px));
-  background:radial-gradient(circle at 7px 5px,#fff3c4 0 1.6px,#ffd84a 2.3px,transparent 3.1px) 0 0/14px 10px repeat-x;filter:drop-shadow(0 0 3px rgba(255,216,74,.9))}
-.bulbs::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 7px 5px,rgba(22,14,4,.88) 0 3.2px,transparent 3.6px) 0 0/28px 10px repeat-x;animation:chase .8s steps(1) infinite}
-@keyframes chase{50%{background-position-x:14px}}
+  background:radial-gradient(circle at 7px 5px,#fff3c4 0 1.6px,#ffd84a 2.3px,rgba(255,216,74,.55) 3.1px,rgba(255,216,74,.18) 4.2px,transparent 5.2px) 0 0/14px 10px repeat-x}
+/* 走る電球：1つおきの暗いふたを2枚、透明度だけ交互に（filter や背景の位置を動かすと毎回描きなおしになる。11/7 軽く） */
+.bulbs::before,.bulbs::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 7px 5px,rgba(22,14,4,.9) 0 3.4px,rgba(22,14,4,.55) 4.4px,transparent 5.4px) 0 0/28px 10px repeat-x;will-change:opacity;animation:chase .8s steps(1) infinite}
+.bulbs::after{background-position:14px 0;animation-name:chaseb}
+@keyframes chase{50%{opacity:0}}
+@keyframes chaseb{0%{opacity:0}50%{opacity:1}}
 .hub-body{position:relative;flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:14px;padding-block:14px 22px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .lead{margin:0;font-size:12px;line-height:1.55;color:#b9b2d6}
@@ -399,7 +404,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .test-tag{margin:-14px 0 0;text-align:center;font:800 13px var(--f-body);color:#6bffb0;text-shadow:0 0 8px rgba(107,255,176,.6)}
 .snd.skip{color:#6bffb0;margin:-7px 0}
 .nbtn.gold:disabled{background:#262040;color:#7d769c;box-shadow:0 4px 0 #120f24;cursor:not-allowed}
-@media (prefers-reduced-motion:reduce){.bulbs::after,.wallet.spend,.buy-in,.toast{animation:none}}
+@media (prefers-reduced-motion:reduce){.bulbs::before,.bulbs::after,.wallet.spend,.buy-in,.toast{animation:none}}
 .sheet{position:absolute;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:8px;z-index:6;max-width:460px;margin:0 auto;max-height:calc(100% - 16px);display:flex;flex-direction:column;padding-bottom:env(safe-area-inset-bottom,0px)}
 .sheet-in{min-height:0;border:1.5px solid var(--line);border-radius:18px;background:var(--panel);padding:14px;display:flex;flex-direction:column;gap:10px;box-shadow:0 -6px 30px rgba(0,0,0,.7)}
 .sheet-head{flex:none;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -606,7 +611,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        fxPath(fill,色,透明度,太さ)＝小さい形を色ごとにまとめて1回で描く（drawFx・ホタル・星・火花。さいごに fxFlush）／余白と FEVER の枠の光は layerOn/layerOff（1/4のピクセル・2フレームに1回）／
        毎フレーム描くものに shadowBlur は使わない。draw のはじめの clearRect は消さない（消すとかえって重い）。ロビーの間は台を描かない・タイトルと結果の間は3フレームに1回
    ・ロビーとシートを軽く（11/7）：一覧のアイコンは ICO()＋fillIco(root)（キャンバスに写す。data URL の画像を作らない・読みこまない）／ホールの台の顔は faceCv（キャンバスのまま置く）／
-       warmIcons がひまな時間にアイコンと台の顔を先に作る／一時停止中（シート・もどる）は台を描かない（G.frozenN）／CSS で box-shadow や filter を動かさない（光の層の opacity だけ動かす）。重さは dev/sim の uiperf.py（CPU 6倍おそく）
+       warmIcons がひまな時間にアイコンと台の顔を先に作る／一時停止中（シート・もどる）は台を描かない（G.frozenN）／CSS で box-shadow や filter を動かさない（光の層の opacity だけ動かす。スタートの光・ホールのわく・走る電球）／タイトルのうしろの台は描いたら止める（G.titleN）。重さは dev/sim の uiperf.py（CPU 6倍おそく）
    ==================================================================== */
 
 
@@ -1820,6 +1825,7 @@ function setupStage(){
 }
 function fieldPath(c,r,bottom){c.beginPath();c.arc(CX,CY,r,Math.PI,Math.PI*2);c.lineTo(CX+r,bottom);c.lineTo(CX-r,bottom);c.closePath()}
 function buildStatic(){
+  G.titleN=0;   // 台の絵が変わったら、タイトルのうしろも描きなおす
   if(!cv.width) return;
   staticCv.width=cv.width; staticCv.height=cv.height;
   const c=staticCv.getContext('2d'), k=scale*dpr, V=view();
@@ -10524,7 +10530,8 @@ function loop(now){
   // ロビー（不透明で台をかくす）のあいだは台を描かない。タイトル・結果（うしろの台がうすく ぼけて見える）のあいだは 3フレームに1回（11/6 軽くする）
   if($('hub').hidden&&!document.hidden){
     if(frozen){if(G.frozenN===1)draw();G.frozenN++}   // 止めた次のフレームは描かない（先にシートを出す）。その次に1回だけ（えらんだ杭の輪）
-    else{G.frozenN=0;const dim=!$('title').hidden||!$('result').hidden;if(!dim||frameN%3===0)draw()}
+    else if(!$('title').hidden){if((G.titleN|0)<2)draw();G.titleN=(G.titleN|0)+1}   // タイトル：うしろの台は ぼけて見えるだけなので、描いたら止める（ぼかしの描きなおしも止まる。11/7 軽く）
+    else{G.frozenN=0;const dim=!$('result').hidden;if(!dim||frameN%3===0)draw()}
   }
   frameN++;
   requestAnimationFrame(loop);
