@@ -29,7 +29,8 @@ html{height:100%;box-sizing:border-box;background:var(--frame)}
 body{height:100%;margin:0;background:var(--frame);color:var(--ink);font-family:var(--f-body);font-size:14px;
   overflow:hidden;overscroll-behavior:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
 #app{position:fixed;left:0;right:0;top:env(safe-area-inset-top,0px);bottom:env(safe-area-inset-bottom,0px);overflow:hidden}
-canvas{position:absolute;inset:0;display:block;touch-action:none}
+#cv{position:absolute;inset:0;display:block;touch-action:none}
+.ico-c{display:block}
 
 /* 台の上に重ねる表示：枠なし。左上にお金（コイン）、右上にWAVEと音。ライフは台の下の受け皿のバー（canvas） */
 .hud{position:absolute;z-index:2;top:8px;left:max(10px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));
@@ -180,7 +181,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .card.row{flex-direction:row;align-items:center;gap:12px;padding:9px 12px 9px 9px;text-align:left;background:linear-gradient(90deg,var(--cs),rgba(10,8,22,.94) 42%)}
 .card.row:active{transform:scale(.98)}
 .card.row .ico{flex:none;width:64px;aspect-ratio:1}
-.card.row .ico img{width:92%}
+.card.row .ico :is(img,canvas){width:92%;height:auto}
 .card.row .mid{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
 .card.row .ds{min-height:0}
 .card.row .price,.card.row .tagown{flex:none;margin:0}
@@ -192,7 +193,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .card:active{transform:scale(.96)}
 .card:focus-visible,.cab:focus-visible,.tabs button:focus-visible,.socket:focus-visible,.nbtn:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .card .ico{width:100%;aspect-ratio:5/4;display:grid;place-items:center;border-radius:12px;background:radial-gradient(circle at 50% 56%,var(--cs),rgba(5,3,12,.75) 72%)}
-.card .ico img{width:84%;max-width:118px;height:auto}
+.card .ico :is(img,canvas){width:84%;max-width:118px;height:auto}
 .card .nm{font:800 15px var(--f-body);line-height:1.2}
 .card .ds{font-size:11px;line-height:1.4;color:#a59fc4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.8em}
 .price{margin-top:5px;display:inline-flex;align-items:center;gap:5px;padding:5px 14px 4px;border-radius:99px;background:linear-gradient(180deg,#fff0a6,#ffc21f);color:#2a1800;
@@ -204,7 +205,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .setstrip{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:16px;border:1.5px solid rgba(62,242,255,.55);background:rgba(10,8,22,.85);box-shadow:0 0 14px rgba(62,242,255,.18)}
 .setstrip>span{font:800 12px var(--f-body);color:#cfe9ff;white-space:nowrap}
 .minis{display:flex;gap:4px;flex:1;min-width:0}
-.minis img{width:26px;height:26px}
+.minis canvas{width:26px;height:26px}
 .linkbtn{flex:none;padding:7px 12px;border-radius:99px;border:1.5px solid var(--neon-c);background:transparent;color:#dffbff;font:800 12px var(--f-body);cursor:pointer;box-shadow:0 0 10px rgba(62,242,255,.3)}
 .stamp{position:absolute;z-index:1;top:10px;right:12px;padding:3px 10px 2px;border:2px solid #5fff8a;border-radius:8px;color:#d9ffe4;font:400 13px var(--f-arc);letter-spacing:.08em;transform:rotate(-7deg);text-shadow:0 0 8px #5fff8a;box-shadow:0 0 10px rgba(95,255,138,.5)}
 /* 台のタブ＝パチンコ屋さんのホール：台が目の前に並び、左右にスワイプで台をかえる。イス（座る）をタップで台へ */
@@ -238,6 +239,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .cframe{position:relative;display:block;margin-top:3px;padding:calc(var(--cw)*.055);border-radius:9px;
   background:linear-gradient(140deg,#5b5672,#25203a 28%,#14111f 55%,#3d3854 80%,#1c1829);
   box-shadow:0 0 0 1.5px var(--nc),0 0 18px var(--ng),inset 0 1px 0 rgba(255,255,255,.22)}
+.cface>canvas.face{position:absolute;inset:0;width:100%;height:100%}
 .cface{position:relative;display:block;width:100%;aspect-ratio:3/5;border-radius:4px;overflow:hidden;background-size:cover!important;background-position:center!important;
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
 .cface::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.15) 0 16%,transparent 32%,transparent 68%,rgba(255,255,255,.07) 76%,transparent 84%)}
@@ -264,14 +266,16 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .hallwrap.sit .slot:not(.cur){opacity:0}
 .hub.sitting::after{content:"";position:absolute;inset:0;z-index:30;background:#05030b;opacity:0;animation:fadein .42s .14s forwards}
 @keyframes fadein{to{opacity:1}}
-.slot.cur .cframe{animation:glowp 1.6s ease-in-out infinite}
-@keyframes glowp{50%{box-shadow:0 0 0 1.5px var(--nc),0 0 30px var(--ng),inset 0 1px 0 rgba(255,255,255,.22)}}
+/* まん中の台のわくの光：box-shadow を動かすと毎フレーム描きなおしになるので、光の層の透明度だけを動かす（11/7 軽く） */
+.cframe::before{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 30px var(--ng);opacity:0;pointer-events:none}
+.slot.cur .cframe::before{animation:glowo 1.6s ease-in-out infinite;will-change:opacity}
+@keyframes glowo{50%{opacity:1}}
 .cab:active .cframe{transform:scale(.985)}
-@media (prefers-reduced-motion:reduce){.slot.cur .cframe,.slot.cur .topper::after{animation:none}}
+@media (prefers-reduced-motion:reduce){.slot.cur .cframe::before,.slot.cur .topper::after{animation:none}}
 .tray{display:flex;flex-direction:column;gap:10px;padding:14px 12px 12px;border-radius:18px;border:1.5px solid rgba(62,242,255,.6);background:linear-gradient(#140f28,#0a0716);box-shadow:0 0 16px rgba(62,242,255,.2)}
 .slots{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
 .socket{position:relative;aspect-ratio:1;max-width:100%;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.14);background:radial-gradient(circle at 50% 60%,#05030b,#1d1636);display:grid;place-items:center;cursor:pointer}
-.socket img{width:92%;height:auto}
+.socket :is(img,canvas){width:92%;height:auto}
 .socket .x{position:absolute;top:-2px;right:-2px;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#ff4f6d;color:#fff;font:800 11px/1 var(--f-body);box-shadow:0 0 8px rgba(255,79,109,.7)}
 .socket.pop{animation:pop .35s ease-out}
 @keyframes pop{0%{transform:scale(1.25);box-shadow:0 0 22px var(--neon-c)}100%{transform:none}}
@@ -312,10 +316,10 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .zh{font:800 14px var(--f-body);color:#fff;margin:6px 0 -4px;text-shadow:0 0 8px var(--c)} .zh small{font-size:11px;color:#a59fc4;margin-left:4px;text-shadow:none}
 .zlist{gap:8px}
 .zrow{--c:#ff4fd8;display:flex;gap:12px;align-items:center;padding:10px 12px;border-radius:14px;border:1.5px solid color-mix(in srgb,var(--c) 50%,#2a2448);background:color-mix(in srgb,var(--c) 9%,#120e26)}
-.zrow>img{width:48px;height:48px;flex:none}
+.zrow>:is(img,canvas){width:48px;height:48px;flex:none}
 .zrow .nm{font:800 14px var(--f-body);color:#fff;text-shadow:0 0 6px var(--c)}
 .zrow .ds{margin-top:2px;font-size:12px;line-height:1.5;color:#b8b2d6}
-.zrow.lock{opacity:.6} .zrow.lock>img{filter:brightness(0) drop-shadow(0 0 3px rgba(255,255,255,.35))} .zrow.lock .nm{text-shadow:none;color:#8f88b0}
+.zrow.lock{opacity:.6} .zrow.lock>:is(img,canvas){filter:brightness(0) drop-shadow(0 0 3px rgba(255,255,255,.35))} .zrow.lock .nm{text-shadow:none;color:#8f88b0}
 .zw{flex-direction:column;align-items:stretch;gap:4px}
 .zpair{display:flex;align-items:center;gap:5px} .zpair b{color:#a59fc4;font-size:12px} .zpair .tg{padding:1px 8px 2px;font-size:10px}
 .znew{margin-left:auto;padding:1px 7px;border-radius:99px;background:#ffe07a;color:#2a1800;font:800 10px var(--f-body)}
@@ -539,6 +543,8 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
    ・軽くする道具（11/6）：sprite(key,w,h,ax,ay,paint)＝毎フレーム同じ形の絵は1回だけ描いて使いまわす（砲台の杭・台座・頭。砲身が時間で変わる種類は毎フレーム）／
        fxPath(fill,色,透明度,太さ)＝小さい形を色ごとにまとめて1回で描く（drawFx・ホタル・星・火花。さいごに fxFlush）／余白と FEVER の枠の光は layerOn/layerOff（1/4のピクセル・2フレームに1回）／
        毎フレーム描くものに shadowBlur は使わない。draw のはじめの clearRect は消さない（消すとかえって重い）。ロビーの間は台を描かない・タイトルと結果の間は3フレームに1回
+   ・ロビーとシートを軽く（11/7）：一覧のアイコンは ICO()＋fillIco(root)（キャンバスに写す。data URL の画像を作らない・読みこまない）／ホールの台の顔は faceCv（キャンバスのまま置く）／
+       warmIcons がひまな時間にアイコンと台の顔を先に作る／一時停止中（シート・もどる）は台を描かない（G.frozenN）／CSS で box-shadow や filter を動かさない（光の層の opacity だけ動かす）。重さは dev/sim の uiperf.py（CPU 6倍おそく）
    ==================================================================== */
 
 
@@ -2111,7 +2117,7 @@ function resize(){
   const extra=VH-H*scale;
   ox=(VW-W*scale)/2; oy=Math.max(0,Math.min(extra-84,extra*.3));
   cv.style.width=VW+'px'; cv.style.height=VH+'px';
-  cv.width=Math.round(VW*dpr); cv.height=Math.round(VH*dpr); layOK=false;
+  cv.width=Math.round(VW*dpr); cv.height=Math.round(VH*dpr); layOK=false; G.frozenN=1;
   buildStatic();
 }
 // 画面の中で見えている広さ（台の座標で）
@@ -9792,7 +9798,7 @@ function toast(msg){const t=$('toast');t.textContent=msg;t.hidden=false;t.style.
 function renderTab(){
   setCoins();
   const body=$('hubBody'); body.textContent=''; body.className='hub-body'; hallRO?.disconnect(); hallRO=null;
-  ({board:tabBoard,ball:tabBall,tower:tabTower,gimmick:tabGimmick,set:tabSet,zukan:tabZukan})[hubTab](body); zBadge();
+  ({board:tabBoard,ball:tabBall,tower:tabTower,gimmick:tabGimmick,set:tabSet,zukan:tabZukan})[hubTab](body); fillIco(body); zBadge();
 }
 const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e};
 function paint(e,color){e.style.setProperty('--c',color);e.style.setProperty('--cg',hexA(color,.36));e.style.setProperty('--cs',hexA(color,.15))}
@@ -9800,13 +9806,43 @@ function paint(e,color){e.style.setProperty('--c',color);e.style.setProperty('--
 function card(o){
   const c=el('button','card'); paint(c,o.color);
   if(o.row) c.classList.add('row');
-  c.innerHTML=`<span class="ico"><img alt="" src="${o.icon}"></span>${o.cnt?`<span class="cnt">${o.cnt}</span>`:''}<span class="mid"><span class="nm">${o.name}</span><span class="ds">${o.desc}</span></span>`+
+  c.innerHTML=`<span class="ico">${ICO(...o.icon)}</span>${o.cnt?`<span class="cnt">${o.cnt}</span>`:''}<span class="mid"><span class="nm">${o.name}</span><span class="ds">${o.desc}</span></span>`+
     (o.own?`<span class="tagown">${o.own}</span>`:o.price!=null?`<span class="price${G.balls<o.price?' short':''}">${COIN}${o.price.toLocaleString()}</span>`:'');
-  c.onclick=()=>{ensureAudio();o.tap()}; return c;
+  fillIco(c); c.onclick=()=>{ensureAudio();o.tap()}; return c;
 }
 // アイコンは台と同じ絵（玉・砲台・ギミック）をキャンバスに描いて使う
-const iconCache=new Map();
+// 一覧では <canvas data-ico> を置いて fillIco で写す（画像の文字列を作らない・読みこまない。11/7 軽く）。1枚だけのシートは icon() の URL
+const iconCache=new Map(), iconUrl=new Map();
 function icon(kind,k){
+  const key=kind+':'+k; let u=iconUrl.get(key); if(!u){u=iconCv(kind,k).toDataURL();iconUrl.set(key,u)} return u;
+}
+const ICO=(kind,k,cls)=>`<canvas class="ico-c${cls?' '+cls:''}" data-ico="${kind}:${k}" width="160" height="160" aria-hidden="true"></canvas>`;
+function fillIco(root){
+  for(const c of root.querySelectorAll('canvas[data-ico]')){
+    if(c.dataset.done) continue; const [kind,k]=c.dataset.ico.split(':');
+    c.getContext('2d').drawImage(iconCv(kind,k),0,0,c.width,c.height); c.dataset.done='1';
+  }
+}
+// ひまな時間に アイコンと台の顔を先に作っておく（はじめてお店やホールを開いたときに待たないように）
+function warmIcons(){
+  const q=[...Object.keys(BALLS).map(k=>['ball',k]),...Object.keys(TOWERS).map(k=>['tower',k]),...Object.keys(GIMMICKS).map(k=>['gimmick',k])];
+  // iPhone の Safari は requestIdleCallback がないので、80msごとに 14ms ぶん
+  const idle=window.requestIdleCallback?(f,o)=>requestIdleCallback(f,o):f=>setTimeout(()=>{const end=performance.now()+14;f({didTimeout:false,timeRemaining:()=>Math.max(0,end-performance.now())})},80);
+  for(const B of BOARDS) if(!B.soon) q.push(['face',B.stage]);
+  // 台の顔は、台で遊んでいない間（タイトル・ロビー）だけ作る（作るときに台をいれかえるので）
+  const ok=([kind])=>kind!=='face'||((G.state==='title'||G.state==='hub')&&!$('hub').classList.contains('sitting'));
+  const step=d=>{
+    let one=d.didTimeout;   // ずっと ひまがなくても、2秒に1つは進める
+    while(q.length&&(one||d.timeRemaining()>(q[0][0]==='face'?10:3))){
+      one=false;
+      if(!ok(q[0])){setTimeout(()=>idle(step,{timeout:2000}),1500);return}
+      const [kind,k]=q.shift(); kind==='face'?faceCv(k):iconCv(kind,k);
+    }
+    if(q.length) idle(step,{timeout:2000});
+  };
+  idle(step,{timeout:2000});
+}
+function iconCv(kind,k){
   const key=kind+':'+k; if(iconCache.has(key)) return iconCache.get(key);
   const cvs=document.createElement('canvas'); cvs.width=cvs.height=160;
   const g=cvs.getContext('2d'), keep=ctx; ctx=g; g.lineCap='round';
@@ -9825,29 +9861,35 @@ function icon(kind,k){
       drawGun(p,{type:kind==='tower'?k:'basic',ang:kind==='tower'?-Math.PI/4:-Math.PI/2,shot:0},0);
     }
   }finally{ctx=keep}
-  const url=cvs.toDataURL(); iconCache.set(key,url); return url;
+  iconCache.set(key,cvs); return cvs;
 }
 
 // 台のタブ：いまのセットと、台のカード
 function setStrip(){
   const d=el('div','setstrip'); d.append(el('span',null,'いまのセット'));
-  const m=el('div','minis'); for(const k of G.deck){const i=new Image();i.alt=BALLS[k].name;i.src=icon('ball',k);m.append(i)} d.append(m);
+  const m=el('div','minis',G.deck.map(k=>ICO('ball',k)).join('')); m.setAttribute('aria-label',G.deck.map(k=>BALLS[k].name).join('・')); d.append(m);
   const b=el('button','linkbtn','へんしゅう'); b.onclick=()=>{ensureAudio();showTab('set')}; d.append(b);
   return d;
 }
 // 台の顔（台を描いた静止画をまるごと切りぬく）。台ごとに1回だけ作る
-const faceCache=new Map();
+// ホールには キャンバスのまま置く（JPEG にすると1枚30ms・読みこみもかかる。11/7 軽く）。1枚だけのシートは boardFace() の URL
+const faceCache=new Map(), faceUrl=new Map();
+function faceCv(stage){
+  if(faceCache.has(stage)) return faceCache.get(stage);
+  let c=null; const keep=G.stage;
+  try{
+    G.stage=stage; setupStage();
+    const k=scale*dpr; c=document.createElement('canvas'); c.width=432; c.height=720; c.className='face';
+    c.getContext('2d').drawImage(staticCv,ox*dpr,oy*dpr,W*k,H*k,0,0,c.width,c.height);
+  }catch(_){c=null}
+  G.stage=keep; setupStage();
+  if(c) faceCache.set(stage,c); return c;
+}
 function boardFace(B){
   if(boardState(B)==='soon') return null;
-  if(faceCache.has(B.stage)) return faceCache.get(B.stage);
-  let url=null; const keep=G.stage;
-  try{
-    G.stage=B.stage; setupStage();
-    const k=scale*dpr, c=document.createElement('canvas'); c.width=432; c.height=720;
-    c.getContext('2d').drawImage(staticCv,ox*dpr,oy*dpr,W*k,H*k,0,0,c.width,c.height); url=c.toDataURL('image/jpeg',.85);
-  }catch(_){url=null}
-  G.stage=keep; setupStage();
-  if(url) faceCache.set(B.stage,url); return url;
+  if(faceUrl.has(B.stage)) return faceUrl.get(B.stage);
+  const c=faceCv(B.stage); if(!c) return null;
+  const url=c.toDataURL('image/jpeg',.85); faceUrl.set(B.stage,url); return url;
 }
 // 台のタブ：パチンコ屋さんのホールのように、台が目の前にならぶ。左右にスワイプで台をかえて、まん中の台をタップで座る
 let hallIdx=0, hallRO=null;
@@ -9859,18 +9901,24 @@ function tabBoard(body){
   const wrap=el('div','hallwrap'), aisle=el('div','aisle');
   aisle.setAttribute('aria-label','台のならび（左右にスワイプ）');
   const slots=BOARDS.map((B,i)=>{
-    const st=boardState(B), soon=st==='soon', lock=st==='lock', buyable=st==='buy', S=STAGES[B.stage], nc=soon?'#5a5278':S.accent, done=!soon&&G.cleared.includes(B.stage), face=boardFace(B);
+    const st=boardState(B), soon=st==='soon', lock=st==='lock', buyable=st==='buy', S=STAGES[B.stage], nc=soon?'#5a5278':S.accent, done=!soon&&G.cleared.includes(B.stage);
     const s=el('div','slot'+(soon?' soon':'')); s.style.setProperty('--nc',nc); s.style.setProperty('--ng',hexA(nc,soon?.12:.45));
     const cab=el('button','cab');
     cab.setAttribute('aria-label',soon?`まだ遊べない台（アンロック ${B.price}コイン）`:lock?`${S.name}の台（${STAGES[B.need].name}の台をクリアすると開く）`:buyable?`${S.name}の台（${B.price}コインでアンロック）`:`${S.name}の台に座る`);
     cab.innerHTML=`<span class="topper"><span class="tno">NO.${i+1}</span><span class="tname"><b>${soon?'？？？':S.name+'<small>の台</small>'}</b></span>${done?'<span class="stamp">CLEAR</span>':''}</span>`+
-      `<span class="cframe"><span class="cface" style="background:${face?`url(${face})`:B.thumb}">${soon?'<span class="shutter">COMING<br>SOON</span>':lock?`<span class="shutter lockd">${STAGES[B.need].name}の台を<br>クリアで開く</span>`:buyable?`<span class="shutter buyd"><span>${COIN}${B.price.toLocaleString()}<br>でアンロック</span></span>`:''}</span></span>`;
+      `<span class="cframe"><span class="cface" style="background:${B.thumb}">${soon?'<span class="shutter">COMING<br>SOON</span>':lock?`<span class="shutter lockd">${STAGES[B.need].name}の台を<br>クリアで開く</span>`:buyable?`<span class="shutter buyd"><span>${COIN}${B.price.toLocaleString()}<br>でアンロック</span></span>`:''}</span></span>`;
     const go=()=>{ensureAudio(); if(i!==hallIdx){goSlot(i,true);return} if(soon||buyable) openBoardBuy(i); else if(lock) openBoardLock(i); else sit(i)};
     cab.onclick=go;
     s.append(cab); aisle.append(s);
     return s;
   });
   wrap.append(aisle); body.append(wrap);
+  // 台の顔：まん中の台はすぐ、ほかは1フレームに1枚ずつ（ロビーを出たら やめる）
+  const putFace=i=>{const B=BOARDS[i];if(boardState(B)==='soon')return;const c=faceCv(B.stage),f=slots[i].querySelector('.cface');if(c&&f&&!f.querySelector('canvas.face'))f.prepend(c)};
+  const order=BOARDS.map((_,i)=>i).sort((a,b)=>Math.abs(a-hallIdx)-Math.abs(b-hallIdx));
+  const fq=order.filter(i=>{const B=BOARDS[i];if(boardState(B)==='soon')return false;if(faceCache.has(B.stage)||i===hallIdx){putFace(i);return false}return true});
+  const faceStep=()=>{if(!fq.length||G.state!=='hub'||!aisle.isConnected||$('hub').classList.contains('sitting'))return;putFace(fq.shift());requestAnimationFrame(faceStep)};
+  requestAnimationFrame(faceStep);
   const center=i=>slots[i].offsetLeft+slots[i].offsetWidth/2-aisle.clientWidth/2;
   function mark(){
     slots.forEach((s,j)=>s.classList.toggle('cur',j===hallIdx));
@@ -9904,7 +9952,7 @@ function tabBall(body){
   const g=el('div','list');
   for(const k of SHOP_BALLS){
     const B=BALLS[k], n=G.owned[k]||0; if(!avail(B)) continue;
-    g.append(card({row:true,icon:icon('ball',k),color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,price:B.price,tap:()=>openBuy('ball',k)}));
+    g.append(card({row:true,icon:['ball',k],color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,price:B.price,tap:()=>openBuy('ball',k)}));
   }
   body.append(g);
 }
@@ -9926,7 +9974,7 @@ function tabZukan(body){
     const g=el('div','list');
     for(const [k,D] of L){
       const ok=avail(D), r=el('div','zrow'+(ok?'':' lock')); paint(r,D.color);
-      r.innerHTML=`<img alt="" src="${icon(zSeg,k)}"><div><div class="nm">${ok?D.name:'？？？'}</div><div class="ds">${ok?D.desc:stageLabel(D.board)+'で 手に入るよ'}</div></div>`;
+      r.innerHTML=`${ICO(zSeg,k)}<div><div class="nm">${ok?D.name:'？？？'}</div><div class="ds">${ok?D.desc:stageLabel(D.board)+'で 手に入るよ'}</div></div>`;
       g.append(r);
     }
     body.append(g);
@@ -9959,7 +10007,7 @@ function tabTower(body){
   const g=el('div','list');
   for(const k of SHOP_TOWERS){
     const t=TOWERS[k]; if(!avail(t)) continue;
-    g.append(card({row:true,icon:icon('tower',k),color:t.color,name:t.name,desc:t.desc,own:G.unlocked[k]?(k==='basic'?'さいしょから':'持ってる'):null,price:t.unlock,tap:()=>openBuy('tower',k)}));
+    g.append(card({row:true,icon:['tower',k],color:t.color,name:t.name,desc:t.desc,own:G.unlocked[k]?(k==='basic'?'さいしょから':'持ってる'):null,price:t.unlock,tap:()=>openBuy('tower',k)}));
   }
   body.append(g);
 }
@@ -9969,7 +10017,7 @@ function tabGimmick(body){
   const g=el('div','list');
   for(const k of Object.keys(GIMMICKS)){
     const M=GIMMICKS[k]; if(!avail(M)) continue;
-    g.append(card({row:true,icon:icon('gimmick',k),color:M.color,name:M.name,desc:M.desc,own:G.gimmicks[k]?'持ってる':null,price:M.unlock,tap:()=>openBuy('gimmick',k)}));
+    g.append(card({row:true,icon:['gimmick',k],color:M.color,name:M.name,desc:M.desc,own:G.gimmicks[k]?'持ってる':null,price:M.unlock,tap:()=>openBuy('gimmick',k)}));
   }
   body.append(g);
 }
@@ -9978,7 +10026,7 @@ function tabSet(body){
   const tray=el('div','tray'), slots=el('div','slots');
   G.deck.forEach((k,i)=>{
     const b=el('button','socket'); b.dataset.i=i; b.setAttribute('aria-label',`${i+1}つ目 ${BALLS[k].name}`+(k==='normal'?'':'（タップで外す）'));
-    b.innerHTML=`<img alt="" src="${icon('ball',k)}">`+(k==='normal'?'':'<span class="x" aria-hidden="true">×</span>');
+    b.innerHTML=ICO('ball',k)+(k==='normal'?'':'<span class="x" aria-hidden="true">×</span>');
     b.onclick=()=>{ensureAudio();
       if(k==='normal'){toast('下の持ち玉をタップすると、ここに入るよ');return}
       G.deck[i]='normal'; sfx.tick(); writeSave(); renderTab(); toast(`${BALLS[k].name}を外したよ（持ち玉にのこってる）`);
@@ -9988,10 +10036,10 @@ function tabSet(body){
   tray.append(slots,el('p','lead','台では、この5つの中から毎回ランダムに出るよ（1つ 20%）。<b>×</b> をタップで外す'));
   body.append(tray,el('div','sect','MY BALLS'));
   const g=el('div','grid'), have=SHOP_BALLS.filter(k=>(G.owned[k]||0)>0);
-  g.append(card({icon:icon('ball','normal'),color:BALLS.normal.color,name:BALLS.normal.name,desc:'いくつでも。セットのあいた所は通常弾になる',cnt:'∞',tap:()=>toast('通常弾は、外したあいた所に入るよ')}));
+  g.append(card({icon:['ball','normal'],color:BALLS.normal.color,name:BALLS.normal.name,desc:'いくつでも。セットのあいた所は通常弾になる',cnt:'∞',tap:()=>toast('通常弾は、外したあいた所に入るよ')}));
   for(const k of have){
     const B=BALLS[k], n=G.owned[k], used=inSet(k);
-    g.append(card({icon:icon('ball',k),color:B.color,name:B.name,desc:B.desc,cnt:`${used}/${n}`,own:used>=n?'ぜんぶセット中':null,tap:()=>equip(k)}));
+    g.append(card({icon:['ball',k],color:B.color,name:B.name,desc:B.desc,cnt:`${used}/${n}`,own:used>=n?'ぜんぶセット中':null,tap:()=>equip(k)}));
   }
   body.append(g);
   if(!have.length){const e=el('div','empty','特殊な玉を買うと、ここにならぶよ');const b=el('button','linkbtn','お店で玉を見る');b.onclick=()=>showTab('ball');e.append(b);body.append(e)}
@@ -10114,7 +10162,7 @@ function openBuild(p){
       const row=towerRow(k,'—',false); row.classList.add('locked'); row.querySelector('.gauges').outerHTML='<div class="d">お店で手に入るよ</div>'; row.querySelector('.tags')?.remove(); body.append(row);
     }
   }
-  $('sheet').hidden=false;
+  fillIco(body); $('sheet').hidden=false;
 }
 // 砲台の強さ（いまのレベル・バフ・FEVER をふくむ）を5つの点に。[いま, もとの強さ]（ふえた分は金色）
 function towerGauge(k,lv,T){
@@ -10156,7 +10204,7 @@ $('sheetBody').addEventListener('click',e=>{
 });
 function towerRow(k,price,enabled,onBuy){
   const t=TOWERS[k], row=document.createElement('div'); row.className='item trow';
-  row.innerHTML=`<img class="tico" alt="" src="${icon('tower',k)}"><div><div class="t">${t.name}</div>${gaugeHtml(k,1,null,true)}${towerTags(k,null)}</div>`;
+  row.innerHTML=`${ICO('tower',k,'tico')}<div><div class="t">${t.name}</div>${gaugeHtml(k,1,null,true)}${towerTags(k,null)}</div>`;
   const b=document.createElement('button'); b.className='buy'; b.innerHTML=typeof price==='number'?COIN+price:price; b.disabled=!enabled; if(onBuy)b.onclick=onBuy; row.append(b); return row;
 }
 function openInfo(p){
@@ -10181,7 +10229,7 @@ function openInfo(p){
       else{const row=itemRow(M.color,M.name,'お店で手に入るよ','—',false);row.classList.add('locked');body.append(row)}
     }
   }else info.insertAdjacentHTML('beforeend','<p class="hint">お店で<b>ギミック</b>を買うと、この砲台につけられるよ</p>');
-  $('sheet').hidden=false;
+  fillIco(body); $('sheet').hidden=false;
 }
 function closeSheet(){$('sheet').hidden=true;G.sel=null;G.paused=false}
 $('sheetClose').onclick=()=>closeSheet();
@@ -10248,7 +10296,7 @@ function testUnlock(){
 }
 function setTest(on){
   TEST=on; try{on?localStorage.setItem('kugidama-test','1'):localStorage.removeItem('kugidama-test')}catch(_){}
-  SAVE_KEY=on?'kugidama-test-v1':'kugidama-save-v1'; faceCache.clear(); testMarks();
+  SAVE_KEY=on?'kugidama-test-v1':'kugidama-save-v1'; faceCache.clear(); faceUrl.clear(); testMarks();
 }
 function testMarks(){$('titleTest').hidden=!TEST;$('testChip').hidden=!TEST;$('skipWave').hidden=!TEST}
 testMarks();
@@ -10274,11 +10322,16 @@ let frameN=0;
 function loop(now){
   const dt=Math.min(.05,(now-last)/1000); last=now;
   G.time+=dt;
+  // 一時停止中（杭・砲台のシート・もどるの確かめ）は、台を1回だけ描いて止める（シートを開く・スクロールが重くならないように。11/7 軽く）
+  const frozen=G.state==='play'&&G.paused&&!G.ending;
   if(G.state==='play'&&!G.paused&&!document.hidden) update(dt);
-  updateFx(dt);
+  if(!frozen) updateFx(dt);
   hud();
   // ロビー（不透明で台をかくす）のあいだは台を描かない。タイトル・結果（うしろの台がうすく ぼけて見える）のあいだは 3フレームに1回（11/6 軽くする）
-  if($('hub').hidden&&!document.hidden){const dim=!$('title').hidden||!$('result').hidden;if(!dim||frameN%3===0)draw()}
+  if($('hub').hidden&&!document.hidden){
+    if(frozen){if(G.frozenN===1)draw();G.frozenN++}   // 止めた次のフレームは描かない（先にシートを出す）。その次に1回だけ（えらんだ杭の輪）
+    else{G.frozenN=0;const dim=!$('title').hidden||!$('result').hidden;if(!dim||frameN%3===0)draw()}
+  }
   frameN++;
   requestAnimationFrame(loop);
 }
@@ -10288,6 +10341,7 @@ setupStage(); resize();
 try{new ResizeObserver(resize).observe($('app'))}catch(_){window.addEventListener('resize',resize)}
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(buildStatic).catch(()=>{});
 requestAnimationFrame(t=>{last=t;loop(t)});
+warmIcons();
 })();
 </script>
 </body>
