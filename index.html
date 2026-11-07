@@ -532,6 +532,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        台の みんなに 効く いたずら（王さまの 遠ぼえ・パンダの 光のたて）は heavenTick・heavenBullet・heavenBall を 天国の おばけの tick・bulletHit・ballHit で よぶ
        エンディング：G.ending の間は draw が drawEnding だけ描く（さいごの台を はじめて クリア → showEnding。hideOverlays で おわる）
    ・技の文字（11/6 夜）：hitText(x,y,名前,色1,色2,tier)＝わざ（fxCombo）・とくしゅ効果（fxSpecial）・強撃・速射（towerHit）のたびに その場所の少し上へ。格闘ゲーム風の帯（drawHitFight）。大きさは tier で分ける（HIT_PX）・おばけの後ろに描く。文字と帯の絵は hitPrep で出たときに1回だけ用意して hit に持たせる（11/7 軽く。毎フレーム字を測らない）
+   ・重なった地面のもの（11/7）：同じ種類で重なった砂地獄などは zoneShow で いちばん長く残る1つだけ描いて粒を出す（効き目は それぞれ）
    ・軽くする道具（11/6）：sprite(key,w,h,ax,ay,paint)＝毎フレーム同じ形の絵は1回だけ描いて使いまわす（砲台の杭・台座・頭。砲身が時間で変わる種類は毎フレーム）／
        fxPath(fill,色,透明度,太さ)＝小さい形を色ごとにまとめて1回で描く（drawFx・ホタル・星・火花。さいごに fxFlush）／余白と FEVER の枠の光は layerOn/layerOff（1/4のピクセル・2フレームに1回）／
        毎フレーム描くものに shadowBlur は使わない。draw のはじめの clearRect は消さない（消すとかえって重い）。ロビーの間は台を描かない・タイトルと結果の間は3フレームに1回
@@ -2394,7 +2395,7 @@ function addText(x,y,s,c,big){G.texts.push({x,y,s,c,big:!!big,t:1})}
 function banner(text,color,dur,y){G.banners.push({text,color,t:0,dur,y:y||250})}
 /* ---------- 属性のエフェクト（文字のかわりに見た目で伝える） ----------
    火＝ゆらめく炎、氷＝きらきらの結晶と冷気、雷＝バチバチの小さな稲妻、毒＝ぶくぶくのあわ */
-const FX_MAX=reduce?140:340, FX_FEV=reduce?110:230;   // FEVER 中の粒の上限（11/6 処理落ち対策）
+const FX_MAX=reduce?140:260, FX_FEV=reduce?110:180;   // 粒の上限・FEVER 中の上限（11/6 処理落ち対策。11/7 すな・かぜで おばけを集めた FEVER が重く 340・230 → 260・180）
 function fxAdd(o){if(G.fx.length<(G.fever>0?FX_FEV:FX_MAX)){o.t=0;G.fx.push(o)}}
 // 1秒に rate 個のわりあいで、この1コマに出す数
 const fxN=(rate,dt)=>{const n=rate*dt*(reduce?.4:1);let c=Math.floor(n);if(Math.random()<n-c)c++;return c};
@@ -2557,7 +2558,15 @@ function emitFx(dt){
     for(const k of EL_ORDER){const D=ELEM[k];if(D.has&&D.has(e))elFx(k,'en',e.x,e.y,e.r,dt)}
     if(e.sleep>0&&Math.random()<dt*2) fxAdd({k:'wisp',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*.6,vx:0,vy:-.25,max:.9,s:1.4,ph:Math.random()*6.28,c:'#d6a8ff'});
   }
-  for(const z of G.zones){const Z=ZONES[z.k];if(Z&&Z.fx)Z.fx(z,dt)}
+  zoneShow(); for(const z of G.zones){const Z=ZONES[z.k];if(Z&&Z.fx&&z.show)Z.fx(z,dt)}
+}
+// 重なった地面のもの（11/7 軽く。おばけを集めると 砂地獄などが同じ所に いくつも できて 重かった）：
+// 同じ種類で まん中が 広さの半分より近いものは、いちばん長く残る1つだけ描いて粒を出す（z.show）。おばけへの効き目（tick）は それぞれ そのまま
+function zoneShow(){
+  const Zs=G.zones;
+  for(const z of Zs){z.show=true;
+    for(const w of Zs){if(w===z||w.k!==z.k||w.R<z.R*.8) continue;
+      if((w.t>z.t||(w.t===z.t&&Zs.indexOf(w)<Zs.indexOf(z)))&&Math.hypot(w.x-z.x,w.y-z.y)<Math.max(w.R,z.R)*.5){z.show=false;break}}}
 }
 function updateFxParts(dt){
   const f=dt*60;
@@ -3915,10 +3924,9 @@ function drawGhost(e){
   ctx.strokeStyle=line; ctx.lineWidth=lw; if(e.ghost>0){ctx.setLineDash([3,3]);ctx.lineDashOffset=-t*20} ctx.stroke(); ctx.setLineDash([]);
     // 状態（体の中だけ色をかえる。毒など skin.wash）
     const wash=live?EL_SKIN.filter(q=>ELEM[q].skin.wash&&ELEM[q].has(e)):[];
-    if(wash.length||k>0){ctx.save();ghostPath(ctx,r,t,e.ph);ctx.clip();
-      for(const q of wash){ctx.fillStyle=ELEM[q].skin.wash;ctx.fillRect(-r*1.2,-r*1.2,r*2.4,r*2.4)}
-    if(k>0){ctx.fillStyle=hexA(E.color,.38*k);ctx.fillRect(-r*1.2,-r*1.2,r*2.4,r*2.4)}
-    ctx.restore()}
+    if(wash.length||k>0){ghostPath(ctx,r,t,e.ph);   // 体の形をもう一度ぬる（前は 切りぬき＋四角。11/7 軽く・見た目は同じ）
+      for(const q of wash){ctx.fillStyle=ELEM[q].skin.wash;ctx.fill()}
+      if(k>0){ctx.fillStyle=hexA(E.color,.38*k);ctx.fill()}}
     // ---- 顔と前の部品 ----
     const ey=-r*(E.ey||.2);
     if(E.skin) E.skin(e,r,ey,t,P);
@@ -4816,13 +4824,13 @@ Object.assign(FXK,{
     pop(x,y,vx,vy,a,i,c){fxAdd({k:'grain',x,y,vx:vx*1.1,vy:vy*1.1-.6,max:.5+Math.random()*.4,s:1.4+Math.random()*.8,c})},
     upd(q,f){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.96;q.vy+=.05*f},
     glow(q,k,a){glow(q.c||'#f2b866',q.x,q.y,q.s*3,a*.35)},
-    draw(q,k,a){ctx.globalAlpha=a;ctx.fillStyle=q.c?mixW(q.c,.25):'#ffe0a0';ctx.fillRect(q.x-q.s/2,q.y-q.s/2,q.s,q.s)}},
+    draw(q,k,a){const P=fxPath(true,q.c?mixW(q.c,.25):'#ffe0a0',a);if(P)P.rect(q.x-q.s/2,q.y-q.s/2,q.s,q.s)}},   // まとめ描き（11/7 軽く）
   gust:{
     spawn(x,y,big,c){const r=Math.random;fxAdd({k:'gust',x,y,vx:(r()<.5?-1:1)*(.6+r()*.6),vy:-.1-r()*.15,max:.5+r()*.3,s:(big?6:4.5)+r()*2,a0:r()*6.28,c})},
     pop(x,y,vx,vy,a,i,c){fxAdd({k:'gust',x,y,vx:vx*1.2,vy:vy*1.2,max:.45+Math.random()*.3,s:5+Math.random()*2,a0:a,c})},
     upd(q,f){q.x+=q.vx*f;q.y+=q.vy*f;q.vx*=.97;q.a0+=.15*f},
     glow(q,k,a){glow(q.c||'#7dffd0',q.x,q.y,q.s*1.8,a*.3)},
-    draw(q,k,a){ctx.globalAlpha=a;ctx.strokeStyle=q.c?mixW(q.c,.35):'#c8fff0';ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(q.x,q.y,q.s*(1-k*.3),q.a0,q.a0+2.2);ctx.stroke()}},
+    draw(q,k,a){const P=fxPath(false,q.c?mixW(q.c,.35):'#c8fff0',a,1.2);if(P){const R=q.s*(1-k*.3);P.moveTo(q.x+Math.cos(q.a0)*R,q.y+Math.sin(q.a0)*R);P.arc(q.x,q.y,R,q.a0,q.a0+2.2)}}},   // まとめ描き（11/7 軽く）
 });
 // たつまきの絵（下が細く、上が広い。まわる線と すなつぶ）。x,y＝下のはし、w＝上のはばの半分、h＝高さ、a＝こさ、c＝ふちの色、sway＝上のゆれ
 function drawFunnel(x,y,w,h,t,a,c,sway){
@@ -9478,7 +9486,7 @@ function draw(){
   }
   // 地面に残るもの（氷霧・毒沼・茨）
   for(const z of G.zones){
-    const Z=ZONES[z.k]; if(!Z) continue;
+    const Z=ZONES[z.k]; if(!Z||z.show===false) continue;
     const a=Math.min(1,z.t/.4)*Math.min(1,(z.max-z.t)/.2+.3);
     ctx.globalCompositeOperation='lighter'; glow(Z.color||'#ffffff',z.x,z.y,z.R*1.25,.45*a); ctx.globalCompositeOperation='source-over';
     if(Z.draw) Z.draw(z,t,a);
