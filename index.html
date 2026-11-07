@@ -612,6 +612,8 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        毎フレーム描くものに shadowBlur は使わない。draw のはじめの clearRect は消さない（消すとかえって重い）。ロビーの間は台を描かない・タイトルと結果の間は3フレームに1回
    ・ロビーとシートを軽く（11/7）：一覧のアイコンは ICO()＋fillIco(root)（キャンバスに写す。data URL の画像を作らない・読みこまない）／ホールの台の顔は faceCv（キャンバスのまま置く）／
        warmIcons がひまな時間にアイコンと台の顔を先に作る／一時停止中（シート・もどる）は台を描かない（G.frozenN）／CSS で box-shadow や filter を動かさない（光の層の opacity だけ動かす。スタートの光・ホールのわく・走る電球）／タイトルのうしろの台は描いたら止める（G.titleN）。重さは dev/sim の uiperf.py（CPU 6倍おそく）
+   ・BGM（11/8）：「BGM ここから」の区切り。曲は SONGS（台ごと・ホール・エンディング・ジングル）、台との対応は BGM_STAGE。ループの bgmTick() が場面（タイトル・ロビー・台・FEVER・ボス・一時停止・エンディング）を見て切りかえる。
+       ジングルは bgmJingle('clear'|'over'|'unlock')。曲の書き方は その区切りの上のコメント。音は ノードを使い捨て（ファイル0・描く処理には さわらない）
    ==================================================================== */
 
 
@@ -1581,7 +1583,7 @@ function seeded(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;ret
 let AC=null, muted=false, lastTick=0;
 function ensureAudio(){
   if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){AC=null}}
-  if(AC&&AC.state==='suspended') AC.resume().catch(()=>{});
+  if(AC&&AC.state!=='running'&&AC.state!=='closed') AC.resume().catch(()=>{});   // suspended・interrupted（iPhone で電話のあと など）
 }
 function tone(freq,dur,type,vol,slide){
   if(!AC||muted) return;
@@ -1625,8 +1627,8 @@ const sfx={
   grab(){noise(.03,4200,6,.06);tone(1800,.03,'triangle',.012,1.2)},                                                    // 玉を つまむ
   clack(){noise(.035,2600,5,.14);tone(170,.09,'triangle',.08,.55);noise(.05,1500,7,.1,.055);tone(2300,.05,'square',.012,.8)},   // 穴に ガチャッ
   eject(){noise(.03,3300,6,.09);tone(380,.14,'sine',.045,2.6)},                                                         // 穴から シャコッ
-  wave(){seq([392,587],120,.18,.035)},
-  fever(){seq([523,659,784,1047,784,1047,1319],90,.14,.04)},
+  wave(){const k=keyMul();seq([392*k,587*k],120,.18,.035)},
+  fever(){const k=keyMul();seq([523,659,784,1047,784,1047,1319].map(x=>x*k),90,.14,.04)},
   bump(){const n=performance.now();if(n-(sfx._b||0)<60)return;sfx._b=n;tone(210,.13,'sine',.06,2.6)},
   spin(){const n=performance.now();if(n-(sfx._s||0)<70)return;sfx._s=n;tone(1400+Math.random()*300,.04,'triangle',.014,1.4)},
   dorn(){tone(240,.28,'triangle',.05,.5);setTimeout(()=>tone(700,.16,'sine',.035,1.6),120)},     // ドロン
@@ -1749,7 +1751,482 @@ const sfx={
   halo(){const n=performance.now();if(n-(sfx._hl||0)<70)return;sfx._hl=n;tone(1760,.12,'sine',.02,1.2)},           // 光の輪を くぐる
   bless(){const n=performance.now();if(n-(sfx._bl||0)<300)return;sfx._bl=n;tone(1175,.2,'sine',.015,1.25)},       // てんしの しゅくふく
   ending(){seq([523,659,784,1047,988,1047,1319,1568],140,.25,.04)},                                                  // エンディング
+  // 11/8（BGM といっしょに）
+  bossIn(b){sfxBoom(.9,700,.3);tone(95,.8,'sawtooth',.05,.4);const n=b===2?4:3;for(let i=0;i<n;i++)setTimeout(()=>{tone(740,.15,'square',.024,1);setTimeout(()=>tone(554,.15,'square',.024,1),165)},240+i*340)},   // 中ボス・ボス出現（ドーン＋ウーウー）
+  bossDown(b){sfxBoom(b===2?1.4:1,900,.34);tone(70,.9,'sine',.09,.35);tone(200,.5,'sawtooth',.03,.3);const k=keyMul(),f=b===2?[784,988,1175,1568,1976,2349]:[784,988,1175,1568];setTimeout(()=>seq(f.map(x=>x*k),55,.16,.03),300)},   // 中ボス・ボスを たおした（ドカーン＋キラキラ）
+  wclear(){const k=keyMul();seq([1047,1319,1568].map(x=>x*k),70,.12,.022)},   // WAVE クリア（ピロリン）
+  coin(){tone(1976,.07,'square',.02);setTimeout(()=>tone(2637,.4,'square',.017,1),70)},   // スタート（コインを入れる チャリーン）
 };
+
+/* ==================== BGM ここから（11/8。コードで鳴らす・ファイル0） ====================
+   ・曲は SONGS（台ごとに1曲・ホール・エンディング）とジングル（clear・over・unlock）。台との対応は BGM_STAGE
+   ・1曲＝セクション。A・B…ふだん（form）、C・D…ボス（bform）。from で別のセクションを写して一部だけかえられる
+     ch＝和音（| で小節・小節の中はスペースで等分）。度数で書く：1〜7（音階どおりの和音）、M m d a で長・短・減・増、7 で7th、j で長7th、s で sus4、前に # b
+     m＝メロディ（8分音符が1つ。- のばす・. 休み・_ で16分2つ）。音は度数 1〜7、' で1オクターブ上、, で下、前に # b
+     bs＝ベース（16分が1文字。r 根音・o 1オクターブ上・f 5度・t 3度・l 下の5度・- のばす・. 休み）
+     ar＝アルペジオ（16分が1文字。0〜3 和音の音・4〜6 その1オクターブ上・c 和音をいっしょに・- のばす・. 休み）
+     dr・df・db＝ドラム（ふだん・FEVER・ボス。k キック s スネア c クラップ h ハイハット o 開いたハイハット t 低いタム m 中くらいのタム
+       w ウッドブロック r リム j 鈴 z シェイカー x シンバル d ダルブッカ（ドゥン）e ダルブッカ（テッ）b ティンパニ。x ふつう o 小さく X 強く）
+   ・FEVER：テンポ×1.18（ボス中は×1.1）・きらきらのアルペジオ・メロディのオクターブ重ね・ドラムを派手に。拍の頭で切りかえ
+   ・ボス：ボスのセクションへ（小節の頭で切りかえ）。大ボスは少し速く、小節のおわりにタムが足される
+   ・一時停止（シート・もどる）は小さく こもった音に。画面が かくれたら AudioContext ごと止める
+   ・bgmTick() をループから毎フレーム呼ぶ（くらべるだけで かるい）。音を並べるのは setInterval で 0.32秒先まで
+   ==================================================================== */
+const SCALE={maj:[0,2,4,5,7,9,11],min:[0,2,3,5,7,8,10],dor:[0,2,3,5,7,9,10],hmin:[0,2,3,5,7,8,11],phd:[0,1,4,5,7,8,10],lyd:[0,2,4,6,7,9,11]};
+const mtof=m=>440*Math.pow(2,(m-69)/12);
+const fold=(base,pc)=>base+(((pc-base)%12)+12)%12;   // base 以上で いちばん近い その音
+// 音色（w 波形・a 立ち上がり・d 減る時間・s のこる大きさ（0 で はじく音）・r 離したあと・v 大きさ・det 2つ目の音のずれ（セント）・w2 2つ目の波形・vib ビブラート・fm [倍率,深さ,時間]）
+const PRE={
+  flute:{w:'triangle',a:.03,d:.3,s:.75,r:.14,vib:1,v:0.075},
+  ocarina:{w:'sine',a:.025,d:.3,s:.8,r:.12,vib:1,v:0.1,det:1200,w2:'triangle',v2:.25},
+  chip:{w:'square',a:.004,d:.14,s:.5,r:.05,v:0.036},
+  chipsoft:{w:'square',a:.004,d:.1,s:.35,r:.04,v:0.022},
+  pluck:{w:'triangle',a:.003,d:.3,s:0,v:0.08},
+  harp:{w:'triangle',a:.003,d:.7,s:0,v:0.05,det:1200,w2:'sine',v2:.3},
+  bell:{w:'sine',a:.002,d:1.2,s:0,v:0.06,fm:[3.5,1.6,.6]},
+  celesta:{w:'sine',a:.002,d:.9,s:0,v:0.075,fm:[4,1.1,.3]},
+  musicbox:{w:'sine',a:.002,d:1.1,s:0,v:0.085,fm:[5,.9,.25]},
+  marimba:{w:'sine',a:.002,d:.4,s:0,v:0.12,fm:[4,1,.06]},
+  organ:{w:'square',a:.012,d:.1,s:.85,r:.07,v:.036,det:1200,w2:'sine',v2:.9},
+  harpsi:{w:'sawtooth',a:.002,d:.42,s:0,v:0.04,det:1200,w2:'square',v2:.25},
+  brass:{w:'sawtooth',a:.035,d:.25,s:.7,r:.1,vib:1,v:.055,det:6},
+  reed:{w:'square',a:.02,d:.2,s:.75,r:.08,vib:1,v:.045},
+  ney:{w:'triangle',a:.06,d:.3,s:.85,r:.16,vib:1,v:0.08,det:1200,w2:'sine',v2:.15},
+  oud:{w:'sawtooth',a:.002,d:.32,s:0,v:0.05,det:5},
+  synth:{w:'sawtooth',a:.012,d:.3,s:.65,r:.18,v:0.04,det:10},
+  lead:{w:'square',a:.006,d:.2,s:.6,r:.07,vib:1,v:.042,det:7},
+  pad:{w:'sawtooth',a:.35,d:.6,s:.8,r:.5,v:.016,det:9},
+  padsoft:{w:'triangle',a:.4,d:.6,s:.85,r:.6,v:0.02,det:7},
+  choir:{w:'sawtooth',a:.6,d:.6,s:.85,r:.7,v:.014,det:12,vib:1},
+  bass:{w:'triangle',a:.004,d:.25,s:.75,r:.05,v:0.075},
+  sqbass:{w:'square',a:.004,d:.18,s:.55,r:.04,v:0.05},
+  sawbass:{w:'sawtooth',a:.004,d:.2,s:.6,r:.04,v:0.07},
+  pizz:{w:'triangle',a:.003,d:.25,s:0,v:0.14},
+  synbass:{w:'sawtooth',a:.004,d:.3,s:.5,r:.06,v:0.06,det:-1200,w2:'square',v2:.5}
+};
+const DF16={k:'x...x...x...x...',c:'....x.......x...',h:'.o.x.o.x.o.x.o.x',o:'..x...x...x...x.'};   // FEVER のドラム（決めていない曲）
+const DF12={k:'x.....x.....',c:'......x.....',h:'.o.x.o.x.o.x',o:'..x.x...x.x.'};
+const AF16='0124012401240124', AF12='012401240124';                                      // FEVER のきらきらアルペジオ
+const DT16={t:'..........x.x.xx'}, DT12={t:'........x.xx'};                                // 大ボスで足すタム
+// 曲の表（音の高さ：mo メロディの1・bo ベースの1・po 和音の下のはし・ao アルペジオの1。bar 1小節の16分の数・beat 1拍の16分の数）
+const SONGS={
+  // ホールとタイトル：夜のゲーセン（ディスコ）
+  hall:{name:'ホール',bpm:116,sc:'maj',key:5,mo:65,bo:41,po:53,ao:77,
+    ins:{ld:'chip',ar:'pluck',bs:'sqbass',pd:'pad'},lp:{ld:3400,ar:2600,bs:1100,pd:1600},
+    bs:'r-o.r-o.r-o.r-o.',ar:null,
+    dr:{k:'x...x...x...x...',s:'....x.......x...',o:'..x...x...x...x.',h:'.o.o.o.o.o.o.o.o'},
+    form:['A','B','A2','B2'],
+    A:{ch:'17|67|27|57|17|67|47 57|1',m:'5 . 5 6 1\' . 6 5|3_2 1 . 6, 1 . . .|4 . 4 5 6 . 5 4|2_3 2 . 7, 5, . . .|5 . 5 6 1\' . 6 5|3_2 1 . 6, 1 . 2 3|4 . 6 . 5 . 7, .|1 . . 1_2 3 . 5 .'},
+    B:{ch:'47|37|67|17|27|37|47|57',m:'6 - - 5 6 - 1\' -|7 - 5 - 3 - - .|6 - - 5 6 - 1\' -|2\' - 1\' - 7 - 5 -|4 - - 3 4 - 6 -|5 - 3 - 7, - 3 -|4 - 6 - 1\' - 6 -|5 - - . 3_4 5_6 7 -'},
+    A2:{from:'A',ar:'0.2.4.5.4.2.1.2.'},B2:{from:'B',ar:'0.2.4.5.4.2.1.2.'}},
+  // 草原：ネオンな夜の草原（ホタル＝きらきら）。ボス＝馬（ギャロップ）
+  grass:{name:'草原',bpm:124,boss:140,sc:'maj',key:2,mo:62,bo:38,po:52,ao:74,
+    ins:{ld:'flute',bl:'lead',ar:'pluck',bs:'bass',pd:'padsoft',sp:'bell'},lp:{ld:4200,ar:3000,bs:1000,pd:1800},
+    bs:'r--.r-f-r--.f-r-',bb:'r-rrr-rrr-rrr-rr',ar:'0.1.2.4.2.1.2.4.',sp:.16,
+    dr:{k:'x.......x.......',s:'....o.......o...',z:'x.o.x.o.x.o.x.o.'},
+    db:{k:'x...x...x...x...',s:'....x.......x..o',h:'x.xxx.xxx.xxx.xx'},
+    A:{ch:'1|5|6|4|1|5|4|5',m:'1 3 5 1\' - 7 5 3|2 - 7, 2 5 - 3 2|3 - 1 3 6 - 5 3|4 - 3 2 1 - - .|1 3 5 1\' - 7 5 3|2 - 7, 2 5 - 6 7|6 - 5 4 6 - 1\' -|7 - 6 5 2\' - - .'},
+    B:{ch:'4|5|3|6|4|5|1|5',m:'6 - - 5 4 - 2 -|5 - - 3 2 - 7, -|3 - 5 - 7 - 5 -|6 - - - 5 - 3 -|4 - 6 - 1\' - 2\' -|3\' - 2\' 1\' 7 - 5 -|1\' - - - 6 5 3 5|2 - 3 - 5 - 7 -'},
+    C:{ch:'6|4|5|6|6|4|5|3M',m:'6 - 6_6 1\' 6 - 5 3|4 - 4_4 6 4 - 3 2|5 - 5_5 7 5 - 4 3|6 - - 5 6 - 1\' -|3\' - 2\' 1\' 6 - 1\' 3\'|2\' - 1\' - 6 - 4 -|5 - 7 - 2\' - 7 -|3 - #5 - 7 - #5 -'},
+    D:{from:'C',ar:'0.2.4.2.0.2.4.2.'}},
+  // 森：ふしぎな夜の森（6/8・マリンバ）。ボス＝大木（太鼓）
+  forest:{name:'森',bpm:150,boss:168,bar:12,beat:6,sc:'dor',key:9,mo:69,bo:45,po:55,ao:69,
+    ins:{ld:'marimba',bl:'reed',ar:'harp',bs:'pizz',pd:'padsoft'},lp:{ld:5000,ar:3200,bs:900,pd:1500},
+    bs:'r---f-r---f-',bb:'r-r-r-r-r-o-',ar:null,
+    dr:{k:'x.....x.....',w:'..o.o...o.o.',z:'o.o.o.o.o.o.'},
+    df:{k:'x.....x.....',s:'......x.....',h:'xoxoxoxoxoxo',w:'..x.x...x.x.'},
+    db:{k:'x..x..x..x..',t:'x.....x...xx',h:'x.x.x.x.x.x.'},
+    A:{ch:'1|7|4|1|1|7|4|5',m:'1\' - 5 3 - 5|7 - 4 2 - 4|6 - 4 1 - 4|3 5 1\' 7 6 5|1\' - 5 3 - 5|7 - 4 2 4 7|6 - 1\' 6 4 2|5 - - 2 3 4'},
+    B:{ch:'4|1|4|5|4|1|7|5',m:'6 - - 1\' - -|1\' - 7 5 - 3|6 - - 4 - 6|5 - 7 2\' - -|1\' - 6 4 - 6|5 - 3 1 - 3|2 - 4 7 - 2\'|7 - 5 2 - -',ar:'0.2.4.2.4.2.'},
+    C:{ch:'1|b6M|7|1|1|b6M|7|5M',m:'5 - 1\' 5 - 3|3 - b6 1\' - b6|2 - 4 7 - 4|1\' - 7 1\' 5 3|5 - 1\' 5 - 3|3 - b6 1\' - 3\'|2\' - 7 4 - 7|5 - #7 2\' - #7'},
+    D:{from:'C',ar:'0.2.4.2.4.2.'}},
+  // 洋館：おばけのワルツ（3/4・チェンバロとオルガン）。ボス＝オオカミ
+  mansion:{name:'洋館',bpm:152,boss:176,bar:12,beat:4,sc:'hmin',key:2,mo:62,bo:38,po:50,ao:62,
+    ins:{ld:'organ',ar:'harpsi',bs:'pizz',pd:'choir'},lp:{ld:2600,ar:3600,bs:900,pd:1400},
+    bs:'r---........',bb:'r-r-f-r-o-f-',ar:'....c...c...',ab:'0.2.4.2.4.2.',
+    dr:{k:'x...........',r:'....o...o...'},
+    df:{k:'x.......x...',c:'....x.......',h:'xoxoxoxoxoxo',r:'....x...x...'},
+    db:{k:'x..x....x...',s:'....x...x.x.',h:'x.x.x.x.x.x.'},
+    A:{ch:'1|5|1|4|1|4|5|1',m:'5 - - 4 3 -|2 - - 1 7, -|1 - 3 - 5 -|6 - - 5 4 -|5 - - 4 3 -|4 - 6 - 1\' -|7 - 2\' - 1\' 7|1\' - - - . .'},
+    B:{ch:'6|4|1|5|6|4|2M7|5',m:'6 - 1\' - 3\' -|1\' - - 6 4 -|3 - 5 - 1\' -|7 - - 6 5 -|6 - 1\' - 3\' -|4\' - - 3\' 2\' -|#4 - 2 - 1\' -|7 - 5 - 3 2'},
+    C:{ch:'1|6|b2M|5|1|6|4|5',m:'1\' - - - 3\' 2\'|1\' - - - 6 1\'|b2\' - - - 6 4|7 - 2\' - 5 -|5\' - - 3\' 2\' 1\'|3\' - - 1\' 6 1\'|1\' - 6 - 4 -|5 - 7 - 2\' -'},
+    D:{from:'C'}},
+  // 砂漠：ヒジャーズの音階（ダルブッカ・ウード・ネイ）。ボス＝スフィンクス
+  desert:{name:'砂漠',bpm:108,boss:128,sc:'phd',key:4,mo:64,bo:40,po:52,ao:64,
+    ins:{ld:'ney',bl:'reed',ar:'oud',bs:'bass',pd:'padsoft'},lp:{ld:4000,ar:2400,bs:900,pd:1300},
+    bs:'r--.r-..f--.r-..',bb:'r.r.rrr.r.r.rrr.',ar:'0...2.0.4...2...',
+    dr:{d:'x.......x.......',e:'..x.o.x.....x.o.',z:'o.o.o.o.o.o.o.o.'},
+    df:{d:'x.......x.......',e:'..x.o.x.o.o.x.o.',k:'x...x...x...x...',c:'....x.......x...'},
+    db:{d:'x..x..x...x.x...',e:'..x.x.x.x.x.x.xx',t:'x.......x.......',k:'x...x...x...x...'},
+    A:{ch:'1|1|2|1|1|7|2|1',m:'5 - 4_3 4 5 - - .|3 - 2_1 2 3 - - .|2 - 3 4 6 - 4 3|2 - - 1 . . . .|1\' - 7 6 7 - 6 5|7 - 6 5 4 - 6 7|6 - 4 3 2 - 3 4|3 - 2 - 1 - - .'},
+    B:{ch:'4|4|7|1|4|7|2|1',m:'1\' - 6 - 4 - 6 -|6 - 1\' - 6 - 4 -|7 - 2\' - 4\' - 2\' -|3\' - 2\' 3\' 1\' - - .|1\' - - 6 4 - 6 1\'|2\' - - 1\' 7 - 6 7|6 - 4 - 2 - 4 -|3 - 2 3 1 - - .'},
+    C:{ch:'1|2|1|2|7|2|1|2 1',m:'1\' 7_6 7 1\' 5 - 3 -|2\' 1\'_7 1\' 2\' 6 - 4 -|1\' 7_6 7 1\' 3\' - 1\' -|2\' - 1\'_7 6_4 6 - - .|7 - 6_5 4 - 6 7 2\'|6 - 4 2 4 - 6 -|5 - 3 - 1 - 2 3|4 - 3 2 1 - - .'},
+    D:{from:'C',ar:'0.2.4.2.0.2.4.2.'}},
+  // 雪山：チェレスタと鈴（雪＝きらきら）。ボス＝マンモス（行進）
+  snow:{name:'雪山',bpm:104,boss:128,sc:'maj',key:7,mo:67,bo:43,po:55,ao:79,
+    ins:{ld:'celesta',bl:'brass',ar:'harp',bs:'bass',pd:'padsoft',sp:'celesta'},lp:{ld:6000,ar:3200,bs:900,pd:1600},
+    bs:'r-------f-------',bb:'r---f---r---f-f-',ar:'0.1.2.4.5.4.2.1.',sp:.2,
+    dr:{j:'x.o.x.o.x.o.x.o.',k:'x.......x.......'},
+    df:{k:'x...x...x...x...',c:'....x.......x...',j:'xoxoxoxoxoxoxoxo'},
+    db:{k:'x.......x.......',s:'x.ooX.oox.ooX.oo',j:'x.x.x.x.x.x.x.x.'},
+    A:{ch:'1|3|4|5|1|3|4 5|1',m:'5 - 3 - 1 - 3 5|7 - 5 - 3 - - .|6 - 5 - 4 - 3 4|5 - - - 2 - 7, -|5 - 3 - 1 - 3 5|7 - 1\' 7 5 - 3 -|6 - 5 4 5 - 6 7|1\' - - - . . . .'},
+    B:{ch:'4|5|3|6|4|5|1|5',m:'1\' - - 6 4 - 6 -|2\' - - 7 5 - 7 -|7 - - 5 3 - 5 -|6 - - 3 1 - 3 -|4 - 6 - 1\' - 6 -|5 - 7 - 2\' - 7 -|1\' - 7 - 5 - 3 -|2 - 5 - 7 - 2\' -'},
+    C:{ch:'6|4|5|6|6|4|2|3M',m:'6 - 6_6 6 1\' - 7 -|1\' - 6 4 6 - 4 -|2\' - 7 5 7 - 5 -|6 - - - 3 - 6 -|6 - 6_6 6 1\' - 2\' 3\'|1\' - 6 4 6 - 1\' -|2\' - 1\' 6 4 - 6 -|3\' - 7 - #5 - 3 -'},
+    D:{from:'C',ar:'0.2.4.2.0.2.4.2.'}},
+  // 火山：ロック（ぶ厚いベースと太鼓）。ボス＝ドラゴン
+  volcano:{name:'火山',bpm:138,boss:156,sc:'min',key:0,mo:60,bo:36,po:48,ao:72,
+    ins:{ld:'lead',bl:'brass',ar:'chip',bs:'sawbass',pd:'pad'},lp:{ld:3000,ar:2600,bs:800,pd:1300},
+    bs:'r-r-r-r-r-r-o-r-',bb:'rrrrrrrrrrrrrrrr',ar:null,
+    dr:{k:'x.....x.x.......',s:'....x.......x...',h:'x.x.x.x.x.x.x.x.',t:'..............o.'},
+    df:{k:'x...x...x...x...',s:'....x.......x...',c:'....x.......x...',h:'xoxoxoxoxoxoxoxo'},
+    db:{k:'x.x.x.x.x.x.x.x.',s:'....x.......x...',t:'x.......x...x.x.',h:'x.x.x.x.x.x.x.x.'},
+    A:{ch:'1|6|7|1|1|6|7|5M',m:'1\' - 1\' 7 1\' - 5 -|6 - 6 5 6 - 3 -|7 - 7 6 7 - 4 -|5 - - - 3_4 5_7 1\' -|3\' - 2\' 1\' 7 - 1\' 5|1\' - 7 6 3 - 6 1\'|2\' - 1\' 7 4 - 7 2\'|#7 - 2\' - 5\' - 2\' -'},
+    B:{ch:'4|4|1|1|6|7|5M|5M',m:'1\' - - - 6 - 4 -|6 - 1\' - 4\' - 3\' -|5\' - - - 3\' - 1\' -|7 - 1\' - 3\' - 4\' -|3\' - - - 1\' - 6 -|4\' - - - 2\' - 7 -|#7 - 2\' - 4\' - 2\' -|5\' - 4\' - 2\' - #7 -'},
+    C:{ch:'1|b2M|1|5M|1|6|4|5M',m:'1\' - 5 - 3\' 2\' 1\' 5|b2\' - 6 - 4\' 3\' b2\' 6|1\' - 5 - 3\' 2\' 1\' 5|#7 - 2\' - 5\' - 4\' 2\'|5\' - 4\' 3\' 1\' - 3\' 5\'|3\' - 1\' 6 3\' - 1\' -|4\' - 3\' 1\' 6 - 4 -|#7 - 2\' - 4\' - 5\' -'},
+    D:{from:'C',ar:'0.2.4.2.0.2.4.2.'}},
+  // 魔王城：オルガンと聖歌隊（和声的短音階）。ボス＝まおう
+  castle:{name:'魔王城',bpm:128,boss:148,sc:'hmin',key:7,mo:67,bo:43,po:55,ao:67,
+    ins:{ld:'organ',bl:'brass',ar:'harpsi',bs:'sawbass',pd:'choir'},lp:{ld:2800,ar:3400,bs:850,pd:1500},
+    bs:'r-------r---f---',bb:'r-r-r-r-r-r-r-r-',ar:'0.2.4.2.1.2.4.2.',
+    dr:{b:'x.......x.......',k:'x.......x.......',h:'..o...o...o...o.'},
+    df:{k:'x...x...x...x...',s:'....x.......x...',h:'.o.x.o.x.o.x.o.x',b:'x...............'},
+    db:{k:'x.x.x..xx.x.x..x',s:'....x.......x...',b:'x...x...x...x...',h:'x.x.x.x.x.x.x.x.'},
+    A:{ch:'1|6|4|5|1|6|7|5',m:'5 - - 6 5 - 3 -|3 - - 1 6, - 1 -|4 - 6 - 1\' - 6 -|5 - - 7 2\' - - .|1\' - - 7 1\' - 5 -|6 - - 5 3 - 1 -|7 - 2\' - 4\' - 2\' -|7 - 6 - 5 - - .'},
+    B:{ch:'6|b7M|3M|1|4|1|2 5|5',m:'1\' - - - 6 - 3 -|b7 - - - 2\' - 4\' -|3\' - - - b7 - 5 -|1\' - - - 5 - 3 -|6 - - - 4 - 1 -|5 - - - 3 - 1 -|6 - 4 - 7 - 2\' -|5 - 7 - 2\' - 7 -'},
+    C:{ch:'1|b2M|7|1|4|b2M|5|5',m:'1\' 7 1\' 5 3 5 1 -|b2\' 1\' b2\' 6 4 6 b2 -|7 6 7 2\' 4\' 2\' 7 -|1\' - 5 - 3 - 1 -|4\' 3\' 4\' 1\' 6 1\' 4 -|b2\' 1\' b2\' 6 4 6 b2 -|5 #4 5 7 2\' 7 5 -|2\' - 1\' - 7 - 6 -'},
+    D:{from:'C',ar:'0.2.4.2.0.2.4.2.'}},
+  // 宇宙：シンセとディレイ（リディアン）。ボス＝宇宙クジラ（短調）
+  space:{name:'宇宙',bpm:118,boss:134,sc:'lyd',key:9,mo:69,bo:45,po:57,ao:69,
+    ins:{ld:'synth',bl:'lead',ar:'chipsoft',bs:'synbass',pd:'pad',sp:'bell'},lp:{ld:3200,ar:2800,bs:900,pd:1700},
+    bs:'r--r--r-r--r--r-',bb:'r-rrr-rrr-rrr-rr',ar:'0246024602460246',sp:.14,
+    dr:{k:'x...x...x...x...',o:'..x...x...x...x.',c:'....o.......o...'},
+    db:{k:'x...x...x...x...',s:'....x.......x...',h:'xoxoxoxoxoxoxoxo',t:'..........x.x.x.'},
+    A:{ch:'17|2|17|2|67|37|57|2',m:'5 - 4 - 3 - - .|4 - - - 6 - 2 -|3 - 5 - 7 - 1\' -|2\' - - - 1\' 7 6 -|6 - - - 5 - 3 -|5 - - - 3 - 7, -|2 - 4 - 5 - 7 -|6 - - - 4 - - .'},
+    B:{ch:'67|57|17|2|67|57|37|2',m:'1\' - 6 - 3 - 6 -|7 - 5 - 2 - 5 -|3\' - - - 1\' - 7 -|2\' - - - 6 - 4 -|1\' - 6 - 3 - 6 -|7 - 5 - 2\' - 7 -|3\' - 7 - 5 - 3 -|4 - 6 - 2\' - 4\' -'},
+    C:{sc:'min',ch:'1|6|7|1|1|6|4|5',m:'1\' - 5 - 1\' 7 1\' 3\'|6 - 3 - 6 5 6 1\'|7 - 4 - 7 6 7 2\'|1\' - - - 5 - - .|3\' - 2\' 1\' 5 - 1\' -|1\' - 7 6 3 - 6 -|4 - 6 - 1\' - 6 -|5 - 7 - 2\' - 7 -'},
+    D:{from:'C',ar:'0246024602460246'}},
+  // 天国：ハープと鐘と聖歌隊。ボス＝おばけの王さま（ホールのメロディが入る）
+  heaven:{name:'天国',bpm:112,boss:146,sc:'maj',key:9,mo:69,bo:45,po:57,ao:81,
+    ins:{ld:'flute',bl:'brass',ar:'harp',bs:'bass',pd:'choir',sp:'bell'},lp:{ld:4400,ar:3400,bs:950,pd:1800},
+    bs:'r-------f-------',bb:'r-r-r-r-f-f-r-r-',ar:'0124542101245421',sp:.18,
+    dr:{k:'x.......x.......',j:'....x.......x...',z:'..o...o...o...o.'},
+    df:{k:'x...x...x...x...',c:'....x.......x...',j:'.o.x.o.x.o.x.o.x',o:'..x...x...x...x.'},
+    db:{k:'x...x...x...x...',s:'....x.......x...',b:'x.......x...x...',h:'x.x.x.x.x.x.x.x.'},
+    A:{ch:'1|5|6|3|4|1|4|5',m:'3 - - - 2 - 1 -|7, - - - 5, - 2 -|1 - - - 3 - 6, -|5, - - - 7, - 3 -|4 - - - 6 - 1\' -|3\' - 2\' - 1\' - 5 -|6 - 4 - 6 - 1\' -|7 - 5 - 2\' - - .'},
+    B:{ch:'4|5|3|6|4|5|1|1',m:'6 - - 5 4 - 1 -|5 - - 3 2 - 7, -|3 - - 5 7 - 5 -|6 - - - 1\' - 6 -|1\' - - 7 6 - 4 -|2\' - - 1\' 7 - 5 -|1\' - 5 - 3 - 5 -|1\' - - - . . . .'},
+    C:{sc:'hmin',ch:'1|6|4|5|1|6|2 5|5',m:'5 - 5 6 1\' - 6 5|3 - 3 4 6 - 4 3|4 - 4 5 6 - 1\' 6|5 - 7 - 2\' - 7 -|1\' - 7 1\' 3\' - 2\' 1\'|6 - 5 6 1\' - 6 4|2\' - 4 - 7 - 5 -|7 - - 1\' 2\' - 7 -'},
+    D:{from:'C',ar:'0.2.4.2.0.2.4.2.'}},
+  // エンディング：ホールのメロディをオルゴールで ゆっくり
+  ending:{name:'エンディング',bpm:88,sc:'maj',key:5,mo:65,bo:41,po:53,ao:77,
+    ins:{ld:'musicbox',ar:'harp',bs:'bass',pd:'padsoft',sp:'celesta'},lp:{ld:6000,ar:3000,bs:900,pd:1500},
+    bs:'r-------f-------',ar:'0.2.4.2.1.2.4.2.',sp:.12,dr:{},
+    A:{ch:'1|5|6|3|4|1|4|5',m:'5 - 5 6 1\' - 6 5|5 - - 3 2 - - .|6 - 6 1\' 2\' - 1\' 6|3 - - - 5 - - .|4 - 4 5 6 - 5 4|3 - - 1 5 - - .|6 - 1\' - 4\' - 1\' -|7 - 2\' - 5\' - - .'},
+    B:{ch:'4|5|3|6|2|5|1|1',m:'1\' - - - 6 - 4 -|7 - - - 5 - 2 -|7 - - - 5 - 3 -|6 - - - 1\' - 2\' -|2\' - - - 6 - 4 -|3\' - - - 2\' - 7 -|1\' - - - - - - -|. . 5 6 1\' - - .'}},
+  // ジングル（1回だけ）
+  clear:{name:'クリア',bpm:150,sc:'maj',key:0,mo:60,bo:36,po:55,ao:72,once:1,
+    ins:{ld:'brass',ar:'chip',bs:'sawbass',pd:'pad'},lp:{ld:3600,ar:3000,bs:900,pd:2000},
+    bs:'r-..r-..r-..r-..r---------......',ar:'01240124012401244...............',
+    dr:{s:'oooooooxxxxxXXXX................',k:'x.......x...x.x.x...............',x:'................x...............'},
+    A:{ch:'1 1 4 5|1',m:'5,_1 3_5 1\' - 6 - 7 -|1\' - 5_1\' 3\'_5\' 1\'\' - - -'}},
+  over:{name:'ゲームオーバー',bpm:100,sc:'min',key:9,mo:69,bo:45,po:57,ao:69,once:1,
+    ins:{ld:'flute',ar:'pluck',bs:'bass',pd:'padsoft'},lp:{ld:3000,ar:2400,bs:900,pd:1400},
+    bs:'r-------r-------r-------........',ar:null,dr:{},
+    A:{ch:'1 7 6 5M|1',m:'5 - 4 - 3 - 2 -|#7, - 1 - - - . .'}},
+  unlock:{name:'アンロック',bpm:168,sc:'maj',key:7,mo:67,bo:43,po:55,ao:79,once:1,
+    ins:{ld:'chip',ar:'celesta',bs:'bass',pd:'pad'},lp:{ld:3600,ar:6000,bs:900,pd:2000},
+    bs:'r---............',ar:'0124567.........',dr:{k:'x...............',x:'x...............'},
+    A:{ch:'1',m:'1_3 5_1\' 3\' - 5\' - - -'}}
+};
+const BGM_STAGE=['grass','forest','mansion','desert','snow','volcano','castle','space','heaven'];   // STAGES の順
+// 書いた曲を 音の列に（はじめて鳴らすときに1回だけ）
+const songCache={};
+function pitchOf(tk,sc){
+  const r=/^([#b]?)([1-7])([',]*)$/.exec(tk); if(!r) throw new Error('音 '+tk);
+  let s=sc[+r[2]-1]+(r[1]==='#'?1:r[1]==='b'?-1:0); for(const c of r[3]) s+=c==="'"?12:-12; return s;
+}
+function chordOf(tk,sc){
+  const r=/^([#b]?)([1-7])([Mmda]?)(7|j)?(s?)$/.exec(tk); if(!r) throw new Error('和音 '+tk);
+  const d=+r[2], acc=r[1]==='#'?1:r[1]==='b'?-1:0, root=sc[d-1]+acc; let t;
+  if(r[3]){t={M:[0,4,7],m:[0,3,7],d:[0,3,6],a:[0,4,8]}[r[3]].map(x=>x+root);if(r[4])t.push(root+(r[4]==='j'?11:r[3]==='d'?9:10))}
+  else{const st=i=>{const n=d-1+i;return sc[n%7]+12*Math.floor(n/7)+acc};t=[st(0),st(2),st(4)];if(r[4]==='7')t.push(st(6));else if(r[4]==='j')t.push(root+11)}
+  if(r[5]) t[1]=t[0]+5;
+  return {root,t};
+}
+function compileSong(key){
+  if(songCache[key]) return songCache[key];
+  const S=SONGS[key], bar=S.bar||16, out={S,bar,beat:S.beat||4,sec:{}};
+  for(const name of Object.keys(S)){
+    if(!/^[A-Z]\d?$/.test(name)) continue;
+    let D=S[name]; if(D.from) D=Object.assign({},S[D.from],D);
+    const sc=SCALE[D.sc||S.sc], bars=D.ch.split('|'), cev=[], cAt=[];
+    bars.forEach((b,bi)=>{const tk=b.trim().split(/\s+/), l=bar/tk.length;tk.forEach((k,i)=>{const c=chordOf(k,sc);c.s=bi*bar+i*l;c.l=l;cev.push(c);for(let j=0;j<l;j++)cAt.push(c)})});
+    const mev=[], at={}; let s=0, last=null;
+    D.m.split('|').forEach((b,bi)=>{
+      for(const tk of b.trim().split(/\s+/)){
+        const parts=tk.split('_'), sub=2/parts.length;
+        for(const p of parts){
+          if(p==='-'){if(last)last.l+=sub}else if(p==='.')last=null;
+          else{last={s,m:pitchOf(p,sc),l:sub};mev.push(last);(at[s]=at[s]||[]).push(last)}
+          s+=sub;
+        }
+      }
+      if(s!==(bi+1)*bar) throw new Error(`${key}.${name} の ${bi+1}小節目の長さ ${s-bi*bar}（${bar}のはず）`);
+    });
+    if(bars.length*bar!==s) throw new Error(`${key}.${name} の和音とメロディの小節の数がちがう`);
+    out.sec[name]={D,len:s,cev,cAt,mev,at};
+  }
+  const has=k=>out.sec[k];
+  out.form=(S.form||['A','B']).filter(has);
+  out.bform=(S.bform||['C','D']).filter(has); if(!out.bform.length) out.bform=out.form;
+  return songCache[key]=out;
+}
+const pat=(p)=>{if(!p)return null;const o=[];for(const k of Object.keys(p))o.push([k,p[k]]);return o};
+const VEL={x:1,o:.5,X:1.3};
+let bgmNoise=null;
+function bgmNoiseBuf(X){
+  if(bgmNoise&&bgmNoise.sampleRate===X.sampleRate) return bgmNoise;
+  const b=X.createBuffer(1,X.sampleRate|0,X.sampleRate), d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  return bgmNoise=b;
+}
+// 1曲を鳴らす人（X＝AudioContext・dest＝つなぐ先・t0＝はじめる時刻）
+function Player(X,dest,key,t0){
+  const C=compileSong(key), S=C.S;
+  this.X=X; this.C=C; this.S=S; this.key=key; this.noise=bgmNoiseBuf(X);
+  const lp=(f,q)=>{const n=X.createBiquadFilter();n.type='lowpass';n.frequency.value=f;n.Q.value=q||.7;return n};
+  const hp=(f,q,type)=>{const n=X.createBiquadFilter();n.type=type||'highpass';n.frequency.value=f;n.Q.value=q||.7;return n};
+  const out=this.out=X.createGain(); out.gain.setValueAtTime(0,t0); out.gain.linearRampToValueAtTime(1,t0+(S.once?.02:.5)); out.connect(dest);
+  const L=Object.assign({ld:3200,ar:2800,bs:900,pd:1600},S.lp);
+  const delay=X.createDelay(1), fb=X.createGain(), dlp=lp(2400), wet=X.createGain();
+  delay.delayTime.value=Math.min(.9,60/S.bpm*.75); fb.gain.value=.3; wet.gain.value=.22;
+  delay.connect(dlp); dlp.connect(fb); fb.connect(delay); dlp.connect(wet); wet.connect(out);
+  this.keep=[delay,fb,dlp,wet];
+  const bus=(f,send)=>{const n=lp(f);n.connect(out);this.keep.push(n);if(send){const g=X.createGain();g.gain.value=send;n.connect(g);g.connect(delay);this.keep.push(g)}return n};
+  this.b={ld:bus(L.ld,.5),ar:bus(L.ar,.6),bs:bus(L.bs),pd:bus(L.pd,.25),sp:bus(7000,.8),fx:bus(4200,.4)};
+  const dr=this.dr=X.createGain(); dr.gain.value=.55; dr.connect(out);
+  const sub=n=>{n.connect(dr);this.keep.push(n);return n};
+  this.d={h:sub(hp(7200)),s:sub(hp(1300)),c:sub(hp(1500,1.2,'bandpass')),x:sub(hp(3200)),e:sub(hp(3300,2.5,'bandpass')),j:sub(hp(8500,1.5,'bandpass'))};
+  this.lfo=X.createOscillator(); this.lfoG=X.createGain(); this.lfo.frequency.value=5.3; this.lfoG.gain.value=11; this.lfo.connect(this.lfoG); this.lfo.start(t0);
+  this.ins={}; for(const k of ['ld','bl','ar','bs','pd','sp']) this.ins[k]=PRE[S.ins[k]]||PRE[k==='bl'?S.ins.ld:k==='sp'?'bell':'pluck'];
+  this.mode=0; this.fv=false; this.want={mode:0,fv:false};
+  this.form=C.form; this.fi=0; this.step=0; this.t=t0; this.t0=t0; this.dead=false; this.done=false;
+  let h=13; for(const c of key) h=(h*31+c.charCodeAt(0))>>>0;
+  this.rng=seeded(h); this.n=0;
+  this.pats();
+}
+Player.prototype.pats=function(){
+  const S=this.S, C=this.C, sec=this.sec(), D=sec.D, B=this.mode>0, b12=C.bar===12;
+  this.pDr=pat(B?(D.db||S.db||D.dr||S.dr):this.fv?(D.df||S.df||(b12?DF12:DF16)):(D.dr||S.dr));   // ボス中の FEVER は ボスのドラムのまま
+  this.pDt=this.mode===2?pat(S.dt||(b12?DT12:DT16)):null;
+  this.pBs=(B?(D.bb||S.bb):null)||D.bs||S.bs;
+  this.pAr=(B?(D.ab||S.ab):null)||(D.ar!==undefined?D.ar:S.ar);
+  this.pFx=this.fv?(S.af||(b12?AF12:AF16)):null;
+  this.sp=(D.sp??S.sp??0)*(this.fv?2:1);
+};
+Player.prototype.sec=function(){return this.C.sec[this.form[this.fi]]};
+Player.prototype.bpm=function(){
+  const S=this.S; let b=this.mode?(S.boss||S.bpm*1.1):S.bpm;
+  if(this.mode===2) b*=1.04;
+  if(this.fv) b*=this.mode?1.1:1.18;
+  return b;
+};
+Player.prototype.stop=function(fade){
+  if(this.dead) return; this.dead=true;
+  const X=this.X, t=X.currentTime, g=this.out.gain;
+  try{g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(0,t+(fade||.4))}catch(e){}
+  const out=this.out, lfo=this.lfo, keep=this.keep.concat([this.dr,this.lfoG]);
+  setTimeout(()=>{try{lfo.stop();out.disconnect();for(const n of keep)n.disconnect()}catch(e){}},((fade||.4)+1.6)*1000);
+};
+// t まで音を並べる
+Player.prototype.pump=function(until){
+  if(this.dead||this.done) return;
+  const X=this.X;
+  if(this.t<X.currentTime-.12){                     // 重くて おくれたら、おくれた分は鳴らさず とばす
+    while(this.t<X.currentTime) this.adv();
+  }
+  let n=0;
+  while(this.t<until&&!this.done&&n++<64){this.play(this.t);this.adv()}
+};
+Player.prototype.adv=function(){
+  const sec=this.sec();
+  this.t+=60/this.bpm()/4;
+  if(++this.step>=sec.len){
+    this.step=0;
+    if(this.S.once&&this.fi===this.form.length-1){this.done=true;return}   // ジングルは1回で おわり
+    this.fi=(this.fi+1)%this.form.length; this.pats();
+  }
+};
+Player.prototype.play=function(t){
+  const C=this.C, S=this.S;
+  // 切りかえ：ボスは小節の頭・FEVER は拍の頭
+  if(this.step%C.bar===0&&this.want.mode!==this.mode){
+    const was=this.mode; this.mode=this.want.mode;
+    if(!was!==!this.mode){this.form=this.mode?C.bform:C.form;this.fi=0;this.step=0;this.drum('x',t,this.mode?1:.6)}
+    this.pats();
+  }
+  if(this.step%C.beat===0&&this.want.fv!==this.fv){this.fv=this.want.fv;this.pats();if(this.fv)this.drum('x',t,1.1)}
+  const sec=this.sec(), st=this.step, D=sec.D, I=this.ins, sd=60/this.bpm()/4, ch=sec.cAt[st];
+  // 和音（パッド）
+  if(I.pd&&S.ins.pd) for(const c of sec.cev) if(c.s===st){for(const x of c.t) this.vox(this.b.pd,t,fold(S.po,S.key+x),c.l*sd,.9,I.pd);break}
+  // ベース
+  const bp=this.pBs;
+  if(bp){
+    const k=st%bp.length, c=bp[k];
+    if(c!=='-'&&c!=='.'){
+      let l=1;while(k+l<bp.length&&bp[k+l]==='-')l++;
+      const m=fold(S.bo-5,S.key+ch.root);
+      const iv={r:0,o:12,f:(ch.t[2]-ch.t[0]),t:(ch.t[1]-ch.t[0]),l:(ch.t[2]-ch.t[0])-12}[c]; if(iv!==undefined) this.vox(this.b.bs,t,m+iv,l*sd*.92,k%4===0?1:.85,I.bs);
+    }
+  }
+  // アルペジオ
+  const ap=this.pAr; if(ap) this.arp(ap,st,t,sd,ch,S.ao,I.ar,this.b.ar,1);
+  const fp=this.pFx; if(fp) this.arp(fp,st,t,sd,ch,S.ao+12,PRE.chipsoft,this.b.fx,.9);
+  // メロディ（ボスは ボスの音色。FEVER は オクターブ上を重ねる）
+  const ev=sec.at[st];
+  if(ev) for(const e of ev){
+    const m=S.mo+e.m+(D.tr||0), L=this.mode&&!S.once?I.bl:I.ld;
+    this.vox(this.b.ld,t,m,e.l*sd,1,L);
+    if(this.fv){const u=m+12>91?m-12:m+12;this.vox(this.b.fx,t,u,e.l*sd,.8,PRE.chipsoft)}
+  }
+  // ドラム
+  if(this.pDr) for(const [k,p] of this.pDr){const v=VEL[p[st%p.length]];if(v)this.drum(k,t,v)}
+  if(this.pDt) for(const [k,p] of this.pDt){const v=VEL[p[st%p.length]];if(v)this.drum(k,t,v*.9)}
+  // きらきら（ホタル・雪・星）
+  if(this.sp&&st%2===0&&this.rng()<this.sp){const x=ch.t[(this.rng()*ch.t.length)|0];this.vox(this.b.sp,t,fold(S.ao+12,S.key+x),sd*2,.45+this.rng()*.4,I.sp)}
+};
+Player.prototype.arp=function(p,st,t,sd,ch,base,P,bus,vel){
+  const k=st%p.length, c=p[k]; if(c==='-'||c==='.') return;
+  let l=1;while(k+l<p.length&&p[k+l]==='-')l++;
+  const r0=fold(base-5,this.S.key+ch.root), v=ch.t.map(x=>r0+x-ch.t[0]);   // 根音から つみあげる
+  if(c==='c'){for(const x of v.slice(0,3)) this.vox(bus,t,x,l*sd*.8,vel*.55,P);return}
+  const i=+c, j=i%4, x=j<v.length?v[j]:v[0]+12;
+  this.vox(bus,t,x+(i>=4?12:0),l*sd,vel*(k%4===0?1:.8),P);
+};
+// 1音（はじく音は s:0）
+Player.prototype.vox=function(bus,t,m,dur,vel,P){
+  const X=this.X, f=mtof(m), pk=vel*(P.v||.1), g=X.createGain(), o=X.createOscillator();
+  o.type=P.w||'triangle'; o.frequency.setValueAtTime(f,t); o.connect(g);
+  let o2=null;
+  if(P.det){o2=X.createOscillator();o2.type=P.w2||o.type;o2.frequency.setValueAtTime(f,t);o2.detune.setValueAtTime(P.det,t);
+    if(P.v2){const g2=X.createGain();g2.gain.value=P.v2;o2.connect(g2);g2.connect(g)}else o2.connect(g)}
+  if(P.vib){const L=this.lfoG;L.connect(o.detune);if(o2)L.connect(o2.detune);o.onended=()=>{try{L.disconnect(o.detune);if(o2)L.disconnect(o2.detune)}catch(e){}}}
+  let mo=null;
+  if(P.fm){mo=X.createOscillator();const mg=X.createGain();mo.frequency.setValueAtTime(f*P.fm[0],t);mg.gain.setValueAtTime(f*P.fm[1],t);mg.gain.exponentialRampToValueAtTime(f*P.fm[1]*.04+1,t+P.fm[2]);mo.connect(mg);mg.connect(o.frequency)}
+  const a=P.a||.005; let end;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(pk,t+a);
+  if(!P.s){end=t+a+P.d;g.gain.exponentialRampToValueAtTime(.0001,end)}
+  else{g.gain.setTargetAtTime(pk*P.s,t+a,(P.d||.2)/3);const off=Math.max(t+a+.01,t+dur);g.gain.setTargetAtTime(0,off,(P.r||.1)/4);end=off+(P.r||.1)}
+  g.connect(bus); o.start(t); o.stop(end+.03); if(o2){o2.start(t);o2.stop(end+.03)} if(mo){mo.start(t);mo.stop(end+.03)}
+  this.n++;
+};
+Player.prototype.ns=function(bus,t,dur,vol,att){
+  const X=this.X, s=X.createBufferSource(), g=X.createGain();
+  s.buffer=this.noise; s.loop=true; g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+(att||.002)); g.gain.exponentialRampToValueAtTime(.0001,t+(att||.002)+dur);
+  s.connect(g); g.connect(bus); s.start(t,Math.random()*.5); s.stop(t+dur+.05);
+};
+Player.prototype.thump=function(t,f0,f1,dur,vol,type){
+  const X=this.X, o=X.createOscillator(), g=X.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(f0,t); o.frequency.exponentialRampToValueAtTime(f1,t+dur*.6);
+  g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g); g.connect(this.dr); o.start(t); o.stop(t+dur+.03);
+};
+Player.prototype.drum=function(k,t,v){
+  const d=this.d;
+  switch(k){
+    case 'k': this.thump(t,150,46,.3,.34*v); break;
+    case 's': this.ns(d.s,t,.15,.16*v); this.thump(t,200,160,.08,.1*v,'triangle'); break;
+    case 'c': this.ns(d.c,t,.012,.2*v); this.ns(d.c,t+.012,.012,.2*v); this.ns(d.c,t+.024,.13,.22*v); break;
+    case 'h': this.ns(d.h,t,.035,.075*v); break;
+    case 'o': this.ns(d.h,t,.2,.06*v); break;
+    case 't': this.thump(t,(this.S.tom||100),(this.S.tom||100)*.62,.4,.34*v); break;
+    case 'm': this.thump(t,165,105,.28,.26*v); break;
+    case 'w': this.thump(t,1000,900,.06,.13*v,'triangle'); this.thump(t,1700,1600,.03,.06*v); break;
+    case 'r': this.thump(t,2300,2100,.025,.09*v,'triangle'); break;
+    case 'j': this.ns(d.j,t,.09,.08*v); this.ns(d.j,t+.025,.07,.05*v); break;
+    case 'z': this.ns(d.h,t,.06,.05*v,.018); break;
+    case 'x': this.ns(d.x,t,1.3,.11*v); break;
+    case 'd': this.thump(t,125,82,.24,.32*v); break;
+    case 'e': this.ns(d.e,t,.045,.16*v); this.thump(t,750,700,.03,.05*v,'triangle'); break;
+    case 'b': this.thump(t,84,76,1,.32*v); this.ns(d.s,t,.12,.05*v); break;
+  }
+};
+// ゲームの中の BGM の係
+const BGM_VOL=.42;   // BGM 全体の大きさ（効果音は 0.03〜0.08 くらい）
+const BGM={out:null,lp:null,p:null,j:[],key:null,hold:0,duck:0,iv:0,lv:0,lvN:0,paused:false,off:false};
+function bgmInit(){
+  if(BGM.out||!AC) return;
+  BGM.out=AC.createGain(); BGM.out.gain.value=BGM_VOL; BGM.lp=AC.createBiquadFilter(); BGM.lp.type='lowpass'; BGM.lp.frequency.value=20000;
+  BGM.out.connect(BGM.lp); BGM.lp.connect(AC.destination);
+  BGM.iv=setInterval(bgmPump,60);
+}
+function bgmPump(){
+  if(!AC||AC.state!=='running'||BGM.off) return;
+  const until=AC.currentTime+.32;
+  if(BGM.p) BGM.p.pump(until);
+  for(const j of BGM.j) j.pump(until);
+  if(BGM.j.length) BGM.j=BGM.j.filter(j=>{if(j.done&&AC.currentTime>j.t+2.5){j.stop(.05);return false}return true});
+}
+function bgmPlay(key){
+  if(BGM.key===key&&(BGM.p||!key)) return;
+  BGM.key=key;
+  if(BGM.p){BGM.p.stop(.45);BGM.p=null}
+  if(key&&!muted&&AC){
+    const t0=Math.max(AC.currentTime+.08,BGM.hold);
+    BGM.p=new Player(AC,BGM.out,key,t0);
+    const js=BGM.j.slice(); if(js.length) setTimeout(()=>{for(const j of js)j.stop(.6)},Math.max(0,(t0-AC.currentTime)*1000));
+    bgmPump();
+  }
+}
+// ジングル（clear・over・unlock）。ふつうの曲は止めて、終わるまで次の曲を待たせる（unlock は小さくするだけ）
+const songLen=key=>{const C=compileSong(key);let n=0;for(const k of C.form)n+=C.sec[k].len;return n*60/C.S.bpm/4};
+function bgmJingle(key){
+  try{
+    if(!AC||muted||BGM.off) return; bgmInit();
+    const now=AC.currentTime, len=songLen(key);
+    if(key==='unlock') BGM.duck=now+len+.3;
+    else{if(BGM.p){BGM.p.stop(.15);BGM.p=null} BGM.key=null; BGM.hold=now+len*.8}
+    BGM.j.push(new Player(AC,BGM.out,key,now+.03)); bgmPump();
+  }catch(e){BGM.off=true}
+}
+// ループから毎フレーム：いまの場面の曲・ボス・FEVER・一時停止
+function bgmTick(){
+  if(!AC||BGM.off) return;
+  try{bgmTick2()}catch(e){BGM.off=true;try{if(BGM.p)BGM.p.stop(.1)}catch(_){}}   // BGM で何かあっても ゲームは止めない（音だけ やめる）
+}
+function bgmTick2(){
+  bgmInit();
+  if(muted){if(BGM.p){BGM.p.stop(.2);BGM.p=null}for(const j of BGM.j)j.stop(.1);BGM.j=[];return}
+  let key=null;
+  if(G.ending) key='ending';
+  else if(G.state==='play') key=BGM_STAGE[G.stage]||null;
+  else if((G.state==='title'||G.state==='hub')&&!$('hub').classList.contains('sitting')) key='hall';
+  bgmPlay(key);
+  if(BGM.p&&G.state==='play'){
+    if(++BGM.lvN>=8){BGM.lvN=0;let lv=0;for(const e of G.en){const b=ENEMIES[e.t].boss;if(b&&b>lv&&!e.dead&&!e.fake)lv=b}for(const q of G.pend){const b=ENEMIES[q.t].boss;if(b&&b>lv)lv=b}BGM.lv=lv}
+    BGM.p.want.mode=BGM.lv; BGM.p.want.fv=G.fever>0;
+  }
+  const pz=G.state==='play'&&G.paused||AC.currentTime<BGM.duck;
+  if(pz!==BGM.paused){BGM.paused=pz;const t=AC.currentTime;BGM.out.gain.setTargetAtTime(BGM_VOL*(pz?.45:1),t,.08);BGM.lp.frequency.setTargetAtTime(pz&&G.state==='play'?900:20000,t,.08)}
+}
+// 効果音を いまの曲の調に合わせる（FEVER・WAVE などの ドレミの音。短調の曲は 平行調の長調へ）
+function keyMul(){
+  const p=BGM.p; if(!p||p.dead) return 1;
+  const S=p.S, mn=/min|dor|hmin/.test(p.sec().D.sc||S.sc); let k=((S.key+(mn?3:0))%12+12)%12; if(k>6) k-=12;
+  return Math.pow(2,k/12);
+}
+// ドーンの音（中ボス・ボスの出現・たおした）。f＝こもり具合
+function sfxBoom(dur,f,vol,at){
+  if(!AC||muted) return;
+  try{
+    const t=AC.currentTime+(at||0), s=AC.createBufferSource(), lp=AC.createBiquadFilter(), g=AC.createGain();
+    s.buffer=bgmNoiseBuf(AC); s.loop=true; lp.type='lowpass'; lp.frequency.setValueAtTime(f,t); lp.frequency.exponentialRampToValueAtTime(Math.max(40,f*.25),t+dur);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+    s.connect(lp); lp.connect(g); g.connect(AC.destination); s.start(t,Math.random()*.2); s.stop(t+dur+.05);
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{if(!AC)return;if(document.hidden)AC.suspend().catch(()=>{});else if(!muted)AC.resume().catch(()=>{})});
+/* ==================== BGM ここまで ==================== */
+
 
 /* ---------- 杭の配置 ---------- */
 // 配置：P＝杭（タワーを建てられる）、F＝小さな固定の釘、walls＝見えないかべ、heso＝ヘソ、ほかは台ごとのもの（setup で使う）
@@ -2241,7 +2718,7 @@ function spawn(t,at){
   G.pend.push({t,x,y,d});
   G.portals.push({x,y,r,c:E.color,age:0,open:d,dur:d+.5,boss:!!E.boss});
   if(E.boss){
-    G.shake=.3; sfx.hurt();
+    G.shake=.3; sfx.bossIn(E.boss);
     banner(E.boss===2?'ボス出現！':'中ボス出現！',E.color,2,230);
     G.alarm=2.6; G.alarmC=E.color;            // 台のまわりが警告の色で点滅
   }else if(!at) sfx.gate();
@@ -2758,7 +3235,7 @@ function hurtEnemy(e,d,dot){
     if(e.fake){vanishFake(e);return}                       // たぬきのにせもの：ドロンと消えるだけ
     const E=ENEMIES[e.t];
     e.dead=true; const r=E.reward; G.balls+=r; G.kills++;
-    addText(e.x,e.y,'+'+r,GOLD); burst(e.x,e.y,E.color,12); sfx.kill();
+    addText(e.x,e.y,'+'+r,GOLD); burst(e.x,e.y,E.color,12); if(E.boss) sfx.bossDown(E.boss); else sfx.kill();
     if(E.gh){G.poofs.push({e:Object.assign({},e,{dying:true,flash:0,hurtT:0,ghost:0,trail:[],oops:0,stun:0,sleep:0}),t:0,dir:Math.random()<.5?-1:1});
       for(let i=0;i<(E.boss?5:2);i++) fxAdd({k:'wisp',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*.3,vx:(Math.random()-.5)*.4,vy:-(.6+Math.random()*.5),max:1.1+Math.random()*.5,s:e.r*(.22+Math.random()*.12),ph:Math.random()*6.28,c:'#ffffff'})}   // たましいが ふわっと上へ
     if(E.death) E.death(e);                                  // おばけごと（わたげが分かれる・きのこの胞子 など）
@@ -3221,7 +3698,7 @@ function update(dt){
   if(G.wave>=WAVES){if(cleared){stageClear();return}}
   else{
     G.waveT-=dt;
-    if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true);cheerRun(GOLD)}
+    if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true);cheerRun(GOLD);sfx.wclear()}
     if(G.waveDone?(G.waveGap-=dt)<=0:G.waveT<=0) startWave(G.wave+1);
   }
 }
@@ -9553,7 +10030,7 @@ function showEnding(done){
   PARADE.forEach((L,row)=>{const y=[372,438,506][row], r=[16,13.5,11.5][row], gap=Math.min(41,330/L.length);L.forEach((t,i)=>mk(t,188+(i-(L.length-1)/2)*gap,y,r,row))});
   mk('ousama',188,262,30,-1);
   G.ending={t0:G.time,done,list,conf:[],fw:0};
-  $('ending').hidden=false; $('app').classList.add('ending-on'); sfx.ending();
+  $('ending').hidden=false; $('app').classList.add('ending-on');
 }
 function closeEnding(){const E=G.ending;$('ending').hidden=true;G.ending=null;if(E&&E.done)E.done()}
 $('ending').onclick=()=>{ensureAudio();if(G.ending&&G.time-G.ending.t0>.6)closeEnding()};
@@ -9793,7 +10270,7 @@ function startStage(){
 }
 function stageClear(){
   G.state='clear'; G.fever=0; G.bs=[]; G.bl=[];
-  const bonus=30+G.life*3; G.balls+=bonus; sfx.fever(); burst(188,300,'rainbow',30);
+  const bonus=30+G.life*3; G.balls+=bonus; bgmJingle('clear'); burst(188,300,'rainbow',30);
   const S=STAGES[G.stage], first=!G.cleared.includes(G.stage);
   if(first) G.cleared.push(G.stage);
   writeSave();
@@ -9841,7 +10318,7 @@ $('quitNo').onclick=closeQuit; $('quitBack').onclick=closeQuit;
 $('quitYes').onclick=()=>{ensureAudio();quitBoard()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('quit').hidden)closeQuit()});
 function gameOver(){
-  G.state='over'; closeSheet(); G.balls+=G.feverPay; G.feverPay=0; G.fever=0; writeSave();
+  G.state='over'; closeSheet(); G.balls+=G.feverPay; G.feverPay=0; G.fever=0; writeSave(); bgmJingle('over');
   const S=STAGES[G.stage], i=G.boardIdx??0;
   showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,`お金 ${COIN}${G.balls}`,'かせいだお金はそのまま残るよ。お店で強くなって、もう一度！'],
     'もう一度この台',()=>playBoard(i),'台えらびへ',()=>openHub('board'));
@@ -10296,7 +10773,7 @@ function openBoardBuy(i){
 }
 function buyBoard(i){
   const B=BOARDS[i]; if(boardState(B)!=='buy'||G.balls<B.price) return;
-  G.balls-=B.price; G.bought.push(B.stage); closeBuy(); setCoins(true); sfx.fever();
+  G.balls-=B.price; G.bought.push(B.stage); closeBuy(); setCoins(true); bgmJingle('unlock');
   writeSave(); renderTab();
   const n=newItems(B.stage); toast(`${STAGES[B.stage].name}の台をアンロック！`+(n.length?` お店に ${n.join('・')} がふえたよ`:''));
 }
@@ -10481,7 +10958,7 @@ handle.addEventListener('keydown',e=>{
 
 $('mute').onclick=()=>{muted=!muted;$('mute').setAttribute('aria-pressed',String(!muted));$('mute').setAttribute('aria-label',muted?'音 OFF':'音 ON');if(!muted)ensureAudio()};
 // スタート：セーブがあればそのつづき、なければはじめから。どちらも台えらびの画面へ
-$('startBtn').onclick=()=>{ensureAudio();readSave()?continueRun():newRun()};
+$('startBtn').onclick=()=>{ensureAudio();sfx.coin();readSave()?continueRun():newRun()};
 // ためしモード：ロゴを5回（2.5秒の中で）タップで ON/OFF
 let logoTaps=[];
 document.querySelector('#title .logo').onclick=()=>{
@@ -10526,7 +11003,7 @@ function loop(now){
   const frozen=G.state==='play'&&G.paused&&!G.ending;
   if(G.state==='play'&&!G.paused&&!document.hidden) update(dt);
   if(!frozen) updateFx(dt);
-  hud();
+  hud(); bgmTick();
   // ロビー（不透明で台をかくす）のあいだは台を描かない。タイトル・結果（うしろの台がうすく ぼけて見える）のあいだは 3フレームに1回（11/6 軽くする）
   if($('hub').hidden&&!document.hidden){
     if(frozen){if(G.frozenN===1)draw();G.frozenN++}   // 止めた次のフレームは描かない（先にシートを出す）。その次に1回だけ（えらんだ杭の輪）
@@ -10543,6 +11020,7 @@ try{new ResizeObserver(resize).observe($('app'))}catch(_){window.addEventListene
 if(document.fonts&&document.fonts.ready) document.fonts.ready.then(buildStatic).catch(()=>{});
 requestAnimationFrame(t=>{last=t;loop(t)});
 warmIcons();
+document.addEventListener('click',()=>{if(!AC||AC.state!=='running')ensureAudio()},{capture:true});   // さわったら 音を用意（さいしょ＝タイトルの曲が鳴る・止まっていたら また鳴らす）
 })();
 </script>
 </body>
