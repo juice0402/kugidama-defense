@@ -7,4 +7,5 @@
 - 全台づくりの設計図は dev/plan.md、しくみ（フック）は index.html の上のコメント「コードのしくみ」。自動プレイ・スクショは dev/sim（mk.py → runsim.py / shot.py）
 - 軽さ：毎フレーム描くものは、絵の使いまわし（sprite）・まとめ描き（fxPath・taperPath）・光の重ね描き（lazyLay）を使い、shadowBlur は使わず clip も なるべく使わない（11/6・11/7 の軽量化。くわしくは「コードのしくみ」の「軽くする道具」）。重さは dev/sim の mkprof.py＋prof9.js で 描く関数ごとの命令の数を 前とくらべる
 - BGM（11/8）：コードで鳴らす（音のファイル0）。台ごとに1曲＋ホール・エンディング・ジングル、FEVER とボスで速く派手に。index.html の「BGM ここから」の区切り。試しは dev/sim の bgmcheck.py（音の大きさ）
+- Canva の絵（11/8〜）：絵柄は A ネオン（しょーくんが4案から選んだ）。おばけは Canva で作って SPRITE_SRC（WebP）に入れる。作り方・できた台・注意は dev/canva.md、道具は dev/canva/（neoncut.py・pack.py）。ゆっくり作る（一度に大量に作らない）
 - 決まっていない中身を勝手に足さない。迷ったらしょーくんに聞く

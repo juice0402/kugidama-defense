@@ -1,0 +1,83 @@
+{
+ "groups": [
+  [
+   "kakashi",
+   "kakashi_nohat"
+  ],
+  [
+   "tanuki",
+   "tanuki_leaf"
+  ],
+  [
+   "hari",
+   "hari_curl"
+  ],
+  [
+   "kuma",
+   "kuma_lick",
+   "kuma_nopot"
+  ]
+ ],
+ "size": {
+  "wata": [
+   2.5,
+   1.05
+  ],
+  "usagi": [
+   2.4,
+   1.05
+  ],
+  "kakashi": [
+   2.9,
+   1.05
+  ],
+  "kakashi_nohat": [
+   2.9,
+   1.05
+  ],
+  "tanuki": [
+   2.8,
+   1.05
+  ],
+  "tanuki_leaf": [
+   2.8,
+   1.05
+  ],
+  "uma": [
+   2.7,
+   1.05
+  ],
+  "kinoko": [
+   2.5,
+   1.05
+  ],
+  "kitsune": [
+   2.8,
+   1.05
+  ],
+  "hari": [
+   2.7,
+   1.05
+  ],
+  "hari_curl": [
+   2.7,
+   1.05
+  ],
+  "kuma": [
+   2.7,
+   1.05
+  ],
+  "kuma_lick": [
+   2.7,
+   1.05
+  ],
+  "kuma_nopot": [
+   2.7,
+   1.05
+  ],
+  "taiboku": [
+   3.5,
+   1.05
+  ]
+ }
+}
