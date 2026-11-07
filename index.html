@@ -156,7 +156,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .hub::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.55;
   background-image:radial-gradient(circle at 10px 10px,rgba(255,216,74,.2) 0 1.2px,transparent 1.7px),radial-gradient(circle at 34px 30px,rgba(62,242,255,.18) 0 1.4px,transparent 1.9px),radial-gradient(circle at 27px 7px,rgba(255,79,216,.16) 0 1px,transparent 1.5px);
   background-size:44px 40px}
-.hub-top{position:relative;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px 8px;
+.hub-top{position:relative;z-index:4;flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;padding-block:12px 8px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .sign{display:flex;flex-direction:column;gap:5px;line-height:1;min-width:0}
 .sign b{font:500 27px var(--f-disp);color:#fff;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 10px var(--neon-p),0 0 22px var(--neon-p),0 0 40px rgba(255,79,216,.55)}
@@ -274,7 +274,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 @media (prefers-reduced-motion:reduce){.slot.cur .cframe::before,.slot.cur .topper::after{animation:none}}
 /* 弾薬箱（玉のセット。11/7）：ふたが開いた鉄の箱に、5つの穴。タップか長おしドラッグで ガチャッと はめる */
 .ammo{position:relative;margin:2px 4px 0;user-select:none;-webkit-user-select:none}
-.ammo-lid{position:relative;height:34px;margin:0 10px -3px;border-radius:12px 12px 3px 3px;transform-origin:50% 100%;transform:perspective(420px) rotateX(36deg);
+.ammo-lid{position:relative;height:26px;margin:0 10px -3px;border-radius:12px 12px 3px 3px;transform-origin:50% 100%;transform:perspective(420px) rotateX(36deg);
   background:repeating-radial-gradient(circle at 50% -40%,#2b2a35 0 7px,#22212b 7px 9px),#24232d;border:2px solid #4a4a58;border-bottom:0;
   box-shadow:inset 0 0 0 4px #33333f,inset 0 6px 14px rgba(0,0,0,.6)}
 .ammo-lid::before,.ammo-lid::after{content:"";position:absolute;bottom:-1px;width:26px;height:9px;border-radius:3px 3px 0 0;background:linear-gradient(#8a8c99,#4c4d58);box-shadow:inset 0 1px 0 rgba(255,255,255,.35)}
@@ -310,12 +310,12 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .ammo.jolt .ammo-lid{animation:lidjolt .3s ease-out}
 @keyframes jolt{0%{transform:translateY(3px) rotate(-.5deg)}50%{transform:translateY(-1px) rotate(.3deg)}100%{transform:none}}
 @keyframes lidjolt{0%{transform:perspective(420px) rotateX(30deg)}50%{transform:perspective(420px) rotateX(40deg)}100%{transform:perspective(420px) rotateX(36deg)}}
-.ammo-front{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;height:34px;margin:8px -9px 0;padding:0 16px;border-radius:0 0 12px 12px;
+.ammo-front{position:relative;display:flex;align-items:center;justify-content:space-between;gap:8px;height:24px;margin:8px -9px 0;padding:0 16px;border-radius:0 0 12px 12px;
   background:linear-gradient(#2c2e37,#24262e);border-top:1px solid rgba(0,0,0,.6)}
 .ammo-front::before{content:"";position:absolute;left:0;right:0;top:0;height:5px;background:repeating-linear-gradient(-45deg,#e8c23a 0 6px,#1a1a20 6px 12px);opacity:.85}
-.stencil{font:800 15px/1 var(--f-disp);letter-spacing:.35em;color:#e8d36a;opacity:.88;text-shadow:0 0 6px rgba(232,211,106,.25)}
-.stencil small{font:400 10px var(--f-arc);letter-spacing:.08em;margin-left:.4em;color:#b9a958}
-.latch{width:20px;height:16px;border-radius:3px;background:linear-gradient(#9a9daa,#555864);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.6);position:relative}
+.settop{position:sticky;top:-14px;z-index:3;display:flex;flex-direction:column;gap:10px;margin:-14px calc(-1*max(16px,env(safe-area-inset-right,0px))) 0 calc(-1*max(16px,env(safe-area-inset-left,0px)));
+  padding:14px max(16px,env(safe-area-inset-right,0px)) 12px max(16px,env(safe-area-inset-left,0px));background:linear-gradient(var(--arc-bg) 88%,color-mix(in srgb,var(--arc-bg) 0%,transparent));box-shadow:0 12px 14px -12px rgba(0,0,0,.85)}
+.latch{width:18px;height:13px;border-radius:3px;background:linear-gradient(#9a9daa,#555864);box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 1px 2px rgba(0,0,0,.6);position:relative}
 .latch::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px;border-radius:50%;background:#33343c}
 .odds{display:flex;height:26px;border-radius:8px;overflow:hidden;border:1.5px solid rgba(255,255,255,.12);background:#0a0816}
 .odds i{--c:#9aa3ad;display:grid;place-items:center;min-width:0;font:800 10.5px/1 var(--f-body);font-style:normal;color:#0b0914;white-space:nowrap;overflow:hidden;
@@ -9852,7 +9852,7 @@ function fitDeck(deck,owned){
 const inSet=k=>G.deck.filter(x=>x===k).length;
 
 /* ---------- ロビー（夜のゲームセンター）：下のタブで 台・玉・タワー・ギミック・セット ---------- */
-const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',gimmick:'お店・ギミック',set:'弾薬箱',zukan:'図鑑'};
+const TABS={board:'台えらび',ball:'お店・玉',tower:'お店・タワー',gimmick:'お店・ギミック',set:'玉のセット',zukan:'図鑑'};
 const SHOP_BALLS=[], SHOP_TOWERS=[];   // お店のならび（finishHooks で作る）：無属性弾 → 回復弾 → 属性弾。台の品は その台が開いてから
 let hubTab='board', toastT=0;
 function openHub(tab){
@@ -9944,7 +9944,7 @@ function iconCv(kind,k){
 
 // 台のタブ：いまのセットと、台のカード
 function setStrip(){
-  const d=el('div','setstrip'); d.append(el('span',null,'弾薬箱'));
+  const d=el('div','setstrip'); d.append(el('span',null,'いまのセット'));
   const m=el('div','minis',G.deck.map(k=>ICO('ball',k)).join('')); m.setAttribute('aria-label',G.deck.map(k=>BALLS[k].name).join('・')); d.append(m);
   const b=el('button','linkbtn','へんしゅう'); b.onclick=()=>{ensureAudio();showTab('set')}; d.append(b);
   return d;
@@ -10026,7 +10026,7 @@ function tabBoard(body){
 }
 // 玉のタブ
 function tabBall(body){
-  body.append(el('p','lead','買った玉は<b>持ち玉</b>にずっと残るよ。弾薬箱のあいている穴（通常弾）に自動で入って、あとは「セット」のタブでいつでも入れかえ'));
+  body.append(el('p','lead','買った玉は<b>持ち玉</b>にずっと残るよ。セットのあいている所（通常弾）に自動で入って、あとは「セット」でいつでも入れかえ'));
   const g=el('div','list');
   for(const k of SHOP_BALLS){
     const B=BALLS[k], n=G.owned[k]||0; if(!avail(B)) continue;
@@ -10100,19 +10100,21 @@ function tabGimmick(body){
   body.append(g);
 }
 // 弾薬箱（玉のセット。11/7 しょーくん「弾薬箱やから、ガチャガチャと弾丸をセッティングするようなUIに」）
+// 画面には「弾薬箱」と書かない（ほんとの弾丸みたいになるので。11/7 しょーくん）。箱と割合の帯は上に固定
 // 5つの穴に玉を はめる。持ち玉をタップ → あいている穴（通常弾）へ飛んで ガチャッ。穴をタップ → 外す。
 // 持ち玉は長おし・穴はそのまま ドラッグで、好きな穴へ（玉が入っている穴なら入れかえ・箱の外に出すと外す）。下に 台で出る割合と 狙える わざ
 let ammoDrag=null;
 function tabSet(body){
   const box=el('div','ammo');
-  box.innerHTML='<div class="ammo-lid" aria-hidden="true"></div><div class="ammo-case"><div class="foam" role="group" aria-label="弾薬箱の5つの穴"></div>'+
-    '<div class="ammo-front" aria-hidden="true"><span class="latch"></span><span class="stencil">弾薬箱<small>×5</small></span><span class="latch"></span></div></div>';
+  box.innerHTML='<div class="ammo-lid" aria-hidden="true"></div><div class="ammo-case"><div class="foam" role="group" aria-label="セットの5つの穴"></div>'+
+    '<div class="ammo-front" aria-hidden="true"><span class="latch"></span><span class="latch"></span></div></div>';
   const foam=box.querySelector('.foam');
   const ch=G.deck.map((_,i)=>{const b=el('button','chamber');b.dataset.i=i;b.innerHTML=`<span class="hole"></span><span class="num">${i+1}</span>`;foam.append(b);return b});
   const odds=el('div','odds'), wz=el('div','wz'), rack=el('div','rack'), empty=el('div','empty','特殊な玉を買うと、ここにならぶよ');
   const shopB=el('button','linkbtn','お店で玉を見る'); shopB.onclick=()=>showTab('ball'); empty.append(shopB);
   odds.setAttribute('role','img');
-  body.append(box,el('p','lead','タップで出し入れ・長おしでドラッグ。台では この割合で出るよ'),odds,wz,el('div','sect','持ち玉'),rack,empty);
+  const top=el('div','settop'); top.append(box,odds);   // 箱と割合は上に固定（持ち玉をスクロールしても 何が入っているか見えるように）
+  body.append(top,el('p','lead','タップで出し入れ・長おしでドラッグ。台では 上の割合で出るよ'),wz,el('div','sect','持ち玉'),rack,empty);
   const reset=el('button','resetbtn','セーブを消して はじめから'); reset.onclick=()=>{ensureAudio();openReset()}; body.append(reset);
 
   const paintCh=(i,hide)=>{
@@ -10140,7 +10142,7 @@ function tabSet(body){
     rack.innerHTML=have.map(k=>{
       const B=BALLS[k], n=G.owned[k]||0, used=inSet(k), nor=k==='normal';
       const pp=nor?'<b>∞</b>':n<=6?Array.from({length:n},(_,j)=>`<i class="${j<used?'in':''}"></i>`).join(''):`<b>${used}/${n}</b>`;
-      return `<button class="pouch${!nor&&used>=n?' out':''}" data-k="${k}" style="--c:${B.color};--cg:${hexA(B.color,.36)}" aria-label="${B.name} ${nor?'いくつでも':`${n}こ中 ${used}こ 箱の中`}">${ICO('ball',k)}<span class="nm">${B.name}</span><span class="pp">${pp}</span></button>`;
+      return `<button class="pouch${!nor&&used>=n?' out':''}" data-k="${k}" style="--c:${B.color};--cg:${hexA(B.color,.36)}" aria-label="${B.name} ${nor?'いくつでも':`${n}こ中 ${used}こ セット中`}">${ICO('ball',k)}<span class="nm">${B.name}</span><span class="pp">${pp}</span></button>`;
     }).join('');
     fillIco(rack); empty.hidden=have.length>1;
   }
@@ -10167,7 +10169,7 @@ function tabSet(body){
   // 持ち玉 k を i番目の穴へ（from＝飛び立つ場所）
   function put(k,i,from){
     if(G.deck[i]===k){thunk(i);return}
-    if(k!=='normal'&&inSet(k)>=(G.owned[k]||0)){toast(`持っている${BALLS[k].name}は、ぜんぶ箱に入ってるよ`);return}
+    if(k!=='normal'&&inSet(k)>=(G.owned[k]||0)){toast(`持っている${BALLS[k].name}は、ぜんぶセットに入ってるよ`);return}
     G.deck[i]=k; writeSave(); refresh([i]);
     const land=()=>{flying.delete(i);paintCh(i);thunk(i)};
     if(from) fly(k,from,center(holeR(i)),1,sz(i),land); else land();
@@ -10183,9 +10185,9 @@ function tabSet(body){
   function tapPouch(k){
     const p=pouchOf(k), from=center(p.querySelector('canvas').getBoundingClientRect());
     if(k==='normal'){toast('通常弾は、穴の玉を外すと入るよ');return}
-    if(inSet(k)>=(G.owned[k]||0)){toast(`持っている${BALLS[k].name}は、ぜんぶ箱に入ってるよ`);p.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:180});return}
+    if(inSet(k)>=(G.owned[k]||0)){toast(`持っている${BALLS[k].name}は、ぜんぶセットに入ってるよ`);p.animate([{transform:'translateX(-4px)'},{transform:'translateX(4px)'},{transform:'none'}],{duration:180});return}
     const i=G.deck.indexOf('normal');
-    if(i<0){toast('箱がいっぱい。穴の玉をタップで外すか、ドラッグで入れかえてね');box.classList.remove('jolt');void box.offsetWidth;box.classList.add('jolt');sfx.tick();return}
+    if(i<0){toast('セットがいっぱい。穴の玉をタップで外すか、ドラッグで入れかえてね');box.classList.remove('jolt');void box.offsetWidth;box.classList.add('jolt');sfx.tick();return}
     sfx.grab(); put(k,i,from);
   }
   wz.onclick=e=>{const t=e.target.closest('[data-w]');if(!t)return;const k=t.dataset.w,D=k.startsWith('sp:')?spOf(k.slice(3)):comboOf(k);sfx.tick();toast(G.found.has(k)?`${D.name}：${D.desc}`:'まだ 見つけていない わざ。台で 当ててみてね')};
@@ -10214,7 +10216,7 @@ function tabSet(body){
     }
     if(j<0){const p=pouchOf(d.k);if(p)fly(d.k,at,center(p.querySelector('canvas').getBoundingClientRect()),1.15,1,null);return}
     if(d.k==='normal'){if(G.deck[j]!=='normal')take(j,at);return}
-    if(G.deck[j]!==d.k&&inSet(d.k)>=(G.owned[d.k]||0)){toast(`持っている${BALLS[d.k].name}は、ぜんぶ箱に入ってるよ`);const p=pouchOf(d.k);if(p)fly(d.k,at,center(p.querySelector('canvas').getBoundingClientRect()),1.15,1,null);return}
+    if(G.deck[j]!==d.k&&inSet(d.k)>=(G.owned[d.k]||0)){toast(`持っている${BALLS[d.k].name}は、ぜんぶセットに入ってるよ`);const p=pouchOf(d.k);if(p)fly(d.k,at,center(p.querySelector('canvas').getBoundingClientRect()),1.15,1,null);return}
     put(d.k,j,at);
   }
   const down=(e,from,k,elm)=>{
@@ -10254,7 +10256,7 @@ function openBuy(kind,k){
   paint($('buyIn'),D.color);
   $('buyIco').src=icon(kind,k); $('buyKind').textContent={ball:'BALL',tower:'TOWER',gimmick:'GIMMICK'}[kind]; $('buyName').textContent=D.name;
   $('buyDesc').textContent=D.desc;
-  $('buyNote').innerHTML=kind==='ball'?`持ち玉 ${G.owned[k]||0}こ・弾薬箱に入っているのは ${inSet(k)}こ`:
+  $('buyNote').innerHTML=kind==='ball'?`持ち玉 ${G.owned[k]||0}こ・セットに入っているのは ${inSet(k)}こ`:
     kind==='tower'?`台で建てるのは ${COIN}${D.cost}・とどく広さ ${D.range}`:`砲台につけるのは ${COIN}${D.cost}・1つの砲台に1つ`;
   const y=$('buyYes');
   if(own){y.disabled=true;y.textContent=k==='basic'?'さいしょから持ってる':'持ってる';buyFn=null}
@@ -10328,7 +10330,7 @@ function buy(kind,k,price){
   let msg;
   if(kind==='ball'){
     G.owned[k]=(G.owned[k]||0)+1; const i=G.deck.indexOf('normal');
-    if(i>=0){G.deck[i]=k;msg=`${BALLS[k].name}をGET！ 弾薬箱に入れたよ`}else msg=`${BALLS[k].name}をGET！ 持ち玉に入ったよ（セットのタブで入れかえてね）`;
+    if(i>=0){G.deck[i]=k;msg=`${BALLS[k].name}をGET！ セットに入れたよ`}else msg=`${BALLS[k].name}をGET！ 持ち玉に入ったよ（セットで入れかえてね）`;
     sfx.build();
   }else if(kind==='tower'){G.unlocked[k]=true;msg=`${TOWERS[k].name}をGET！ 杭をタップして建てられるよ`;sfx.lv()}
   else{G.gimmicks[k]=true;msg=`${GIMMICKS[k].name}をGET！ 台で砲台をタップしてつけてね`;sfx.lv()}
