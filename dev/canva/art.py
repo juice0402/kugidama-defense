@@ -3,6 +3,7 @@
 #         python3 art.py 見る.png … ついでに 枠と 景色を 台の 形に かさねた 見本を 出す（さいごの 1つ）
 #
 # bg   ：Canva の 9:16 の 絵（1180×2100 など）。台の アーチの はば（RO*2+8＝340）で、下を H-6 に そろえて 置く。アーチの外は 見えないので 1色に（軽く）
+#        art.json に "ridge" が あれば、手前の 地面の 光る ふちの 線を さがして ridge（台の座標の 点）に する（台の build の artFront で 使う）
 # frame：Canva の「まん中に アーチの窓（こい紺の 無地）が ある 枠の絵」。窓の形を 見つけて、台の アーチ（CX,CY,RO と 下の H-6）に ぴったり 合うように
 #        ゆがめる（アーチの所は 角度ごとに、まっすぐの所は 行ごとに。窓の外の はばは そのままの 大きさ）。
 #        できた 絵は 台の座標の FR（x -45〜405・y -60〜740）を おおう。外がわは base の色に だんだん とけこむ（コードで base を ぬってから 絵を 置く）。
@@ -142,16 +143,34 @@ def frame_warp(src, key, th=130, nmax=24):
     return im, dict(x=x0, y=y0, w=fw, h=fh, base=hexc(base), glow=glow)
 
 
-def bg_fit(src, key):
+def ridge_line(A, x0, y0, k, spec):
+    """手前の 地面の 光る ふちの 線（ridge）を さがす → [[x,y],...]（台の座標）。spec＝{"y":[上,下],"w":[R,G,B の おもみ]}。
+    台の build で artFront が この線より下を もう一度 かさねて、コードで 描いた 大きな物（ピラミッド など）の すそを 地面の うしろに かくす"""
+    h, w, _ = A.shape
+    lo, hi = [int((v - y0) * k) for v in spec['y']]
+    sc = (A[lo:hi] * np.array(spec.get('w', [1, 1, 1]), dtype=np.float32)).sum(axis=2)
+    sc = nd.gaussian_filter(sc, 2)
+    ys = np.argmax(sc, axis=0) + lo
+    ys = nd.median_filter(ys.astype(float), 31, mode='nearest')
+    ys = nd.uniform_filter1d(ys, 15, mode='nearest')
+    pts = []
+    for px in list(range(0, w - 12, 24)) + [w - 1]:
+        pts.append([round(x0 + px / k, 1), round(y0 + ys[px] / k, 1)])
+    return pts
+
+
+def bg_fit(src, key, ridge=None):
     im = Image.open(src).convert('RGB')
     w, h = BG_W, round(im.height * BG_W / im.width)
     im = im.resize((w, h), Image.LANCZOS)
     gw = RO * 2 + 8; gh = gw * h / w
     x0, y0 = CX - gw / 2, FB - gh
     A = np.asarray(im).astype(np.float32)
+    meta = dict(x=round(x0, 2), y=round(y0, 2), w=gw, h=round(gh, 2))
+    if ridge: meta['ridge'] = ridge_line(A, x0, y0, w / gw, ridge); print(key, 'ridge', meta['ridge'][::8])
     inside = field_mask(w, h, x0, y0, w / gw, shrink=-3)
     A[~inside] = np.median(A[~inside], axis=0)          # アーチの外は 見えないので 1色に
-    return Image.fromarray(A.astype(np.uint8)), dict(x=round(x0, 2), y=round(y0, 2), w=gw, h=round(gh, 2))
+    return Image.fromarray(A.astype(np.uint8)), meta
 
 
 def webp(im, q):
@@ -164,7 +183,7 @@ def main():
     lines = []; last = {}
     for key, s in spec.items():
         src = os.path.join(HERE, s['src'])
-        im, meta = frame_warp(src, key, s.get('glow', 130), s.get('nglow', 24)) if s['kind'] == 'frame' else bg_fit(src, key)
+        im, meta = frame_warp(src, key, s.get('glow', 130), s.get('nglow', 24)) if s['kind'] == 'frame' else bg_fit(src, key, s.get('ridge'))
         data = webp(im, s.get('q', 78))
         open(os.path.join(HERE, 'art', key + '.webp'), 'wb').write(data)
         last[s['kind']] = (im, meta)
@@ -174,6 +193,7 @@ def main():
             for k in ('cut', 'lift'):
                 if k in s: extra += f",{k}:{s[k]}"
             extra += f",base:'{meta['base']}',glow:[{g}]"
+        if 'ridge' in meta: extra += ',ridge:[' + ','.join(f'[{a},{b}]' for a, b in meta['ridge']) + ']'
         lines.append(f"  {key}:{{x:{meta['x']},y:{meta['y']},w:{meta['w']},h:{meta['h']}{extra},src:'data:image/webp;base64,{base64.b64encode(data).decode()}'}},   // {im.width}×{im.height} {len(data)//1024}KB")
         print(key, im.size, len(data), 'bytes')
     p = os.path.join(ROOT, 'index.html')

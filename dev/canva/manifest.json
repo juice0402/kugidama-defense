@@ -337,6 +337,11 @@
   "mansion": {
    "gen": "MAHaTHpaKUo",
    "file": "bg/mansion_full.png"
+  },
+  "desert": {
+   "gen": "MAHaTBQKtV4",
+   "file": "bg/desert_full.png",
+   "old_moon_cut": "MAHaTOSGSZI"
   }
  },
  "frame": {
@@ -352,6 +357,10 @@
    "gen": "MAHaTJShV-E",
    "file": "frame/mansion_frame_full.png",
    "old_noisy": "MAHaTNRMwHc"
+  },
+  "desert": {
+   "gen": "MAHaTNk3d-s",
+   "file": "frame/desert_frame_full.png"
   }
  }
 }

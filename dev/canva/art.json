@@ -23,5 +23,25 @@
  "mansion_bg": {
   "kind": "bg",
   "src": "bg/mansion_full.png"
+ },
+ "desert_frame": {
+  "kind": "frame",
+  "src": "frame/desert_frame_full.png",
+  "q": 70
+ },
+ "desert_bg": {
+  "kind": "bg",
+  "src": "bg/desert_full.png",
+  "ridge": {
+   "y": [
+    405,
+    460
+   ],
+   "w": [
+    1,
+    1,
+    -0.6
+   ]
+  }
  }
 }
