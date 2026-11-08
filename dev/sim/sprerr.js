@@ -31,5 +31,17 @@ for(let i=0;i<combos.length;i+=G.pegs.length){
 }
 for(const p of G.pegs) p.tower=null;
 try{for(const k of tks)T.icon('tower',k);for(const k of gks.slice(1))T.icon('gimmick',k);n++}catch(x){errs.push('icon:'+x.message)}
+// 玉 24種（Canva の 絵・11/8 5.）：台に ならべて、ふつう・金色・宿った・分身 で 数コマ 描く（まわる 玉・ボムの 火花も）。FEVER も。お店の アイコンも
+try{T.playBoard(0);G.paused=true;G.en=[];G.bs=[]}catch(x){errs.push('ball play:'+x.message)}
+const bks=Object.keys(T.BALLS);
+for(const st of [{},{gold:2},{inf:{el:'fire'}},{clone:true},{fev:1}]){
+  try{
+    G.fever=st.fev?8:0;
+    G.bs=bks.map((k,i)=>Object.assign({x:40+(i%6)*55,y:100+Math.floor(i/6)*60,vx:.5,vy:-.5,t:k,r:T.BALLS[k].r*G.bscale,age:st.clone?25:1,still:0,hit:{},gone:false,rail:false,s:0,e0:0},st));
+    T.draw();for(let f=0;f<4;f++){G.time+=1/60;T.draw()}n++;
+  }catch(x){errs.push('ball '+JSON.stringify(st)+':'+x.message)}
+}
+G.bs=[];G.fever=0;
+try{for(const k of bks)T.icon('ball',k);n++}catch(x){errs.push('ball icon:'+x.message)}
 return n+' ok / errors '+errs.length+' '+errs.slice(0,6).join(' | ');
 })()
