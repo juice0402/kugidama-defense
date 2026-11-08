@@ -98,6 +98,67 @@
    "src": "ui/src/coin.png",
    "gen": "MAHaUPipmvE",
    "px": 96
+  },
+  "heart": {
+   "src": "ui/src/heart.png",
+   "gen": "MAHaUPZdp4I",
+   "px": 96
+  },
+  "snd": {
+   "src": "ui/src/snd.png",
+   "gen": "MAHaUJgzCx0",
+   "px": 96,
+   "c": [
+    106,
+    100
+   ],
+   "box": 156
+  },
+  "snd-off": {
+   "src": "ui/src/snd_off.png",
+   "gen": "MAHaUDcTYEc",
+   "px": 96,
+   "c": [
+    106,
+    100
+   ],
+   "box": 156
+  },
+  "back": {
+   "src": "ui/src/back.png",
+   "gen": "MAHaUJeC7VA",
+   "px": 240,
+   "q": 84
+  },
+  "t-board": {
+   "src": "ui/src/t_board.png",
+   "gen": "MAHaUO8Jqts",
+   "px": 96
+  },
+  "t-ball": {
+   "src": "ui/src/t_ball.png",
+   "gen": "MAHaUEOKJbk",
+   "px": 96
+  },
+  "t-tower": {
+   "src": "ui/src/t_tower.png",
+   "gen": "MAHaULGZr5o",
+   "px": 96
+  },
+  "t-gimmick": {
+   "src": "ui/src/t_gimmick.png",
+   "gen": "MAHaUJFYV1o",
+   "px": 96
+  },
+  "t-set": {
+   "src": "ui/src/t_set.png",
+   "gen": "MAHaUCNKvWU",
+   "px": 96
+  },
+  "t-zukan": {
+   "src": "ui/src/t_zukan.png",
+   "gen": "MAHaUNAGFVI",
+   "px": 96
   }
  }
 }

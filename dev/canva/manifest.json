@@ -744,6 +744,55 @@
   "coin": {
    "gen": "MAHaUPipmvE",
    "file": "ui/src/coin.png"
+  },
+  "heart": {
+   "gen": "MAHaUPZdp4I",
+   "file": "ui/src/heart.png"
+  },
+  "snd": {
+   "gen": "MAHaUJgzCx0",
+   "file": "ui/src/snd.png",
+   "note": "コインと ノーマルタワー（白い パールの 金属）を 参考に"
+  },
+  "snd_off": {
+   "gen": "MAHaUDcTYEc",
+   "file": "ui/src/snd_off.png",
+   "note": "音の アイコンを 参考に 波を ×に"
+  },
+  "back": {
+   "gen": "MAHaUJeC7VA",
+   "file": "ui/src/back.png",
+   "note": "スピーカーと コインを 参考に。作業用デザインで 600×600 に"
+  },
+  "t_board": {
+   "gen": "MAHaUO8Jqts",
+   "file": "ui/src/t_board.png",
+   "note": "タブの アイコン（台）。もどるの アイコンと 草原の 枠を 参考に"
+  },
+  "t_ball": {
+   "gen": "MAHaUEOKJbk",
+   "file": "ui/src/t_ball.png",
+   "note": "タブ（玉）。台の アイコンと 通常弾を 参考に"
+  },
+  "t_tower": {
+   "gen": "MAHaULGZr5o",
+   "file": "ui/src/t_tower.png",
+   "note": "タブ（タワー）。玉の アイコンと ノーマルタワーを 参考に"
+  },
+  "t_gimmick": {
+   "gen": "MAHaUJFYV1o",
+   "file": "ui/src/t_gimmick.png",
+   "note": "タブ（ギミック）。タワーの アイコンと バンパーを 参考に"
+  },
+  "t_set": {
+   "gen": "MAHaUCNKvWU",
+   "file": "ui/src/t_set.png",
+   "note": "タブ（セット）。ギミックの アイコンと 火炎弾を 参考に"
+  },
+  "t_zukan": {
+   "gen": "MAHaUNAGFVI",
+   "file": "ui/src/t_zukan.png",
+   "note": "タブ（図鑑）。セットの アイコンと コインを 参考に"
   }
  }
 }
