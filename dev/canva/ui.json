@@ -1,0 +1,103 @@
+{
+ "plates": {
+  "gold": {
+   "src": "ui/src/btn_gold.png",
+   "gen": "MAHaT2Izbuk",
+   "r": 62,
+   "use": [
+    ".nbtn.gold",
+    ".price",
+    ".buy"
+   ]
+  },
+  "lime": {
+   "from": "gold",
+   "hue": 35,
+   "r": 62,
+   "use": [
+    ".btn.primary"
+   ]
+  },
+  "red": {
+   "from": "gold",
+   "hue": -55,
+   "r": 62,
+   "use": [
+    ".nbtn.danger"
+   ]
+  },
+  "grey": {
+   "from": "gold",
+   "hue": 200,
+   "sat": 0.1,
+   "val": 0.4,
+   "r": 62,
+   "use": [
+    ".nbtn.gold:disabled",
+    ".nbtn.danger:disabled",
+    ".price.short",
+    ".buy:disabled"
+   ]
+  },
+  "navy": {
+   "src": "ui/src/btn_navy.png",
+   "gen": "MAHaTyOsdyI",
+   "r": 62,
+   "use": [
+    ".btn",
+    ".nbtn",
+    ".x",
+    ".linkbtn",
+    ".zseg button",
+    ".buy.owned",
+    ".wallet",
+    ".tagown",
+    ".cnt"
+   ]
+  },
+  "pink": {
+   "from": "navy",
+   "hue": 100,
+   "r": 62,
+   "use": [
+    ".zseg button.on",
+    ".test-enter .nbtn.on"
+   ]
+  },
+  "panel": {
+   "src": "ui/src/panel.png",
+   "gen": "MAHaTzxnOpI",
+   "r": 80,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".panel",
+    ".buy-in",
+    ".sheet-in"
+   ]
+  },
+  "card": {
+   "from": "panel",
+   "hue": 0,
+   "sat": 0.5,
+   "val": 0.92,
+   "r": 80,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".card",
+    ".zrow",
+    ".item",
+    ".setstrip",
+    ".pouch"
+   ]
+  }
+ },
+ "icons": {
+  "coin": {
+   "src": "ui/src/coin.png",
+   "gen": "MAHaUPipmvE",
+   "px": 96
+  }
+ }
+}

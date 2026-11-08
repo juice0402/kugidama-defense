@@ -724,5 +724,26 @@
    "file": "title/key1_full.png",
    "note": "タイトルの 1まい絵（9:16・文字なし）。うさぎおばけ・草原の景色・ねこおばけを 参考に"
   }
+ },
+ "ui": {
+  "btn_gold": {
+   "gen": "MAHaT2Izbuk",
+   "file": "ui/src/btn_gold.png",
+   "note": "さいしょの ボタン（ほかの UI の 参考の 絵）。参考は 火炎弾と 宇宙の ハンドル"
+  },
+  "btn_navy": {
+   "gen": "MAHaTyOsdyI",
+   "file": "ui/src/btn_navy.png",
+   "note": "金の ボタンと 宇宙の ハンドルを 参考に"
+  },
+  "panel": {
+   "gen": "MAHaTzxnOpI",
+   "file": "ui/src/panel.png",
+   "note": "こん色の ボタンと 宇宙の ハンドルを 参考に。カードの わくは これの あざやかさを 半分に"
+  },
+  "coin": {
+   "gen": "MAHaUPipmvE",
+   "file": "ui/src/coin.png"
+  }
  }
 }
