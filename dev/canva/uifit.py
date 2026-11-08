@@ -38,12 +38,14 @@ def hue_rot(A, deg, sat=1, val=1):   # hue.py と 同じ（A は 0〜1 の RGB�
 
 
 def load(J):
-    src = J.get('src') or CFG['plates'][J['from']]['src']
+    src = J.get('src') or next(CFG[g][J['from']]['src'] for g in ('plates', 'icons', 'fx') if J['from'] in CFG.get(g, {}))
     A = np.asarray(Image.open(os.path.join(HERE, src)).convert('RGB')).astype(np.float32) / 255
     border = np.concatenate([A[0], A[-1], A[:, 0], A[:, -1]])
     bg = np.median(border, axis=0)
     d = np.abs(A - bg).max(axis=2)
-    solid = nd.binary_fill_holes(nd.binary_opening(d > J.get('solid', .3), iterations=2))
+    m = nd.binary_opening(d > J.get('solid', .3), iterations=2)
+    if J.get('close'): m = nd.binary_closing(m, iterations=J['close'])   # ふちの すきまを とじて 中を うめる（中が 背景に にた こい 色の 板。演出の 帯）
+    solid = nd.binary_fill_holes(m)
     lab, n = nd.label(solid)
     if n > 1:   # 小さい かけらは 光として あつかう
         sz = nd.sum(solid, lab, range(1, n + 1)); keep = [i + 1 for i, s in enumerate(sz) if s > sz.max() * J.get('bits', .02)]
@@ -110,7 +112,24 @@ def icon(key, J):
     return f"--i-{key}:url(data:image/webp;base64,{base64.b64encode(data).decode()})", img
 
 
-def sheet(plates, icons, out):
+def fxpic(key, J):
+    # 演出の 絵（11/8 7.）：どんな 形でも よい 1まい絵。すけすけに して まわりを 切って、はば "w" px の WebP に
+    # ゲームの中：CSS の 変数 --fx-〇〇（:root）と その 形 --fx-〇〇-ar（はば/高さ）。台の キャンバスは fxImg('〇〇') が この 変数から よむ
+    R, solid = load(J)
+    a = R[..., 3]
+    ys, xs = np.nonzero(a > J.get('cut', .04))
+    p = J.get('pad', 4)
+    x0, x1, y0, y1 = max(0, xs.min() - p), min(a.shape[1], xs.max() + 1 + p), max(0, ys.min() - p), min(a.shape[0], ys.max() + 1 + p)
+    if 'box' in J: x0, y0, x1, y1 = J['box']
+    img = Image.fromarray((np.clip(R, 0, 1) * 255 + .5).astype(np.uint8), 'RGBA').crop((x0, y0, x1, y1))
+    w = J.get('w', 600); h = round(img.height * w / img.width)
+    img = img.resize((w, h), Image.LANCZOS)
+    data = webp(img, J.get('q', 86))
+    print(f'fx {key}: {w}x{h} webp {len(data)//1024}KB')
+    return f"--fx-{key}:url(data:image/webp;base64,{base64.b64encode(data).decode()});--fx-{key}-ar:{w/h:.4f}", img
+
+
+def sheet(plates, icons, out, fxs=None):
     # 見本：上に 板（いろいろな 大きさに のばした 絵）、下に アイコン（大・小）
     W = 1100; rows = []
     for key, (img, S) in plates.items():
@@ -126,6 +145,15 @@ def sheet(plates, icons, out):
         for key, img in icons.items():
             row.alpha_composite(img.resize((72, 72), Image.LANCZOS), (x, 6))
             row.alpha_composite(img.resize((26, 26), Image.LANCZOS), (x + 23, 84)); x += 80
+        rows.append(row)
+    if fxs:   # 演出の 絵（はば 260 に ちぢめて ならべる）
+        ims = [im.resize((260, max(1, round(im.height * 260 / im.width))), Image.LANCZOS) for im in fxs.values()]
+        x = 10; y = 6; rh = 0; row = Image.new('RGBA', (W, 10), (16, 12, 34, 255)); pos = []
+        for im in ims:
+            if x + im.width > W: x = 10; y += rh + 8; rh = 0
+            pos.append((x, y)); x += im.width + 10; rh = max(rh, im.height)
+        row = Image.new('RGBA', (W, y + rh + 6), (16, 12, 34, 255))
+        for im, xy in zip(ims, pos): row.alpha_composite(im, xy)
         rows.append(row)
     H = sum(r.height for r in rows) + 4 * len(rows)
     c = Image.new('RGBA', (W, H), (255, 255, 255, 255)); y = 0
@@ -160,6 +188,10 @@ def main():
     for key, J in CFG.get('icons', {}).items():
         v, img = icon(key, J); vars_.append(v); I[key] = img
         img.save(os.path.join(HERE, 'ui', 'i_' + key + '.png'))
+    X = {}
+    for key, J in CFG.get('fx', {}).items():
+        v, img = fxpic(key, J); vars_.append(v); X[key] = img
+        img.save(os.path.join(HERE, 'fx', key + '.png'))
     block = ':root{' + ';'.join(vars_) + '}\n' + '\n'.join(rules) + '\n'
     path = os.path.join(ROOT, 'index.html')
     html = open(path, encoding='utf-8').read()
@@ -169,7 +201,7 @@ def main():
     html = html[:i + len(a)] + block + html[j:]
     open(path, 'w', encoding='utf-8').write(html)
     print('index.html UI_ART', len(block) // 1024, 'KB')
-    if len(sys.argv) > 1: sheet(P, I, sys.argv[1])
+    if len(sys.argv) > 1: sheet(P, I, sys.argv[1], X)
 
 
 if __name__ == '__main__':

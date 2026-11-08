@@ -7,7 +7,8 @@
    "use": [
     ".nbtn.gold",
     ".price",
-    ".buy"
+    ".buy",
+    ".crownbar"
    ]
   },
   "lime": {
@@ -52,7 +53,8 @@
     ".buy.owned",
     ".wallet",
     ".tagown",
-    ".cnt"
+    ".cnt",
+    ".toast"
    ]
   },
   "pink": {
@@ -61,7 +63,8 @@
    "r": 62,
    "use": [
     ".zseg button.on",
-    ".test-enter .nbtn.on"
+    ".test-enter .nbtn.on",
+    ".newb"
    ]
   },
   "panel": {
@@ -170,6 +173,21 @@
    "src": "ui/src/t_zukan.png",
    "gen": "MAHaUNAGFVI",
    "px": 96
+  }
+ },
+ "fx": {
+  "fever": {
+   "src": "fx/src/fever.png",
+   "gen": "MAHaUSeH5cQ",
+   "w": 720,
+   "q": 84
+  },
+  "boss": {
+   "src": "fx/src/boss.png",
+   "gen": "MAHaUdBLf3g",
+   "w": 720,
+   "q": 84,
+   "close": 8
   }
  }
 }
