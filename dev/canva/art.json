@@ -111,5 +111,24 @@
     1
    ]
   }
+ },
+ "heaven_frame": {
+  "kind": "frame",
+  "src": "frame/heaven_frame_full.png"
+ },
+ "heaven_bg": {
+  "kind": "bg",
+  "src": "bg/heaven_full.png",
+  "ridge": {
+   "y": [
+    478,
+    512
+   ],
+   "w": [
+    1,
+    0.6,
+    -0.4
+   ]
+  }
  }
 }

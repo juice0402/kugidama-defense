@@ -364,6 +364,13 @@
    "file": "bg/space_full.png",
    "old_planet_corner": "MAHaTX_sMGE",
    "old_grainy": "MAHaTW1zkiA"
+  },
+  "heaven": {
+   "gen": "MAHaTdUz4NM",
+   "file": "bg/heaven_full.png",
+   "old_bright": "MAHaTf8JDVA",
+   "old_clouds_high": "MAHaTSfwcRs",
+   "alt_big_rainbow": "MAHaTd3vK70"
   }
  },
  "frame": {
@@ -399,6 +406,11 @@
   "space": {
    "gen": "MAHaTUnvlYI",
    "file": "frame/space_frame_full.png"
+  },
+  "heaven": {
+   "gen": "MAHaTdoi-cU",
+   "file": "frame/heaven_frame_full.png",
+   "old_bright": "MAHaTT_49MY"
   }
  }
 }
