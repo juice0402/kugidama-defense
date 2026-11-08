@@ -15,7 +15,7 @@
 3. remove-background で 背景けし。**それだけだと ネオンの光が けずれる**（こい色の部品＝くまの ツボ なども けずれる）ので、`dev/canva/neoncut.py もとの絵 背景けし 出す_full.png` で、体は 背景けしの形・まわりの光は もとの絵の「背景の こん色との ちがい」から すけすけにする。
 4. `dev/canva/pack.py` が `_full.png` を切りぬいて WebP（q90）にして SPRITE_SRC の行を出す。かえ絵の組（sprites.json の groups）は 同じ わくで 切るので、入れかわっても体が ずれない。大きさは sprites.json の size（[w, by]：w＝半径に対する絵のはば、by＝絵の下はし）。
 5. ここで 取れる絵は 200×200（Canva の見本の大きさ。もとの 1264×1264 は この作業場から ダウンロードできない）。おばけは この大きさで足りる。**台の奥の景色やタイトルのような 大きい絵は 別の やり方が いる**（しょーくんが Canva から 書き出して わたす など）。
-6. たしかめ：`dev/sim/mk.py` のあと `python3 shot.py out.png "$(sed s/__STAGE__/0/g sprcheck.js)" 60`（0＝草原）。台に その台の おばけと かえ絵が ならぶ。エラーは `sprerr.js`（その台の おばけ × 状態。1分くらい。全部の drawcheck.js は 30分でも おわらない）。かえ絵の 状態を 足したら 両方の 表に 足す。
+6. たしかめ：`dev/sim/mk.py` のあと `python3 shot.py out.png "$(sed s/__STAGE__/0/g sprcheck.js)" 60`（0＝草原）。台に その台の おばけと かえ絵が ならぶ。sprcheck.js は おばけの tick を 止めて 状態を そのまま 見せる。エラーは `sprerr.js`（その台の おばけ × 状態。1分くらい。全部の drawcheck.js は 30分でも おわらない）。かえ絵の 状態を 足したら 両方の 表に 足す。
 
 ## ゲームの中のしくみ
 - `SPRITE_SRC` に絵、`sprOf(e)` が いまの絵（ENEMIES の `sprKey(e)` で かえ絵の名前）。絵があると drawGhost は back・skin・front・top・顔を描かない。絵の上に かさねる 効果は `over(e,r,t,P)`（洋館の まとめは 「Canvaの絵の かえ絵と 上に かさねる 効果（洋館）」の区切り）。
@@ -28,4 +28,5 @@
 - 洋館（11/8）：neko（しっぽ1本 neko_1・天使の輪 neko_rev）・koumori（天井で ねむる koumori_hang）・yoroi（よろいが ずれる yoroi_off）・fukurou（羽をためる fukurou_up）・ookami（遠ぼえ ookami_howl）。あせ・いかりマークと 遠ぼえの音は over で 絵の上に
 - 砂漠（11/8）：mia（もぐっている間は sprKey が null＝コードの絵、もぐりかけの すなの山は over）・tokage（しっぽ切れ tokage_cut・リボン tokage_knot）・rakuda（こぶが しぼむ rakuda_flat）・sasori（ねらう sasori_aim・だらん sasori_stop）・sphinx（すなのたては over）
   - らくだは 1回目 こぶが 耳に見えたので「頭のうしろに 大きな ふたこぶ・らくだらしい顔」で 作りなおし。しぼんだ こぶも 1回目は 羊の角に見えたので「風船のように 平たく しぼむ・まるまらない」
+- 雪山（11/8）：okojo（雪に まぎれる白い おおいと 見つかった輪は over。P.spr＝いまの絵と 場所）・penguin・tonakai（氷のよろい → ひび tonakai_crack → われた tonakai_bare）・seiuchi（ねそべる seiuchi_lie。絵のときは pose で つぶさない）・mammoth（鼻を ふり上げる mammoth_up、鼻の先の 雪玉は over で 絵の中の 鼻の先に）
 - Canva のフォルダ「パチおば おばけ（ネオン）」に もとの絵。Canva の番号は dev/canva/manifest.json

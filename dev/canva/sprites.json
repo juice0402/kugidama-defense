@@ -51,6 +51,19 @@
    "sasori",
    "sasori_aim",
    "sasori_stop"
+  ],
+  [
+   "tonakai",
+   "tonakai_crack",
+   "tonakai_bare"
+  ],
+  [
+   "seiuchi",
+   "seiuchi_lie"
+  ],
+  [
+   "mammoth",
+   "mammoth_up"
   ]
  ],
  "size": {
@@ -195,6 +208,42 @@
    1.05
   ],
   "sphinx": [
+   3.0,
+   1.05
+  ],
+  "okojo": [
+   2.75,
+   1.05
+  ],
+  "penguin": [
+   2.75,
+   1.05
+  ],
+  "tonakai": [
+   2.65,
+   1.05
+  ],
+  "tonakai_crack": [
+   2.65,
+   1.05
+  ],
+  "tonakai_bare": [
+   2.65,
+   1.05
+  ],
+  "seiuchi": [
+   3.6,
+   1.05
+  ],
+  "seiuchi_lie": [
+   3.6,
+   1.05
+  ],
+  "mammoth": [
+   3.0,
+   1.05
+  ],
+  "mammoth_up": [
    3.0,
    1.05
   ]
