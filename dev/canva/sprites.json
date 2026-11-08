@@ -81,6 +81,18 @@
   [
    "dragon",
    "dragon_fire"
+  ],
+  [
+   "kaeru",
+   "kaeru_stone"
+  ],
+  [
+   "yagi",
+   "yagi_chant"
+  ],
+  [
+   "kujaku",
+   "kujaku_fan"
   ]
  ],
  "size": {
@@ -302,6 +314,45 @@
   ],
   "dragon_fire": [
    3.5,
+   1.05
+  ],
+  "karasu": [
+   2.75,
+   1.05
+  ],
+  "hebi": [
+   3.0,
+   1.05
+  ],
+  "kaeru": [
+   2.75,
+   1.05
+  ],
+  "kaeru_stone": [
+   2.75,
+   1.05
+  ],
+  "yagi": [
+   3.0,
+   1.05
+  ],
+  "yagi_chant": [
+   3.0,
+   1.05
+  ],
+  "kujaku": [
+   3.4,
+   1.05
+  ],
+  "kujaku_fan": [
+   3.4,
+   1.05
+  ]
+ },
+ "place": {
+  "kujaku_fan": [
+   0,
+   -40,
    1.05
   ]
  }

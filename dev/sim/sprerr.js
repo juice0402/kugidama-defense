@@ -4,7 +4,8 @@ const states=[{},{stun:1},{sleep:1},{freeze:1,stun:1},{ghost:1},{hurtT:.3,flash:
   {hatGone:true},{leaf:false},{curl:2},{lick:1},{potGone:1},{lives:0},{lives:0,revived:true},{bp:'hang',bt:9},{armorOff:3},{wind:2},{flap:.4},{howl:2},
   {mp:'dig',mt:.3},{mp:'under',mt:1},{tail:false},{knot:true},{hump:0},{drink:1},{aim:1},{clawStop:1},{shield:2},{crack:1},
   {found:1},{found:0},{armor:0},{crk:2},{melt:1},{lie:2},{sb:1},{sb:1,aim:.5},{sb:.6,toss:.3},{pp:'slide',pt:1},{pp:'fall',pt:.5},
-  {soak:.5},{cool:2},{fly:.5},{burnt:true},{horn:0},{hcrk:2},{aim:.5,rush:0},{rush:1},{fall:.3},{inh:.5},{breath:1}];
+  {soak:.5},{cool:2},{fly:.5},{burnt:true},{horn:0},{hcrk:2},{aim:.5,rush:0},{rush:1},{fall:.3},{inh:.5},{breath:1},
+  {grab:.5},{loot:{c:'#ff5fd2'}},{shell:true,life:1},{noShed:true},{fresh:.5},{stone:1},{chant:1},{fanUp:.5},{fan:1}];
 for(let s=0;s<T.STAGES.length;s++){
   try{T.playBoard(T.BOARDS.findIndex(b=>b.stage===s));G.paused=true}catch(x){errs.push('play'+s+':'+x.message);continue}
   for(const t of T.STAGES[s].foes){

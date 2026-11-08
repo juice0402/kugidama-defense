@@ -13,7 +13,7 @@
    - **いたずらの説明（分かれる・とぶ…）は 文に入れない**（絵に描かれてしまう。わたげの1回目は 小さいわたげが 2つ ついた）。見た目だけ書く。
 2. 状態で 見た目が かわる おばけは、できた絵を 参考にして「◯◯だけ なくした絵に。ほかは そのまま」で かえ絵を作る（位置が そろう）。
 3. remove-background で 背景けし。**それだけだと ネオンの光が けずれる**（こい色の部品＝くまの ツボ なども けずれる）ので、`dev/canva/neoncut.py もとの絵 背景けし 出す_full.png` で、体は 背景けしの形・まわりの光は もとの絵の「背景の こん色との ちがい」から すけすけにする。
-4. `dev/canva/pack.py` が `_full.png` を切りぬいて WebP（q90）にして SPRITE_SRC の行を出す。かえ絵の組（sprites.json の groups）は 同じ わくで 切るので、入れかわっても体が ずれない。大きさは sprites.json の size（[w, by]：w＝半径に対する絵のはば、by＝絵の下はし）。
+4. `dev/canva/pack.py` が `_full.png` を切りぬいて WebP（q90）にして SPRITE_SRC の行を出す。かえ絵の組（sprites.json の groups）は 同じ わくで 切るので、入れかわっても体が ずれない。大きさは sprites.json の size（[w, by]：w＝半径に対する絵のはば、by＝絵の下はし）。かえ絵の 体が ずれているときは place（[dx,dy,倍率]、200×200 の 絵の 点で）で そろえる。
 5. ここで 取れる絵は 200×200（Canva の見本の大きさ。もとの 1264×1264 は この作業場から ダウンロードできない）。おばけは この大きさで足りる。**台の奥の景色やタイトルのような 大きい絵は 別の やり方が いる**（しょーくんが Canva から 書き出して わたす など）。
 6. たしかめ：`dev/sim/mk.py` のあと `python3 shot.py out.png "$(sed s/__STAGE__/0/g sprcheck.js)" 60`（0＝草原）。台に その台の おばけと かえ絵が ならぶ。sprcheck.js は おばけの tick を 止めて 状態を そのまま 見せる。エラーは `sprerr.js`（その台の おばけ × 状態。1分くらい。全部の drawcheck.js は 30分でも おわらない）。かえ絵の 状態を 足したら 両方の 表に 足す。
 
@@ -30,4 +30,5 @@
   - らくだは 1回目 こぶが 耳に見えたので「頭のうしろに 大きな ふたこぶ・らくだらしい顔」で 作りなおし。しぼんだ こぶも 1回目は 羊の角に見えたので「風船のように 平たく しぼむ・まるまらない」
 - 雪山（11/8）：okojo（雪に まぎれる白い おおいと 見つかった輪は over。P.spr＝いまの絵と 場所）・penguin・tonakai（氷のよろい → ひび tonakai_crack → われた tonakai_bare）・seiuchi（ねそべる seiuchi_lie。絵のときは pose で つぶさない）・mammoth（鼻を ふり上げる mammoth_up、鼻の先の 雪玉は over で 絵の中の 鼻の先に）
 - 火山（11/8）：buta（タオル buta_soak。ゆげ・ひやっの しずくは over）・hinotori（黒こげ hinotori_burnt）・sai（角のよろい → ひび sai_crack → われた sai_bare）・inoshishi（はないきは over）・dragon（火を はく口 dragon_fire。むねの光と 口の光は over）
+- 魔王城（11/8）：karasu（ぬすんだ宝石は over で くちばしに）・hebi（ぬけがらは コードの絵、ばんそうこう・ぴかぴかは over）・kaeru（石 kaeru_stone）・yagi（となえる yagi_chant、足もとの まほうじんは under）・kujaku（羽を広げる kujaku_fan。広げた絵は 体が 下に ずれていたので sprites.json の place で [0,-40,1.05] ずらして 体を そろえた）
 - Canva のフォルダ「パチおば おばけ（ネオン）」に もとの絵。Canva の番号は dev/canva/manifest.json

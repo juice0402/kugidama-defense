@@ -14,10 +14,14 @@ def bbox(im):
     return im.getchannel('A').point(lambda v:255 if v>6 else 0).getbbox()
 lines=[]; total=0
 for g in groups:
-    ims={k:Image.open(G+k+'_full.png').convert('RGBA') for k in g}
+    ims={}
+    for k in g:   # 320×320 の わくの まん中に 置く（place があれば ずらす・大きさをかえる：かえ絵の 体の 位置を そろえるため）
+        im=Image.open(G+k+'_full.png').convert('RGBA'); dx,dy,sc=spec.get('place',{}).get(k,[0,0,1])
+        if sc!=1: im=im.resize((round(im.width*sc),round(im.height*sc)),Image.LANCZOS)
+        c=Image.new('RGBA',(320,320),(0,0,0,0)); c.alpha_composite(im,(round(160-im.width/2+dx),round(160-im.height/2+dy))); ims[k]=c
     bs=[bbox(i) for i in ims.values()]
     b=(min(x[0] for x in bs)-3,min(x[1] for x in bs)-3,max(x[2] for x in bs)+3,max(x[3] for x in bs)+3)
-    b=(max(0,b[0]),max(0,b[1]),min(200,b[2]),min(200,b[3]))
+    b=(max(0,b[0]),max(0,b[1]),min(320,b[2]),min(320,b[3]))
     for k,im in ims.items():
         c=im.crop(b); buf=io.BytesIO(); c.save(buf,'WEBP',quality=90,method=6,alpha_quality=100); data=buf.getvalue(); total+=len(data)
         pass
