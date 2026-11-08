@@ -29,4 +29,5 @@
 - 砂漠（11/8）：mia（もぐっている間は sprKey が null＝コードの絵、もぐりかけの すなの山は over）・tokage（しっぽ切れ tokage_cut・リボン tokage_knot）・rakuda（こぶが しぼむ rakuda_flat）・sasori（ねらう sasori_aim・だらん sasori_stop）・sphinx（すなのたては over）
   - らくだは 1回目 こぶが 耳に見えたので「頭のうしろに 大きな ふたこぶ・らくだらしい顔」で 作りなおし。しぼんだ こぶも 1回目は 羊の角に見えたので「風船のように 平たく しぼむ・まるまらない」
 - 雪山（11/8）：okojo（雪に まぎれる白い おおいと 見つかった輪は over。P.spr＝いまの絵と 場所）・penguin・tonakai（氷のよろい → ひび tonakai_crack → われた tonakai_bare）・seiuchi（ねそべる seiuchi_lie。絵のときは pose で つぶさない）・mammoth（鼻を ふり上げる mammoth_up、鼻の先の 雪玉は over で 絵の中の 鼻の先に）
+- 火山（11/8）：buta（タオル buta_soak。ゆげ・ひやっの しずくは over）・hinotori（黒こげ hinotori_burnt）・sai（角のよろい → ひび sai_crack → われた sai_bare）・inoshishi（はないきは over）・dragon（火を はく口 dragon_fire。むねの光と 口の光は over）
 - Canva のフォルダ「パチおば おばけ（ネオン）」に もとの絵。Canva の番号は dev/canva/manifest.json

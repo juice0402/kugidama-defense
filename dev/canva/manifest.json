@@ -182,6 +182,46 @@
   "mammoth_up": {
    "gen": "MAHaSZmTU6Y",
    "cut": "MAHaSVtNdu8"
+  },
+  "buta": {
+   "gen": "MAHaSR5XQN4",
+   "cut": "MAHaSXc_Rys"
+  },
+  "buta_soak": {
+   "gen": "MAHaSfC-5Do",
+   "cut": "MAHaSTqPqBk"
+  },
+  "hinotori": {
+   "gen": "MAHaSWtWUhY",
+   "cut": "MAHaSRAy5B8"
+  },
+  "hinotori_burnt": {
+   "gen": "MAHaSdupiJY",
+   "cut": "MAHaSbil3qg"
+  },
+  "sai": {
+   "gen": "MAHaSQMGZrA",
+   "cut": "MAHaSez1aPY"
+  },
+  "sai_crack": {
+   "gen": "MAHaSfkXWiE",
+   "cut": "MAHaSXyGYLw"
+  },
+  "sai_bare": {
+   "gen": "MAHaScqL5gU",
+   "cut": "MAHaSZtaghA"
+  },
+  "inoshishi": {
+   "gen": "MAHaSW6i3c0",
+   "cut": "MAHaSSkokTw"
+  },
+  "dragon": {
+   "gen": "MAHaSRMcjh0",
+   "cut": "MAHaSRHS5Cg"
+  },
+  "dragon_fire": {
+   "gen": "MAHaSaShVQw",
+   "cut": "MAHaSQ5nNbI"
   }
  }
 }

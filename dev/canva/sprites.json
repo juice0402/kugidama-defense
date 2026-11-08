@@ -64,6 +64,23 @@
   [
    "mammoth",
    "mammoth_up"
+  ],
+  [
+   "buta",
+   "buta_soak"
+  ],
+  [
+   "hinotori",
+   "hinotori_burnt"
+  ],
+  [
+   "sai",
+   "sai_crack",
+   "sai_bare"
+  ],
+  [
+   "dragon",
+   "dragon_fire"
   ]
  ],
  "size": {
@@ -245,6 +262,46 @@
   ],
   "mammoth_up": [
    3.0,
+   1.05
+  ],
+  "buta": [
+   2.75,
+   1.05
+  ],
+  "buta_soak": [
+   2.75,
+   1.05
+  ],
+  "hinotori": [
+   2.85,
+   1.05
+  ],
+  "hinotori_burnt": [
+   2.85,
+   1.05
+  ],
+  "sai": [
+   3.05,
+   1.05
+  ],
+  "sai_crack": [
+   3.05,
+   1.05
+  ],
+  "sai_bare": [
+   3.05,
+   1.05
+  ],
+  "inoshishi": [
+   2.85,
+   1.05
+  ],
+  "dragon": [
+   3.5,
+   1.05
+  ],
+  "dragon_fire": [
+   3.5,
    1.05
   ]
  }
