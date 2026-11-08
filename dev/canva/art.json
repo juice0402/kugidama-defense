@@ -15,5 +15,13 @@
  "forest_bg": {
   "kind": "bg",
   "src": "bg/forest_full.png"
+ },
+ "mansion_frame": {
+  "kind": "frame",
+  "src": "frame/mansion_frame_full.png"
+ },
+ "mansion_bg": {
+  "kind": "bg",
+  "src": "bg/mansion_full.png"
  }
 }

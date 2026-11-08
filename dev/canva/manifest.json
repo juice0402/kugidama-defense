@@ -333,6 +333,10 @@
   "forest": {
    "gen": "MAHaTJ03nvk",
    "file": "bg/forest_full.png"
+  },
+  "mansion": {
+   "gen": "MAHaTHpaKUo",
+   "file": "bg/mansion_full.png"
   }
  },
  "frame": {
@@ -343,6 +347,11 @@
   "forest": {
    "gen": "MAHaTLeK5us",
    "file": "frame/forest_frame_full.png"
+  },
+  "mansion": {
+   "gen": "MAHaTJShV-E",
+   "file": "frame/mansion_frame_full.png",
+   "old_noisy": "MAHaTNRMwHc"
   }
  }
 }

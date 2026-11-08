@@ -51,7 +51,7 @@ def window(A):
     return m, ref
 
 
-def frame_warp(src, key, th=130):
+def frame_warp(src, key, th=130, nmax=24):
     A = np.asarray(Image.open(src).convert('RGB')).astype(np.float32)
     h, w, _ = A.shape
     m, ref = window(A)
@@ -127,6 +127,7 @@ def frame_warp(src, key, th=130):
     keep = []   # 近い 山は いちばん明るい 1つだけ（大きい きのこに 光が いくつも つかないように）
     for py, px in sorted(zip(*np.where(pk)), key=lambda q: -Y[q]):
         if all((py - a) ** 2 + (px - b) ** 2 > 30 ** 2 for a, b in keep): keep.append((py, px))
+    keep = keep[:nmax]   # 多すぎると 毎フレーム 重いので 明るい方から nmax こ（art.json の "nglow"。ふつう 24）
     for py, px in keep:
         R = 14
         y1, y2, x1, x2 = max(0, py - R), min(H2, py + R), max(0, px - R), min(W2, px + R)
@@ -163,7 +164,7 @@ def main():
     lines = []; last = {}
     for key, s in spec.items():
         src = os.path.join(HERE, s['src'])
-        im, meta = frame_warp(src, key, s.get('glow', 130)) if s['kind'] == 'frame' else bg_fit(src, key)
+        im, meta = frame_warp(src, key, s.get('glow', 130), s.get('nglow', 24)) if s['kind'] == 'frame' else bg_fit(src, key)
         data = webp(im, s.get('q', 78))
         open(os.path.join(HERE, 'art', key + '.webp'), 'wb').write(data)
         last[s['kind']] = (im, meta)
