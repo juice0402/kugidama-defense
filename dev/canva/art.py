@@ -56,21 +56,20 @@ def frame_warp(src, key, th=130):
     h, w, _ = A.shape
     m, ref = window(A)
     rows = np.where(m.any(axis=1))[0]
-    top, bot = rows[0], rows[-1]
-    mid = (top + bot) // 2
+    top = rows[0]
+    mid = int(top + (rows[-1] - top) * .55)
     cols = np.where(m[mid])[0]
     acx = (cols[0] + cols[-1]) / 2
     a = (cols[-1] - cols[0]) / 2               # 窓の はばの 半分（ピクセル）
     p = a / RO                                 # 1単位に 何ピクセル（窓の はばで きめる）
     acy = top + a                              # アーチの 中心の 高さ（上が 半円と して）
-    # まっすぐの所の 左右の ふち（行ごと）
-    Lr = np.full(h, np.nan); Rr = np.full(h, np.nan)
-    for y in range(int(acy), bot + 1):
-        c = np.where(m[y])[0]
-        if len(c): Lr[y], Rr[y] = c[0], c[-1] + 1
-    ok = ~np.isnan(Lr)
-    Lr = np.interp(np.arange(h), np.where(ok)[0], Lr[ok]); Rr = np.interp(np.arange(h), np.where(ok)[0], Rr[ok])
-    Lr = nd.uniform_filter1d(Lr, 31); Rr = nd.uniform_filter1d(Rr, 31)
+    # 窓の下：まん中の 列で 窓が おわる 行（すみの 根っこ・草が 窓に かかっても だいじょうぶなように）
+    bs = [np.where(m[:, int(x)])[0][-1] for x in np.linspace(acx - a * .4, acx + a * .4, 9) if m[:, int(x)].any()]
+    bot = int(np.median(bs))
+    # まっすぐの所の 左右の ふち：まん中あたりの 行の 中央値で まっすぐの 線に（こけ・根っこが かかっても ずれない）
+    ys = np.arange(int(acy + (bot - acy) * .1), int(acy + (bot - acy) * .7))
+    le = [np.where(m[y])[0][0] for y in ys if m[y].any()]; re_ = [np.where(m[y])[0][-1] + 1 for y in ys if m[y].any()]
+    Lr = np.full(h, float(np.median(le))); Rr = np.full(h, float(np.median(re_)))
     # アーチの所：角度ごとの 窓の ふちまでの きょり
     ang = np.linspace(-np.pi, 0, 721)
     dd = np.zeros_like(ang)
@@ -80,7 +79,7 @@ def frame_warp(src, key, th=130):
             if x < 0 or y < 0 or x >= w - 1 or y >= h - 1 or not m[int(y), int(x)]:
                 dd[i] = s; break
     dd[0], dd[-1] = acx - Lr[int(acy)], Rr[int(acy)] - acx   # 横は まっすぐの所と つなぐ
-    dd = nd.uniform_filter1d(dd, 9, mode='nearest')
+    dd = nd.uniform_filter1d(nd.maximum_filter1d(dd, 41, mode='nearest'), 41, mode='nearest')   # こけが たれた所は 窓が せまく 見えるので 大きい方へ
     # 台の座標 → 絵の 点
     x0, y0, fw, fh = FR
     W2, H2 = int(fw * FQ), int(fh * FQ)
@@ -125,7 +124,10 @@ def frame_warp(src, key, th=130):
     vis = (~field_mask(W2, H2, x0, y0, FQ, shrink=-1)) & (gx > -25) & (gx < 385) & (gy > -58) & (gy < 735)
     pk = (Y == nd.maximum_filter(Y, size=30)) & (Y > th) & vis
     glow = []
-    for py, px in zip(*np.where(pk)):
+    keep = []   # 近い 山は いちばん明るい 1つだけ（大きい きのこに 光が いくつも つかないように）
+    for py, px in sorted(zip(*np.where(pk)), key=lambda q: -Y[q]):
+        if all((py - a) ** 2 + (px - b) ** 2 > 30 ** 2 for a, b in keep): keep.append((py, px))
+    for py, px in keep:
         R = 14
         y1, y2, x1, x2 = max(0, py - R), min(H2, py + R), max(0, px - R), min(W2, px + R)
         P = out[y1:y2, x1:x2].reshape(-1, 3)

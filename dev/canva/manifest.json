@@ -329,12 +329,20 @@
   "meadow": {
    "gen": "MAHaS59YJ0A",
    "file": "bg/grass_full.png"
+  },
+  "forest": {
+   "gen": "MAHaTJ03nvk",
+   "file": "bg/forest_full.png"
   }
  },
  "frame": {
   "meadow": {
    "gen": "MAHaTH_DRw0",
    "file": "frame/grass_frame_full.png"
+  },
+  "forest": {
+   "gen": "MAHaTLeK5us",
+   "file": "frame/forest_frame_full.png"
   }
  }
 }
