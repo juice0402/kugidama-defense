@@ -38,6 +38,9 @@ def hue_rot(A, deg, sat=1, val=1):   # hue.py と 同じ（A は 0〜1 の RGB�
 
 
 def load(J):
+    if J.get('rgba'):   # もう すけすけの 絵（コードで 作った 光の すじ など）は そのまま
+        R = np.asarray(Image.open(os.path.join(HERE, J['src'])).convert('RGBA')).astype(np.float32) / 255
+        return R, R[..., 3] > .5
     src = J.get('src') or next(CFG[g][J['from']]['src'] for g in ('plates', 'icons', 'fx') if J['from'] in CFG.get(g, {}))
     A = np.asarray(Image.open(os.path.join(HERE, src)).convert('RGB')).astype(np.float32) / 255
     border = np.concatenate([A[0], A[-1], A[:, 0], A[:, -1]])

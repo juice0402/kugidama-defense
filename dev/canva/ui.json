@@ -105,6 +105,18 @@
     ".topper",
     ".cframe"
    ]
+  },
+  "case": {
+   "from": "cabinet",
+   "val": 0.8,
+   "r": 52,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".ammo-case",
+    ".ammo-lid"
+   ],
+   "note": "玉のセットの 鉄の 箱と ふた（台の わくの 銀を すこし こく。11/8 7.）"
   }
  },
  "icons": {
@@ -173,6 +185,13 @@
    "src": "ui/src/t_zukan.png",
    "gen": "MAHaUNAGFVI",
    "px": 96
+  },
+  "socket": {
+   "src": "fx/src/socket.png",
+   "gen": "MAHaUv4ucfs",
+   "px": 160,
+   "q": 84,
+   "note": "素材シート sheet1.png の 右下（玉のセットの 穴）"
   }
  },
  "fx": {
@@ -188,6 +207,35 @@
    "w": 720,
    "q": 84,
    "close": 8
+  },
+  "rays": {
+   "src": "fx/src/rays.png",
+   "rgba": true,
+   "w": 400,
+   "q": 72,
+   "pad": 0,
+   "note": "fxrays.py で 作る（Canva では ない）"
+  },
+  "wave": {
+   "src": "fx/src/wave.png",
+   "gen": "MAHaUv4ucfs",
+   "w": 560,
+   "q": 84,
+   "note": "素材シート sheet1.png の 左上"
+  },
+  "ribbon": {
+   "src": "fx/src/ribbon.png",
+   "gen": "MAHaUv4ucfs",
+   "w": 600,
+   "q": 84,
+   "note": "素材シート sheet1.png の 右上"
+  },
+  "crown": {
+   "src": "fx/src/crown.png",
+   "gen": "MAHaUv4ucfs",
+   "w": 360,
+   "q": 84,
+   "note": "素材シート sheet1.png の 左下"
   }
  }
 }
