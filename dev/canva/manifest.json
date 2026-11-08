@@ -412,5 +412,174 @@
    "file": "frame/heaven_frame_full.png",
    "old_bright": "MAHaTT_49MY"
   }
+ },
+ "towers": {
+  "base": {
+   "gen": "MAHaTWxFLt8",
+   "note": "円で 切りぬいて こく（tbase.py）"
+  },
+  "basic": {
+   "gen": "MAHaTcyAge4",
+   "cut": "MAHaTWimZbc",
+   "hue": 17,
+   "old": [
+    "MAHaTbJsY88"
+   ]
+  },
+  "fire": {
+   "gen": "MAHaTa1ACiU",
+   "cut": "MAHaTbYNB2o"
+  },
+  "ice": {
+   "gen": "MAHaTbPY8Is",
+   "cut": "MAHaTd4wP24"
+  },
+  "bolt": {
+   "gen": "MAHaTULJRwA",
+   "cut": "MAHaTUVD4cE",
+   "old": [
+    "MAHaTcSJ7to"
+   ]
+  },
+  "poison": {
+   "gen": "MAHaTVF7IPM",
+   "cut": "MAHaTXJYs3k"
+  },
+  "long": {
+   "gen": "MAHaTRxDvVA",
+   "cut": "MAHaTexBmOw"
+  },
+  "water": {
+   "gen": "MAHaTfrhdDc",
+   "cut": "MAHaTbVUjgs"
+  },
+  "sound": {
+   "gen": "MAHaTXoN-ug",
+   "cut": "MAHaTeHDNyU"
+  },
+  "shadow": {
+   "gen": "MAHaTbFi7rQ",
+   "cut": "MAHaTZPgfT4",
+   "hue": -19
+  },
+  "mirror": {
+   "gen": "MAHaTV4AdW0",
+   "cut": "MAHaTWSzgiY"
+  },
+  "sand": {
+   "gen": "MAHaTgRG07Y",
+   "cut": "MAHaTte6W80",
+   "old": [
+    "MAHaTu-3xng",
+    "MAHaTggA_v0"
+   ]
+  },
+  "tornado": {
+   "gen": "MAHaTnfJP2k",
+   "cut": "MAHaTkSew3U",
+   "hue": 56,
+   "old": [
+    "MAHaTih8wRE"
+   ]
+  },
+  "snow": {
+   "gen": "MAHaTi5Rgg0",
+   "cut": "MAHaToTSwMI",
+   "old": [
+    "MAHaTiNIGus"
+   ]
+  },
+  "sandan": {
+   "gen": "MAHaTsoCIlk",
+   "cut": "MAHaTindbDc",
+   "hue": 16
+  },
+  "magma": {
+   "gen": "MAHaTkG-KyU",
+   "cut": "MAHaThY7pSY",
+   "hue": 15
+  },
+  "houdan": {
+   "gen": "MAHaTitpTW4",
+   "cut": "MAHaTi_bqKU",
+   "hue": 10
+  },
+  "curse": {
+   "gen": "MAHaTsVaLHc",
+   "cut": "MAHaTkrQz_A"
+  },
+  "mahou": {
+   "gen": "MAHaTjH7vrw",
+   "cut": "MAHaTptmNeI"
+  },
+  "gravity": {
+   "gen": "MAHaTr4go_w",
+   "cut": "MAHaTuwH-48",
+   "hue": -26
+  },
+  "laser": {
+   "gen": "MAHaTpqqhAo",
+   "cut": "MAHaTqN9mnA"
+  },
+  "holy": {
+   "gen": "MAHaTrIvroM",
+   "cut": "MAHaTu89ja0",
+   "hue": 8
+  },
+  "tenshi": {
+   "gen": "MAHaTmVFhy4",
+   "cut": "MAHaTqcnpvs"
+  }
+ },
+ "gimmicks": {
+  "bumper": {
+   "gen": "MAHaTrPvuzs",
+   "cut": "MAHaTmV6xL8",
+   "hue": -125,
+   "sat": 0.35
+  },
+  "spinner": {
+   "gen": "MAHaTiUFPok",
+   "cut": "MAHaTuoAb5A"
+  },
+  "ivy": {
+   "gen": "MAHaToZ5PBo",
+   "cut": "MAHaTi8M5gs"
+  },
+  "warp": {
+   "gen": "MAHaTklJSnA",
+   "cut": "MAHaTqFW8lk"
+  },
+  "jump": {
+   "gen": "MAHaThDFzok",
+   "cut": "MAHaTkr0YYI",
+   "hue": -8,
+   "sat": 0.8
+  },
+  "ari": {
+   "gen": "MAHaTvcI5yg",
+   "cut": "MAHaTpUj5QU"
+  },
+  "funka": {
+   "gen": "MAHaTv4Wbys",
+   "cut": "MAHaTiYaGoQ"
+  },
+  "bunshin": {
+   "gen": "MAHaTolrsAc",
+   "cut": "MAHaTvSRQy8"
+  },
+  "kagami": {
+   "gen": "MAHaTmZs8M0",
+   "cut": "MAHaTjv3nZU",
+   "note": "分身ミラーの まわる 手かがみ"
+  },
+  "wakusei": {
+   "gen": "MAHaToWkp54",
+   "cut": "MAHaTmzQ4Bk"
+  },
+  "halo": {
+   "gen": "MAHaTmwC-3c",
+   "cut": "MAHaTgInTkI"
+  }
  }
 }
