@@ -1,0 +1,4 @@
+{
+ "meadow_frame": {"kind": "frame", "src": "frame/grass_frame_full.png"},
+ "meadow_bg": {"kind": "bg", "src": "bg/grass_full.png"}
+}

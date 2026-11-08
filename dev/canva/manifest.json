@@ -323,5 +323,18 @@
    "gen": "MAHaSjsqnd0",
    "cut": "MAHaSgLWT-g"
   }
+ },
+ "work_design": "DAHaSyBw7z8",
+ "bg": {
+  "meadow": {
+   "gen": "MAHaS59YJ0A",
+   "file": "bg/grass_full.png"
+  }
+ },
+ "frame": {
+  "meadow": {
+   "gen": "MAHaTH_DRw0",
+   "file": "frame/grass_frame_full.png"
+  }
  }
 }
