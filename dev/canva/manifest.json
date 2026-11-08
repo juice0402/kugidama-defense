@@ -106,6 +106,46 @@
   "ookami_howl": {
    "gen": "MAHaR6W3CFc",
    "cut": "MAHaSB7J6D8"
+  },
+  "mia": {
+   "gen": "MAHaSHSMAGY",
+   "cut": "MAHaSB92pro"
+  },
+  "tokage": {
+   "gen": "MAHaSIJs4mc",
+   "cut": "MAHaSE8x9AU"
+  },
+  "tokage_cut": {
+   "gen": "MAHaSGYQFVU",
+   "cut": "MAHaSPP2vvo"
+  },
+  "tokage_knot": {
+   "gen": "MAHaSLqPuVc",
+   "cut": "MAHaSBBGvT4"
+  },
+  "rakuda": {
+   "gen": "MAHaSO1Agxg",
+   "cut": "MAHaSB2FzOk"
+  },
+  "rakuda_flat": {
+   "gen": "MAHaSMViQk0",
+   "cut": "MAHaSCVvF1s"
+  },
+  "sasori": {
+   "gen": "MAHaSKwokzA",
+   "cut": "MAHaSKKqydo"
+  },
+  "sasori_aim": {
+   "gen": "MAHaSBn2XJ4",
+   "cut": "MAHaSAfmujw"
+  },
+  "sasori_stop": {
+   "gen": "MAHaSASpD_k",
+   "cut": "MAHaSJ9REJM"
+  },
+  "sphinx": {
+   "gen": "MAHaSHc4-AQ",
+   "cut": "MAHaSAEpu4E"
   }
  }
 }

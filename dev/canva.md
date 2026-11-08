@@ -26,4 +26,6 @@
 - 草原（11/8）：wata・usagi・kakashi（帽子なし kakashi_nohat）・tanuki（葉っぱ tanuki_leaf＝化ける前の本物と にせもの）・uma（金の王冠）
 - 森（11/8）：kinoko・kitsune・hari（まるまり hari_curl）・kuma（なめる kuma_lick・ツボなし kuma_nopot）・taiboku
 - 洋館（11/8）：neko（しっぽ1本 neko_1・天使の輪 neko_rev）・koumori（天井で ねむる koumori_hang）・yoroi（よろいが ずれる yoroi_off）・fukurou（羽をためる fukurou_up）・ookami（遠ぼえ ookami_howl）。あせ・いかりマークと 遠ぼえの音は over で 絵の上に
+- 砂漠（11/8）：mia（もぐっている間は sprKey が null＝コードの絵、もぐりかけの すなの山は over）・tokage（しっぽ切れ tokage_cut・リボン tokage_knot）・rakuda（こぶが しぼむ rakuda_flat）・sasori（ねらう sasori_aim・だらん sasori_stop）・sphinx（すなのたては over）
+  - らくだは 1回目 こぶが 耳に見えたので「頭のうしろに 大きな ふたこぶ・らくだらしい顔」で 作りなおし。しぼんだ こぶも 1回目は 羊の角に見えたので「風船のように 平たく しぼむ・まるまらない」
 - Canva のフォルダ「パチおば おばけ（ネオン）」に もとの絵。Canva の番号は dev/canva/manifest.json

@@ -37,6 +37,20 @@
   [
    "ookami",
    "ookami_howl"
+  ],
+  [
+   "tokage",
+   "tokage_cut",
+   "tokage_knot"
+  ],
+  [
+   "rakuda",
+   "rakuda_flat"
+  ],
+  [
+   "sasori",
+   "sasori_aim",
+   "sasori_stop"
   ]
  ],
  "size": {
@@ -142,6 +156,46 @@
   ],
   "ookami_howl": [
    3.55,
+   1.05
+  ],
+  "mia": [
+   2.75,
+   1.05
+  ],
+  "tokage": [
+   3.1,
+   1.05
+  ],
+  "tokage_cut": [
+   3.1,
+   1.05
+  ],
+  "tokage_knot": [
+   3.1,
+   1.05
+  ],
+  "rakuda": [
+   2.6,
+   1.05
+  ],
+  "rakuda_flat": [
+   2.6,
+   1.05
+  ],
+  "sasori": [
+   3.45,
+   1.05
+  ],
+  "sasori_aim": [
+   3.45,
+   1.05
+  ],
+  "sasori_stop": [
+   3.45,
+   1.05
+  ],
+  "sphinx": [
+   3.0,
    1.05
   ]
  }
