@@ -581,5 +581,98 @@
    "gen": "MAHaTmwC-3c",
    "cut": "MAHaTgInTkI"
   }
+ },
+ "balls": {
+  "normal": {
+   "gen": "MAHaTsB4Bg8"
+  },
+  "fire": {
+   "gen": "MAHaTnnyR0Q",
+   "hue": -14,
+   "note": "さいしょの 1つ（ほかの 玉の 参考の 絵）"
+  },
+  "ice": {
+   "gen": "MAHaTjJTXMU",
+   "hue": -6
+  },
+  "bolt": {
+   "gen": "MAHaTsqtWUw"
+  },
+  "poison": {
+   "gen": "MAHaTsonm4k",
+   "hue": -11
+  },
+  "lead": {
+   "gen": "MAHaTmrwaEU"
+  },
+  "heal": {
+   "gen": "MAHaTk3RNfs",
+   "hue": -6,
+   "sat": 0.8
+  },
+  "bb": {
+   "gen": "MAHaTvOyQak"
+  },
+  "water": {
+   "gen": "MAHaTo-zJfY",
+   "hue": -7
+  },
+  "vine": {
+   "gen": "MAHaTtulhCU",
+   "hue": 20
+  },
+  "sound": {
+   "gen": "MAHaTn82xVQ",
+   "hue": -15
+  },
+  "shadow": {
+   "gen": "MAHaTo6I3YM",
+   "hue": -14
+  },
+  "sand": {
+   "gen": "MAHaTogP5h8"
+  },
+  "wind": {
+   "gen": "MAHaTqz9CeI",
+   "hue": -5
+  },
+  "snow": {
+   "gen": "MAHaTmfC9q8"
+  },
+  "crystal": {
+   "gen": "MAHaTqlFyFU",
+   "hue": -7
+  },
+  "magma": {
+   "gen": "MAHaTiNACVA",
+   "hue": 10
+  },
+  "bomb": {
+   "gen": "MAHaTgOcPbY"
+  },
+  "curse": {
+   "gen": "MAHaToVZAWE",
+   "hue": -7,
+   "spin": 1
+  },
+  "chain": {
+   "gen": "MAHaTgUQ7Nc",
+   "hue": 6
+  },
+  "gravity": {
+   "gen": "MAHaThbk8Y0",
+   "hue": -10
+  },
+  "star": {
+   "gen": "MAHaTp6obyw",
+   "spin": 1
+  },
+  "holy": {
+   "gen": "MAHaThQVkaw"
+  },
+  "rainbow": {
+   "gen": "MAHaTnX2fe8",
+   "spin": 1
+  }
  }
 }
