@@ -93,6 +93,18 @@
   [
    "kujaku",
    "kujaku_fan"
+  ],
+  [
+   "kurage",
+   "kurage_knot"
+  ],
+  [
+   "tako",
+   "tako_puff"
+  ],
+  [
+   "kujira",
+   "kujira_open"
   ]
  ],
  "size": {
@@ -346,6 +358,38 @@
   ],
   "kujaku_fan": [
    3.4,
+   1.05
+  ],
+  "kurage": [
+   2.5,
+   1.45
+  ],
+  "kurage_knot": [
+   2.5,
+   1.45
+  ],
+  "iruka": [
+   2.6,
+   1.25
+  ],
+  "kame": [
+   2.75,
+   1.15
+  ],
+  "tako": [
+   3.3,
+   1.4
+  ],
+  "tako_puff": [
+   3.3,
+   1.4
+  ],
+  "kujira": [
+   3.6,
+   1.05
+  ],
+  "kujira_open": [
+   3.6,
    1.05
   ]
  },

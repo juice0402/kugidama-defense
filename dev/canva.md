@@ -31,4 +31,5 @@
 - 雪山（11/8）：okojo（雪に まぎれる白い おおいと 見つかった輪は over。P.spr＝いまの絵と 場所）・penguin・tonakai（氷のよろい → ひび tonakai_crack → われた tonakai_bare）・seiuchi（ねそべる seiuchi_lie。絵のときは pose で つぶさない）・mammoth（鼻を ふり上げる mammoth_up、鼻の先の 雪玉は over で 絵の中の 鼻の先に）
 - 火山（11/8）：buta（タオル buta_soak。ゆげ・ひやっの しずくは over）・hinotori（黒こげ hinotori_burnt）・sai（角のよろい → ひび sai_crack → われた sai_bare）・inoshishi（はないきは over）・dragon（火を はく口 dragon_fire。むねの光と 口の光は over）
 - 魔王城（11/8）：karasu（ぬすんだ宝石は over で くちばしに）・hebi（ぬけがらは コードの絵、ばんそうこう・ぴかぴかは over）・kaeru（石 kaeru_stone）・yagi（となえる yagi_chant、足もとの まほうじんは under）・kujaku（羽を広げる kujaku_fan。広げた絵は 体が 下に ずれていたので sprites.json の place で [0,-40,1.05] ずらして 体を そろえた）
+- 宇宙（11/8）：kurage（からまって リボン kurage_knot）・iruka（足もとの 流れ星は under）・kame（星のバリアは over で コードの top を そのまま）・tako（ほっぺ ぷくー tako_puff）・kujira（口を あける kujira_open、しおふきは over で 絵の 頭の上から）。しょくしゅや しっぽが 下に のびる おばけは by を 大きく（クラゲ 1.45・タコ 1.4）して 体の まん中を 合わせる
 - Canva のフォルダ「パチおば おばけ（ネオン）」に もとの絵。Canva の番号は dev/canva/manifest.json
