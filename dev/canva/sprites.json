@@ -16,6 +16,27 @@
    "kuma",
    "kuma_lick",
    "kuma_nopot"
+  ],
+  [
+   "neko",
+   "neko_1",
+   "neko_rev"
+  ],
+  [
+   "koumori",
+   "koumori_hang"
+  ],
+  [
+   "yoroi",
+   "yoroi_off"
+  ],
+  [
+   "fukurou",
+   "fukurou_up"
+  ],
+  [
+   "ookami",
+   "ookami_howl"
   ]
  ],
  "size": {
@@ -77,6 +98,50 @@
   ],
   "taiboku": [
    3.5,
+   1.05
+  ],
+  "neko": [
+   3.2,
+   1.05
+  ],
+  "neko_1": [
+   3.2,
+   1.05
+  ],
+  "neko_rev": [
+   3.2,
+   1.05
+  ],
+  "koumori": [
+   3.55,
+   1.05
+  ],
+  "koumori_hang": [
+   3.55,
+   1.05
+  ],
+  "yoroi": [
+   2.6,
+   1.05
+  ],
+  "yoroi_off": [
+   2.6,
+   1.05
+  ],
+  "fukurou": [
+   3.3,
+   1.05
+  ],
+  "fukurou_up": [
+   3.3,
+   1.05
+  ],
+  "ookami": [
+   3.55,
+   1.05
+  ],
+  "ookami_howl": [
+   3.55,
    1.05
   ]
  }

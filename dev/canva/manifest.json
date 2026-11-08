@@ -62,6 +62,50 @@
   "taiboku": {
    "gen": "MAHaRzpm5SI",
    "cut": "MAHaR3sYbO4"
+  },
+  "neko": {
+   "gen": "MAHaR_SCXK0",
+   "cut": "MAHaSLWJJhs"
+  },
+  "neko_1": {
+   "gen": "MAHaR4Mm8l0",
+   "cut": "MAHaSACNmXg"
+  },
+  "neko_rev": {
+   "gen": "MAHaR4JmTow",
+   "cut": "MAHaSETk2oI"
+  },
+  "koumori": {
+   "gen": "MAHaR1b9Qrg",
+   "cut": "MAHaSJhWUlE"
+  },
+  "koumori_hang": {
+   "gen": "MAHaR1XNm-w",
+   "cut": "MAHaSMTFwgA"
+  },
+  "yoroi": {
+   "gen": "MAHaR_d4XVE",
+   "cut": "MAHaSHDsCGY"
+  },
+  "yoroi_off": {
+   "gen": "MAHaRy7x5SM",
+   "cut": "MAHaSEarZFs"
+  },
+  "fukurou": {
+   "gen": "MAHaR-OW18Y",
+   "cut": "MAHaSCS7kbI"
+  },
+  "fukurou_up": {
+   "gen": "MAHaR942BCg",
+   "cut": "MAHaSATPkKc"
+  },
+  "ookami": {
+   "gen": "MAHaR5Ck3H0",
+   "cut": "MAHaSPTyW6g"
+  },
+  "ookami_howl": {
+   "gen": "MAHaR6W3CFc",
+   "cut": "MAHaSB7J6D8"
   }
  }
 }

@@ -15,14 +15,15 @@
 3. remove-background で 背景けし。**それだけだと ネオンの光が けずれる**（こい色の部品＝くまの ツボ なども けずれる）ので、`dev/canva/neoncut.py もとの絵 背景けし 出す_full.png` で、体は 背景けしの形・まわりの光は もとの絵の「背景の こん色との ちがい」から すけすけにする。
 4. `dev/canva/pack.py` が `_full.png` を切りぬいて WebP（q90）にして SPRITE_SRC の行を出す。かえ絵の組（sprites.json の groups）は 同じ わくで 切るので、入れかわっても体が ずれない。大きさは sprites.json の size（[w, by]：w＝半径に対する絵のはば、by＝絵の下はし）。
 5. ここで 取れる絵は 200×200（Canva の見本の大きさ。もとの 1264×1264 は この作業場から ダウンロードできない）。おばけは この大きさで足りる。**台の奥の景色やタイトルのような 大きい絵は 別の やり方が いる**（しょーくんが Canva から 書き出して わたす など）。
-6. たしかめ：`dev/sim/mk.py` のあと `python3 shot.py out.png "$(sed s/__STAGE__/0/g sprcheck.js)" 60`（0＝草原）。台に その台の おばけと かえ絵が ならぶ。
+6. たしかめ：`dev/sim/mk.py` のあと `python3 shot.py out.png "$(sed s/__STAGE__/0/g sprcheck.js)" 60`（0＝草原）。台に その台の おばけと かえ絵が ならぶ。エラーは `sprerr.js`（その台の おばけ × 状態。1分くらい。全部の drawcheck.js は 30分でも おわらない）。かえ絵の 状態を 足したら 両方の 表に 足す。
 
 ## ゲームの中のしくみ
-- `SPRITE_SRC` に絵、`sprOf(e)` が いまの絵（ENEMIES の `sprKey(e)` で かえ絵の名前）。絵があると drawGhost は back・skin・front・top・顔を描かない。
+- `SPRITE_SRC` に絵、`sprOf(e)` が いまの絵（ENEMIES の `sprKey(e)` で かえ絵の名前）。絵があると drawGhost は back・skin・front・top・顔を描かない。絵の上に かさねる 効果は `over(e,r,t,P)`（洋館の まとめは 「Canvaの絵の かえ絵と 上に かさねる 効果（洋館）」の区切り）。
   → 状態で出る効果（たて・まほうじん・ふきだし など）を フックの中で描いている おばけは、絵に かえるときに その効果を 絵の上に 描くよう 分ける（森より先の台で 必要）。
 - ボスのHPバーは `sprTop(e)` で 絵の上に出す。
 
 ## できたもの
 - 草原（11/8）：wata・usagi・kakashi（帽子なし kakashi_nohat）・tanuki（葉っぱ tanuki_leaf＝化ける前の本物と にせもの）・uma（金の王冠）
 - 森（11/8）：kinoko・kitsune・hari（まるまり hari_curl）・kuma（なめる kuma_lick・ツボなし kuma_nopot）・taiboku
+- 洋館（11/8）：neko（しっぽ1本 neko_1・天使の輪 neko_rev）・koumori（天井で ねむる koumori_hang）・yoroi（よろいが ずれる yoroi_off）・fukurou（羽をためる fukurou_up）・ookami（遠ぼえ ookami_howl）。あせ・いかりマークと 遠ぼえの音は over で 絵の上に
 - Canva のフォルダ「パチおば おばけ（ネオン）」に もとの絵。Canva の番号は dev/canva/manifest.json
