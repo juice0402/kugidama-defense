@@ -73,5 +73,24 @@
     ]
    ]
   }
+ },
+ "castle_frame": {
+  "kind": "frame",
+  "src": "frame/castle_frame_full.png"
+ },
+ "castle_bg": {
+  "kind": "bg",
+  "src": "bg/castle_full.png",
+  "ridge": {
+   "y": [
+    395,
+    445
+   ],
+   "w": [
+    1,
+    -1,
+    1
+   ]
+  }
  }
 }

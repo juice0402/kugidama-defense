@@ -352,6 +352,12 @@
    "file": "bg/volcano_full.png",
    "old_ground_high": "MAHaTQj-O80",
    "old_blurry": "MAHaTVKSwD4"
+  },
+  "castle": {
+   "gen": "MAHaTUWy9G8",
+   "file": "bg/castle_full.png",
+   "old_courtyard_high": "MAHaTRdhLN0",
+   "old_facade": "MAHaTToHXOg"
   }
  },
  "frame": {
@@ -379,6 +385,10 @@
   "volcano": {
    "gen": "MAHaTcwKmQU",
    "file": "frame/volcano_frame_full.png"
+  },
+  "castle": {
+   "gen": "MAHaTY0z2k0",
+   "file": "frame/castle_frame_full.png"
   }
  }
 }
