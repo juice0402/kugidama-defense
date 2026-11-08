@@ -16,15 +16,10 @@
  },
  "volcano": {
   "src": "handles/src/volcano.png",
-  "c": [
-   298,
-   304
-  ],
-  "rk": 152,
-  "ro": 224,
+  "ro": 222,
   "grip": [
-   30,
-   174
+   34,
+   164
   ]
  },
  "castle": {

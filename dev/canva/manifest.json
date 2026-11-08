@@ -698,8 +698,12 @@
    "file": "handles/src/snow.png"
   },
   "volcano": {
-   "gen": "MAHaTwue3vs",
-   "file": "handles/src/volcano.png"
+   "gen": "MAHaTy_HElM",
+   "file": "handles/src/volcano.png",
+   "old": [
+    "MAHaTwue3vs"
+   ],
+   "note": "1回目は ピンク ばかりで 火山の 枠に まぎれた → 黒い 岩・オレンジの ふちどりで 作りなおし"
   },
   "castle": {
    "gen": "MAHaTzuGgdc",
