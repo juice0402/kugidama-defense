@@ -43,5 +43,14 @@
     -0.6
    ]
   }
+ },
+ "snow_frame": {
+  "kind": "frame",
+  "src": "frame/snow_frame_full.png",
+  "basek": 0.4
+ },
+ "snow_bg": {
+  "kind": "bg",
+  "src": "bg/snow_full.png"
  }
 }

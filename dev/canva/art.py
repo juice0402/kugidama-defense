@@ -52,7 +52,7 @@ def window(A):
     return m, ref
 
 
-def frame_warp(src, key, th=130, nmax=24):
+def frame_warp(src, key, th=130, nmax=24, basek=.85):
     A = np.asarray(Image.open(src).convert('RGB')).astype(np.float32)
     h, w, _ = A.shape
     m, ref = window(A)
@@ -115,7 +115,7 @@ def frame_warp(src, key, th=130, nmax=24):
     out[inside] = ref
     # まわりの色（base）に だんだん とけこむ：上 8・左右 18・下 14 単位
     edge = np.concatenate([out[2, :], out[-3, :], out[:, 2], out[:, -3]])
-    base = np.median(edge, axis=0) * .85
+    base = np.median(edge, axis=0) * basek   # まわりの色（art.json の "basek"。枠の ふちが 明るい 絵は 小さく して 暗く とけこませる）
     fx = np.minimum((gx - x0) / 18, (x0 + fw - gx) / 18)
     fy = np.minimum((gy - y0) / 8, (y0 + fh - gy) / 14)
     f = np.clip(np.minimum(fx, fy), 0, 1); f = f * f * (3 - 2 * f)
@@ -183,7 +183,7 @@ def main():
     lines = []; last = {}
     for key, s in spec.items():
         src = os.path.join(HERE, s['src'])
-        im, meta = frame_warp(src, key, s.get('glow', 130), s.get('nglow', 24)) if s['kind'] == 'frame' else bg_fit(src, key, s.get('ridge'))
+        im, meta = frame_warp(src, key, s.get('glow', 130), s.get('nglow', 24), s.get('basek', .85)) if s['kind'] == 'frame' else bg_fit(src, key, s.get('ridge'))
         data = webp(im, s.get('q', 78))
         open(os.path.join(HERE, 'art', key + '.webp'), 'wb').write(data)
         last[s['kind']] = (im, meta)
