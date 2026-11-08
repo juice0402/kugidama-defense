@@ -92,5 +92,24 @@
     1
    ]
   }
+ },
+ "space_frame": {
+  "kind": "frame",
+  "src": "frame/space_frame_full.png"
+ },
+ "space_bg": {
+  "kind": "bg",
+  "src": "bg/space_full.png",
+  "ridge": {
+   "y": [
+    412,
+    455
+   ],
+   "w": [
+    -0.5,
+    1,
+    1
+   ]
+  }
  }
 }

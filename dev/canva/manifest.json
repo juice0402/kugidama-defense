@@ -358,6 +358,12 @@
    "file": "bg/castle_full.png",
    "old_courtyard_high": "MAHaTRdhLN0",
    "old_facade": "MAHaTToHXOg"
+  },
+  "space": {
+   "gen": "MAHaTYm_tsg",
+   "file": "bg/space_full.png",
+   "old_planet_corner": "MAHaTX_sMGE",
+   "old_grainy": "MAHaTW1zkiA"
   }
  },
  "frame": {
@@ -389,6 +395,10 @@
   "castle": {
    "gen": "MAHaTY0z2k0",
    "file": "frame/castle_frame_full.png"
+  },
+  "space": {
+   "gen": "MAHaTUnvlYI",
+   "file": "frame/space_frame_full.png"
   }
  }
 }
