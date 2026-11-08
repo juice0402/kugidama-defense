@@ -346,6 +346,12 @@
   "snow": {
    "gen": "MAHaTL4PneM",
    "file": "bg/snow_full.png"
+  },
+  "volcano": {
+   "gen": "MAHaTWTW6vk",
+   "file": "bg/volcano_full.png",
+   "old_ground_high": "MAHaTQj-O80",
+   "old_blurry": "MAHaTVKSwD4"
   }
  },
  "frame": {
@@ -369,6 +375,10 @@
   "snow": {
    "gen": "MAHaTAF0n0Y",
    "file": "frame/snow_frame_full.png"
+  },
+  "volcano": {
+   "gen": "MAHaTcwKmQU",
+   "file": "frame/volcano_frame_full.png"
   }
  }
 }

@@ -145,7 +145,9 @@ def frame_warp(src, key, th=130, nmax=24, basek=.85):
 
 def ridge_line(A, x0, y0, k, spec):
     """手前の 地面の 光る ふちの 線（ridge）を さがす → [[x,y],...]（台の座標）。spec＝{"y":[上,下],"w":[R,G,B の おもみ]}。
-    台の build で artFront が この線より下を もう一度 かさねて、コードで 描いた 大きな物（ピラミッド など）の すそを 地面の うしろに かくす"""
+    台の build で artFront が この線より下を もう一度 かさねて、コードで 描いた 大きな物（ピラミッド など）の すそを 地面の うしろに かくす。
+    spec に "line" が あれば さがさずに その 点を そのまま 使う"""
+    if 'line' in spec: return spec['line']   # 線を 手で きめる（地面の 光る ふちが 高すぎる 絵。台の座標の 点）
     h, w, _ = A.shape
     lo, hi = [int((v - y0) * k) for v in spec['y']]
     sc = (A[lo:hi] * np.array(spec.get('w', [1, 1, 1]), dtype=np.float32)).sum(axis=2)

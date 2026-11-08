@@ -52,5 +52,26 @@
  "snow_bg": {
   "kind": "bg",
   "src": "bg/snow_full.png"
+ },
+ "volcano_frame": {
+  "kind": "frame",
+  "src": "frame/volcano_frame_full.png",
+  "basek": 0.45
+ },
+ "volcano_bg": {
+  "kind": "bg",
+  "src": "bg/volcano_full.png",
+  "ridge": {
+   "line": [
+    [
+     10,
+     412
+    ],
+    [
+     350,
+     412
+    ]
+   ]
+  }
  }
 }
