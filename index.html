@@ -297,9 +297,9 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .end-top{position:relative;display:flex;flex-direction:column;align-items:center;margin-top:clamp(2px,1.2vh,14px);animation:pop .7s cubic-bezier(.3,1.5,.5,1) both}
 .end-rays{position:absolute;left:50%;top:clamp(26px,4.6vh,40px);width:min(132vw,72vh);aspect-ratio:1;margin-left:calc(min(132vw,72vh)/-2);margin-top:calc(min(132vw,72vh)/-2);
   background:var(--fx-rays) center/contain no-repeat;opacity:.75;animation:spin 40s linear infinite;will-change:transform;pointer-events:none}
-.end-crown{position:relative;display:block;width:clamp(64px,10.5vh,92px);aspect-ratio:var(--fx-crown-ar,1.3);background:var(--fx-crown) center/contain no-repeat;margin-bottom:-6px}
+.end-crown{position:relative;display:block;width:clamp(72px,13vh,116px);aspect-ratio:var(--fx-crown-ar,1.3);background:var(--fx-crown) center/contain no-repeat;margin-bottom:-10px}
 .end-kick{position:relative;margin:0;display:grid;place-items:center;width:clamp(200px,58vw,250px);aspect-ratio:var(--fx-ribbon-ar,4);background:var(--fx-ribbon) center/contain no-repeat;
-  font:400 clamp(15px,4.4vw,19px)/1 var(--f-arc);letter-spacing:.16em;color:#4a2400;text-shadow:0 1px 0 rgba(255,255,255,.55);padding-bottom:var(--rib-dy,.12em)}
+  font:800 clamp(16px,4.8vw,20px)/1 var(--f-body);letter-spacing:.14em;color:#4a2400;text-shadow:0 1px 0 rgba(255,255,255,.55);padding-bottom:var(--rib-dy,.12em)}
 .end-title{position:relative;margin:2px 0 0;padding:.04em .12em .1em;font:800 clamp(26px,8.6vw,38px)/1.1 var(--f-body);white-space:nowrap;letter-spacing:-.01em;
   color:#2b0838;-webkit-text-stroke:.2em #2b0838;text-shadow:0 .07em 0 #2b0838,0 .12em 0 #2b0838,0 0 .4em rgba(255,140,230,.75),0 0 .9em rgba(140,200,255,.5)}
 .end-title::before,.end-title::after{content:attr(data-t);position:absolute;inset:0;padding:inherit;text-shadow:none}
@@ -352,8 +352,11 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
   background:repeating-linear-gradient(180deg,rgba(34,26,40,.62) 0 18px,rgba(16,12,24,.78) 18px 21px)}
 .slot{position:relative}
 .slot.unlock .cab{animation:unlockPop .65s cubic-bezier(.3,1.6,.5,1)}
-.slot.unlock::before{content:"";position:absolute;z-index:-1;left:50%;top:42%;width:230%;aspect-ratio:1;margin:-115% 0 0 -115%;background:var(--fx-rays) center/contain no-repeat;opacity:0;pointer-events:none;animation:unlockRays 1.6s ease-out}
+.slot.unlock::before{content:"";position:absolute;z-index:-1;left:50%;top:42%;width:260%;aspect-ratio:1;margin:-130% 0 0 -130%;background:var(--fx-rays) center/contain no-repeat;opacity:0;pointer-events:none;animation:unlockRays 1.6s ease-out}
 @keyframes unlockPop{0%{transform:scale(.82)}55%{transform:scale(1.06)}100%{transform:none}}
+.slot.unlock .cface::before{content:"";position:absolute;z-index:2;inset:0;pointer-events:none;transform:translateX(-110%);animation:sweep 1s .2s ease-out forwards;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.65) 47%,rgba(255,236,190,.3) 55%,transparent 70%)}   /* 台の 顔を 光が さっと はしる */
+@keyframes sweep{to{transform:translateX(110%)}}
 @keyframes unlockRays{0%{transform:scale(.3);opacity:0}20%{opacity:1}100%{transform:scale(1.1) rotate(50deg);opacity:0}}
 .hallwrap.sit .slot.cur{transform:scale(1.3) translateY(6%);transition:transform .5s cubic-bezier(.55,0,.8,.3)}
 .hallwrap.sit .slot:not(.cur){opacity:0}
@@ -4177,8 +4180,7 @@ function fxImg(k){
   return im&&im.complete&&im.naturalWidth?im:null;
 }
 const FX_KEYS=['fever','boss','wave','ribbon','rays','crown'];
-const ARCF='"Bungee","M PLUS Rounded 1c",sans-serif';
-const logoFont=(s,px)=>/^[\x20-\x7e]+$/.test(s)?`400 ${px}px ${ARCF}`:`800 ${px}px ${BODYF}`;   // 英語は Bungee（ホールの 数字と 同じ）、日本語は タイトルの ロゴと 同じ 太い 字
+const logoFont=(s,px)=>`800 ${px}px ${BODYF}`;   // タイトルの ロゴと 同じ 太い 丸い 字（英語も。字の しゅるいを ふやさない＝とどくのを まつ 字が 1つ）
 // 見出しの 絵は 新しく 使った じゅんに BN_KEEP こまで（WAVE 1〜10 など。いっぱいなら いちばん 前に 使ったものから すてる）
 const bnUse=new Map(), BN_KEEP=18;
 function bnSprite(key,w,h,paint,res){
