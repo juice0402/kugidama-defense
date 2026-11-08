@@ -16,5 +16,20 @@ for(let s=0;s<T.STAGES.length;s++){
     }
   }
 }
+// タワー 22種 × ギミック 10種（Canva の 絵・11/8 4.）：12本の 杭に ならべて、ふつうの 状態と 動いている 状態（撃った・ためる・宿った・はじいた など）で 数コマ 描く。お店の アイコンも
+try{T.playBoard(0);G.paused=true;G.en=[];G.bs=[]}catch(x){errs.push('tw play:'+x.message)}
+const tks=Object.keys(T.TOWERS), gks=[null,...Object.keys(T.GIMMICKS)], combos=[];
+for(const tk of tks) for(const gk of gks) combos.push([tk,gk]);
+const busy={shot:.08,chg:.3,chgMax:.55,el:'fire',elT:5,bump:.2,door:.2,jump:.2,whirl:.2,gulp:.2,boom:.3,flow:1,split:.2,spinK:.2,hfl:.2,pull:.1,near:.2,bless:9};
+for(let i=0;i<combos.length;i+=G.pegs.length){
+  for(const st of [{},busy]){
+    try{
+      G.pegs.forEach((p,j)=>{const c=combos[i+j];p.tower=c?Object.assign(T.newTower(c[0],p),{gm:c[1],pop:0,ang:j*.8,lv:1+j%4},st):null;if(p.tower&&st.spinK)p.tower.orbT=G.time});
+      T.draw();for(let f=0;f<3;f++){T.update(1/60);G.time+=1/60}T.draw();n++;
+    }catch(x){errs.push('tw '+combos.slice(i,i+12).map(c=>c.join('+')).join(',')+':'+x.message)}
+  }
+}
+for(const p of G.pegs) p.tower=null;
+try{for(const k of tks)T.icon('tower',k);for(const k of gks.slice(1))T.icon('gimmick',k);n++}catch(x){errs.push('icon:'+x.message)}
 return n+' ok / errors '+errs.length+' '+errs.slice(0,6).join(' | ');
 })()
