@@ -1,0 +1,49 @@
+{
+ "meadow": {
+  "src": "handles/src/meadow.png"
+ },
+ "forest": {
+  "src": "handles/src/forest.png"
+ },
+ "mansion": {
+  "src": "handles/src/mansion.png"
+ },
+ "desert": {
+  "src": "handles/src/desert.png"
+ },
+ "snow": {
+  "src": "handles/src/snow.png"
+ },
+ "volcano": {
+  "src": "handles/src/volcano.png",
+  "c": [
+   298,
+   304
+  ],
+  "rk": 152,
+  "ro": 224,
+  "grip": [
+   30,
+   174
+  ]
+ },
+ "castle": {
+  "src": "handles/src/castle.png",
+  "c": [
+   300,
+   300
+  ],
+  "rk": 154,
+  "ro": 212,
+  "grip": [
+   33,
+   163
+  ]
+ },
+ "space": {
+  "src": "handles/src/space.png"
+ },
+ "heaven": {
+  "src": "handles/src/heaven.png"
+ }
+}

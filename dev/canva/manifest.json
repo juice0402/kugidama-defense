@@ -674,5 +674,51 @@
    "gen": "MAHaTnX2fe8",
    "spin": 1
   }
+ },
+ "handles": {
+  "meadow": {
+   "gen": "MAHaT0bdOYk",
+   "file": "handles/src/meadow.png",
+   "note": "さいしょの 1つ（ほかの ハンドルの 参考の 絵）"
+  },
+  "forest": {
+   "gen": "MAHaT0In9zM",
+   "file": "handles/src/forest.png"
+  },
+  "mansion": {
+   "gen": "MAHaTxeZHWA",
+   "file": "handles/src/mansion.png"
+  },
+  "desert": {
+   "gen": "MAHaT1hPMLo",
+   "file": "handles/src/desert.png"
+  },
+  "snow": {
+   "gen": "MAHaTxJyqM8",
+   "file": "handles/src/snow.png"
+  },
+  "volcano": {
+   "gen": "MAHaTwue3vs",
+   "file": "handles/src/volcano.png"
+  },
+  "castle": {
+   "gen": "MAHaTzuGgdc",
+   "file": "handles/src/castle.png"
+  },
+  "space": {
+   "gen": "MAHaT24BVtQ",
+   "file": "handles/src/space.png"
+  },
+  "heaven": {
+   "gen": "MAHaT9GFKPw",
+   "file": "handles/src/heaven.png"
+  }
+ },
+ "title": {
+  "key": {
+   "gen": "MAHaT97WE4o",
+   "file": "title/key1_full.png",
+   "note": "タイトルの 1まい絵（9:16・文字なし）。うさぎおばけ・草原の景色・ねこおばけを 参考に"
+  }
  }
 }
