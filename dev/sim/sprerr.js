@@ -43,5 +43,22 @@ for(const st of [{},{gold:2},{inf:{el:'fire'}},{clone:true},{fev:1}]){
 }
 G.bs=[];G.fever=0;
 try{for(const k of bks)T.icon('ball',k);n++}catch(x){errs.push('ball icon:'+x.message)}
+// 演出（11/8 7.）：9台で 見出し（台の名前・WAVE・FEVER・ボス・中ボス）を いろいろな 時間で、FEVER の のこり・台の上の 文字・ボスを たおした 光・クリア／ゲームオーバーの 画面・エンディング
+for(let s=0;s<T.STAGES.length;s++){
+  try{
+    T.playBoard(T.BOARDS.findIndex(b=>b.stage===s));G.paused=true;G.en=[];
+    const F=T.STAGES[s].foes;
+    G.banners=[];T.startWave(3);T.spawn(F[4]);T.spawn(F[3]);T.heso(G.heso);
+    G.banners.push({text:T.STAGES[s].name+'の台',color:T.STAGES[s].accent,t:0,dur:2.2,y:200});
+    for(const u of [0,.05,.15,.3,.6,1.2,1.5,1.9,2.15]){for(const b of G.banners)b.t=Math.min(u,b.dur-.01);G.fever=8-u;T.draw();n++}
+    G.texts=[];for(const [x,c,b] of [['+5','#ffd84a',0],['WAVE クリア +15','#ffd84a',1],['ライフ +2','#7dffb0',1],['Lv3!','#ffd84a',1],['コイン +40','#ffd84a',1]])G.texts.push({x:188,y:300,s:x,c,big:!!b,t:.8});
+    const e=T.addEnemy(F[4],188,260);T.hurtEnemy(e,1e9);for(let f=0;f<20;f++){T.updateFx(1/60);G.time+=1/60;T.draw()}n++;
+    G.fever=0;G.banners=[];G.texts=[];G.poofs=[];
+    T.stageClear();T.draw();n++;
+    T.playBoard(T.BOARDS.findIndex(b=>b.stage===s));G.life=0;G.paused=false;T.update(1/60);n++;
+  }catch(x){errs.push('fx'+s+':'+x.message)}
+}
+try{T.showEnding(()=>{});for(let f=0;f<90;f++){G.time+=1/30;T.draw()}T.closeEnding();n++}catch(x){errs.push('ending:'+x.message)}
+try{T.openHub('board');G.balls=99999;T.buyBoard(1);T.openHub('set');T.openHub('zukan');n++}catch(x){errs.push('hub:'+x.message)}
 return n+' ok / errors '+errs.length+' '+errs.slice(0,6).join(' | ');
 })()
