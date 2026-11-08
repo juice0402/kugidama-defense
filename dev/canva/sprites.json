@@ -105,6 +105,22 @@
   [
    "kujira",
    "kujira_open"
+  ],
+  [
+   "hato",
+   "hato_walk"
+  ],
+  [
+   "unicorn",
+   "unicorn_fog"
+  ],
+  [
+   "panda",
+   "panda_pray"
+  ],
+  [
+   "ousama",
+   "ousama_open"
   ]
  ],
  "size": {
@@ -390,6 +406,42 @@
   ],
   "kujira_open": [
    3.6,
+   1.05
+  ],
+  "hitsuji": [
+   2.7,
+   1.05
+  ],
+  "hato": [
+   3.5,
+   1.05
+  ],
+  "hato_walk": [
+   3.5,
+   1.05
+  ],
+  "unicorn": [
+   2.7,
+   1.05
+  ],
+  "unicorn_fog": [
+   2.7,
+   1.05
+  ],
+  "panda": [
+   3.1,
+   1.05
+  ],
+  "panda_pray": [
+   3.1,
+   1.05
+  ],
+  "ousama": [
+   3.2,
+   1.05
+  ],
+  "ousama_open": [
+   3.2,
    1.05
   ]
  },

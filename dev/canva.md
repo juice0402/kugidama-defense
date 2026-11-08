@@ -32,4 +32,7 @@
 - 火山（11/8）：buta（タオル buta_soak。ゆげ・ひやっの しずくは over）・hinotori（黒こげ hinotori_burnt）・sai（角のよろい → ひび sai_crack → われた sai_bare）・inoshishi（はないきは over）・dragon（火を はく口 dragon_fire。むねの光と 口の光は over）
 - 魔王城（11/8）：karasu（ぬすんだ宝石は over で くちばしに）・hebi（ぬけがらは コードの絵、ばんそうこう・ぴかぴかは over）・kaeru（石 kaeru_stone）・yagi（となえる yagi_chant、足もとの まほうじんは under）・kujaku（羽を広げる kujaku_fan。広げた絵は 体が 下に ずれていたので sprites.json の place で [0,-40,1.05] ずらして 体を そろえた）
 - 宇宙（11/8）：kurage（からまって リボン kurage_knot）・iruka（足もとの 流れ星は under）・kame（星のバリアは over で コードの top を そのまま）・tako（ほっぺ ぷくー tako_puff）・kujira（口を あける kujira_open、しおふきは over で 絵の 頭の上から）。しょくしゅや しっぽが 下に のびる おばけは by を 大きく（クラゲ 1.45・タコ 1.4）して 体の まん中を 合わせる
-- Canva のフォルダ「パチおば おばけ（ネオン）」に もとの絵。Canva の番号は dev/canva/manifest.json
+- 天国（11/8）：hitsuji（のっている 雲は under）・hato（羽が ちる hato_walk）・unicorn（角が くもる unicorn_fog、光る角は over）・panda（おいのり panda_pray）・ousama（口を あける ousama_open。まおうの おうぎは under、すなのたて・ふきだしは over）。光のたて（drawLShield）は 天国の 5体 みんな over で
+- → おばけ 45体 ぜんぶ 完了（かえ絵 こみで 80まい・WebP で 約0.9MB）
+- つぎ：ハンドル 9つ・台の奥の景色・砲台・タイトル・お店／図鑑のアイコン・ボタンやフレーム（大きい絵は ここから ダウンロードできないので やり方を しょーくんと 決める）
+- Canva のフォルダ「パチおば おばけ（ネオン）」に 草原の もとの絵（ほかは Canva の アップロードに ある）。Canva の番号は dev/canva/manifest.json

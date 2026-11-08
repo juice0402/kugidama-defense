@@ -286,6 +286,42 @@
   "kujira_open": {
    "gen": "MAHaSp-qvsE",
    "cut": "MAHaSlyIKg0"
+  },
+  "hitsuji": {
+   "gen": "MAHaSjwTXHM",
+   "cut": "MAHaSlHLjpE"
+  },
+  "hato": {
+   "gen": "MAHaSp1PeA8",
+   "cut": "MAHaStDWcpE"
+  },
+  "hato_walk": {
+   "gen": "MAHaSrOs824",
+   "cut": "MAHaSmodQ0A"
+  },
+  "unicorn": {
+   "gen": "MAHaSnLZ9rA",
+   "cut": "MAHaSlJ0SeU"
+  },
+  "unicorn_fog": {
+   "gen": "MAHaSo0uR-4",
+   "cut": "MAHaSkkDclg"
+  },
+  "panda": {
+   "gen": "MAHaSkwUs3k",
+   "cut": "MAHaStC3F6M"
+  },
+  "panda_pray": {
+   "gen": "MAHaSo89XCM",
+   "cut": "MAHaSpV04D0"
+  },
+  "ousama": {
+   "gen": "MAHaSp_yQpo",
+   "cut": "MAHaSgLbLS0"
+  },
+  "ousama_open": {
+   "gen": "MAHaSjsqnd0",
+   "cut": "MAHaSgLWT-g"
   }
  }
 }
