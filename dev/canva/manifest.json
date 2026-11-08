@@ -793,6 +793,11 @@
    "gen": "MAHaUNAGFVI",
    "file": "ui/src/t_zukan.png",
    "note": "タブ（図鑑）。セットの アイコンと コインを 参考に"
+  },
+  "cabinet": {
+   "gen": "MAHaUDB9FwQ",
+   "file": "ui/src/cabinet.png",
+   "note": "ホールの 台の 看板と わく。パネルと ノーマルタワー（白い パールの 金属）を 参考に"
   }
  }
 }

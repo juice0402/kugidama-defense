@@ -91,6 +91,17 @@
     ".setstrip",
     ".pouch"
    ]
+  },
+  "cabinet": {
+   "src": "ui/src/cabinet.png",
+   "gen": "MAHaUDB9FwQ",
+   "r": 52,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".topper",
+    ".cframe"
+   ]
   }
  },
  "icons": {

@@ -9,7 +9,7 @@
 #   "src"・"r"＝角の まるみ（もとの絵の px。角の 所は のびない）・"rt"/"rb"（上・下だけ かえる）・"q"
 #   "from"＝ほかの 板の もとの絵を 使う ＋ "hue"（色あいを まわす 度）・"sat"（あざやかさの 倍率）・"val"（明るさの 倍率）＝hue.py と 同じ まわし方
 #   "use"＝この 板を 使う CSS の セレクタ（ここに 書いた 所に border-image が つく）
-#   ゲームの中：border-image の はば＝もとの絵の px × --k（その ボタンの CSS で きめる。角の まるみが r×k px に なる）。光は 外へ（outset）
+#   ゲームの中：border-image の はば＝もとの絵の px × --k（その ボタンの CSS で きめる 長さ。--k:.25px なら 絵の 4px が 画面の 1px。角の まるみが r×k に なる）。光は 外へ（outset）
 #   まん中の のびる 所は 1/4 に ちぢめて 入れる（つづいているので つなぎめは 出ない）
 # icons（アイコン）："src"・"px"＝WebP の 大きさ（正方形・ふつう 96＝32px を dpr3）・"pad"（まわりの すきま 割合）・"q"
 #   ゲームの中：CSS の 変数 --i-〇〇（:root。background-image に 使う。台の ハートは JS が この 変数から 絵を よむ）
@@ -85,9 +85,9 @@ def plate(key, J):
         C = np.concatenate([C[:T], midv, C[h - B:]], axis=0)
     img = Image.fromarray((np.clip(C, 0, 1) * 255 + .5).astype(np.uint8), 'RGBA')
     data = webp(img, J.get('q', 86))
-    k = 'var(--k)'
+    k = 'var(--k)'   # --k は 長さ（.25px など。ホールの 台は --cw から calc で）
     rule = (f"{', '.join(J['use'])}{{border-image:url(data:image/webp;base64,{base64.b64encode(data).decode()}) {T} {Rr} {B} {L} fill/"
-            f"calc({k}*{T}px) calc({k}*{Rr}px) calc({k}*{B}px) calc({k}*{L}px)/calc({k}*{m}px) stretch}}")
+            f"calc({k}*{T}) calc({k}*{Rr}) calc({k}*{B}) calc({k}*{L})/calc({k}*{m}) stretch}}")
     print(f'plate {key}: {img.size} slice T{T} R{Rr} B{B} L{L} glow{m} body {x1-x0}x{y1-y0} webp {len(data)//1024}KB')
     return rule, img, dict(T=T, R=Rr, B=B, L=L, m=m)
 
