@@ -8,6 +8,7 @@
 #   "poly" ：[[台の x, 台の y], ...]（この 形の 中は 不とうめい。外は 背景の 紺との ちがいで すけすけの 光。なければ ぜんぶ 光の すけすけ）
 #   "dark" ：[こさ, ...]（金・水色など 明るい 線は そのままで、むらさきなどの 面だけ くらく。台の まん中は 暗めに）
 #   "inner"：[こさ, はば]（形の 中で ふちから はば より 内がわの 線を くらく）・"keep"：[[台の x, 台の y, 半径], ...]（くらく しない 所）
+#   "dim"  ：[[台の x, 台の y, 半径, こさ], ...]（円の 中を くらく。ふちの 外 10 で もとに もどる）
 #   "solid"：背景との ちがいが これより 大きい所は 不とうめい（光の すけすけでは なく 物として。ふつう なし）
 import sys, os, json
 import numpy as np
@@ -55,6 +56,11 @@ def obj_fit(s):
             inside &= np.hypot(xs - (cx - x0) * q, ys - (cy - y0) * q) > r * q
         f = nd.gaussian_filter(np.where(inside, k, 1.0), 2)[..., None]
         F = F * f
+    if 'dim' in s:   # 円の 中を 少し くらく（台の まん中の 明るい 物。おばけや 玉が 見えるように）
+        ys, xs = np.mgrid[0:H, 0:W]
+        for cx, cy, r, k in s['dim']:
+            t = np.clip((np.hypot(xs - (cx - x0) * q, ys - (cy - y0) * q) - r * q) / (10 * q), 0, 1)
+            a = a * (k + (1 - k) * t)                        # すけさせる（白い 物は 白い まま うすく）
     im = Image.fromarray((np.dstack([F, a]) * 255 + .5).astype(np.uint8), 'RGBA')
     meta = dict(x=x0, y=y0, w=x1 - x0, h=y1 - y0)
     return im, meta
