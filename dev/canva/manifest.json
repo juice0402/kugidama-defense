@@ -820,5 +820,10 @@
    "file": "fx/src/rays.png",
    "note": "光の すじ。Canva では なく fxrays.py で 作った"
   }
+ },
+ "objs": {
+  "desert_pyr": {
+   "gen": "MAHaY1kFV_E"
+  }
  }
 }

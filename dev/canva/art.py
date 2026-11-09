@@ -4,6 +4,7 @@
 #
 # bg   ：Canva の 9:16 の 絵（1180×2100 など）。台の アーチの はば（RO*2+8＝340）で、下を H-6 に そろえて 置く。アーチの外は 見えないので 1色に（軽く）
 #        art.json に "ridge" が あれば、手前の 地面の 光る ふちの 線を さがして ridge（台の座標の 点）に する（台の build の artFront で 使う）
+# obj  ：台の中の 大きな物（杭と つながった ピラミッド・雪の結晶・火山）。objfit.py で 台の 点に 合わせて ゆがめ、すけすけに（11/9）
 # frame：Canva の「まん中に アーチの窓（こい紺の 無地）が ある 枠の絵」。窓の形を 見つけて、台の アーチ（CX,CY,RO と 下の H-6）に ぴったり 合うように
 #        ゆがめる（アーチの所は 角度ごとに、まっすぐの所は 行ごとに。窓の外の はばは そのままの 大きさ）。
 #        できた 絵は 台の座標の FR（x -45〜405・y -60〜740）を おおう。外がわは base の色に だんだん とけこむ（コードで base を ぬってから 絵を 置く）。
@@ -185,10 +186,14 @@ def main():
     lines = []; last = {}
     for key, s in spec.items():
         src = os.path.join(HERE, s['src'])
-        im, meta = frame_warp(src, key, s.get('glow', 130), s.get('nglow', 24), s.get('basek', .85)) if s['kind'] == 'frame' else bg_fit(src, key, s.get('ridge'))
-        data = webp(im, s.get('q', 78))
+        if s['kind'] == 'obj':   # 台の中の 大きな物（objfit.py）。すけすけの WebP
+            from objfit import obj_fit
+            im, meta = obj_fit(s); data = webp(im, s.get('q_webp', 80))
+        else:
+            im, meta = frame_warp(src, key, s.get('glow', 130), s.get('nglow', 24), s.get('basek', .85)) if s['kind'] == 'frame' else bg_fit(src, key, s.get('ridge'))
+            data = webp(im, s.get('q', 78))
         open(os.path.join(HERE, 'art', key + '.webp'), 'wb').write(data)
-        last[s['kind']] = (im, meta)
+        if s['kind'] != 'obj': last[s['kind']] = (im, meta)
         g = ''.join(f"[{a},{b},{c},'{d}']," for a, b, c, d in meta.get('glow', [])).rstrip(',')
         extra = ''
         if s['kind'] == 'frame':
