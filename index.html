@@ -4323,7 +4323,13 @@ function sprite(key,w,h,ax,ay,paint,res){
 const blit=(o,x,y)=>ctx.drawImage(o.c,x-o.ax,y-o.ay,o.w,o.h);
 // UI の 絵（11/8 Canva）：CSS の 変数 --i-〇〇（UI_ART。dev/canva/uifit.py が 書く）を 台の キャンバスでも 使う（受け皿の ハート）。よめるまでは null
 const uiIm={}, uiUrl={};
-const uiSrc=k=>uiUrl[k]??(uiUrl[k]=(getComputedStyle(document.documentElement).getPropertyValue('--i-'+k).match(/url\(["']?([^"')]+)["']?\)/)||[])[1]||'');
+// CSS の 変数の 絵の URL：<style> の 文字から じかに よむ（11/9：iPhone・iPad の Safari は getComputedStyle で とれず、もどるの 絵・見出しの リボンなどが 出なかった）。なければ getComputedStyle
+let cssUrlMap=null;
+function cssVarUrl(v){
+  if(!cssUrlMap){cssUrlMap={};for(const st of document.querySelectorAll('style')){const re=/(--[\w-]+):url\(["']?([^"')]+)["']?\)/g;let m;while((m=re.exec(st.textContent)))cssUrlMap[m[1]]=m[2]}}
+  return cssUrlMap[v]||(getComputedStyle(document.documentElement).getPropertyValue(v).match(/url\(["']?([^"')]+)["']?\)/)||[])[1]||'';
+}
+const uiSrc=k=>uiUrl[k]??(uiUrl[k]=cssVarUrl('--i-'+k));
 function uiImg(k){
   let im=uiIm[k];
   if(im===undefined){const u=uiSrc(k);uiIm[k]=im=u?Object.assign(new Image(),{src:u}):null}
@@ -4335,7 +4341,7 @@ function uiImg(k){
    絵も 文字も 1回だけ sprite に 描いて（光の ぼかし shadowBlur は この 1回だけ）、毎フレームは 絵を 数まい 置いて うごき（大きさ・かたむき・すけ）だけ。
    出る 時間・きっかけ・音は 前と 同じ（banner(文字,色,秒,y) のまま。種類は 文字と 色で きまる＝bnKind） */
 const fxIm={};
-const cssUrl=v=>(getComputedStyle(document.documentElement).getPropertyValue(v).match(/url\(["']?([^"')]+)["']?\)/)||[])[1]||'';
+const cssUrl=cssVarUrl;
 function fxImg(k){
   let im=fxIm[k];
   if(im===undefined){const u=cssUrl('--fx-'+k);fxIm[k]=im=u?Object.assign(new Image(),{src:u}):null}
@@ -10290,7 +10296,7 @@ function openQuit(){
   if(G.state!=='play'||G.ending) return;
   closeSheet(); G.paused=true;
   const S=STAGES[G.stage];
-  paint($('quitIn'),S.accent); $('quitIco').src=uiSrc('back')||quitIco(S.accent);   // Canva の もどるの 絵（--i-back）
+  paint($('quitIn'),S.accent); {const q=$('quitIco');q.onerror=()=>{q.onerror=null;q.src=quitIco(S.accent)};q.src=uiSrc('back')||quitIco(S.accent)}   // Canva の もどるの 絵（--i-back）。よめなければ コードの 絵
   $('quitKind').textContent='BOARD NO.'+((G.boardIdx??0)+1);
   $('quitDesc').textContent=`${S.name}の台は ここでおわりにして、台えらびにもどるよ。`;
   $('quitNote').innerHTML=G.testLobby!=null?'ためしモード：ロビーのコインにもどるよ':`コインは 台に入る前の ${COIN}${(G.pre?G.pre.balls:G.balls).toLocaleString()} にもどるよ（この台でかせいだ分は なくなるよ）`;
