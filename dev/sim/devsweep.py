@@ -9,7 +9,7 @@ OUT=os.path.join(HERE,sys.argv[1] if len(sys.argv)>1 else '_sweep')
 DEV={  # 名前: (はば, 高さ, 細かさ)
  'iPhoneSE':(375,667,2), 'iPhone15':(393,852,3), 'iPhoneProMax':(430,932,3), 'iPhoneSafari':(390,664,3),
  'mini320':(320,568,2), 'Android':(360,800,3), 'iPadPortrait':(820,1180,2), 'iPadLandscape':(1180,820,2),
- 'iPadSplit':(590,820,2), 'phoneLandscape':(852,393,3), 'PC':(1440,900,1),
+ 'iPadSplit':(590,820,2), 'iPadMini':(744,1133,2), 'iPadPro13':(1032,1376,2), 'iPadPro13Land':(1376,1032,2), 'phoneLandscape':(852,393,3), 'PC':(1440,900,1),
 }
 ONLY=sys.argv[2].split(',') if len(sys.argv)>2 else list(DEV)
 CHECK=r"""(name)=>{const W=innerWidth,H=innerHeight,out=[];
@@ -45,10 +45,44 @@ CHECK=r"""(name)=>{const W=innerWidth,H=innerHeight,out=[];
    const ix=Math.min(A.right,B.right)-Math.max(A.left,B.left), iy=Math.min(A.bottom,B.bottom)-Math.max(A.top,B.top);
    if(ix>2&&iy>2&&ix*iy>.15*Math.min(A.width*A.height,B.width*B.height)) out.push(`ボタンが 重なる ${lab(a)} × ${lab(b)}`)}
  return [...new Set(out)]}"""
+# すきま しらべ（SPACE=1 の とき）：ボタン・タグ・字 と、いちばん 近い 枠（border-image か 線の ある 箱）の 内がわ との すきま、
+#   となりの ボタンどうしの すきま、字と ボタンの 重なり。見つけた 所は 枠ごと 切りぬいて _sweep/space/ に（赤い 線＝その 物）
+SPACE=os.environ.get('SPACE')=='1'
+SPACEJS=r"""()=>{const W=innerWidth,H=innerHeight,out=[];
+ const vis=e=>e.checkVisibility?e.checkVisibility({opacityProperty:true,visibilityProperty:true}):!!e.getClientRects().length;
+ const px=v=>parseFloat(v)||0;
+ // 枠の 絵の 光る ふちの 内がわ（絵の 点。11/9 dev/canva の 9わけ 絵を はかった）：[上,左,下,右, はみ出し, 9わけ の 大きさ]
+ const FR=[['.panel,.buy-in,.sheet-in',[37,33,32,34,8,88]],['.card,.zrow,.item,.setstrip,.pouch',[42,36,34,36,8,88]],['.topper,.cframe,.ammo-case,.ammo-lid',[30,28,28,29,6,58]]];
+ const famOf=f=>{for(const [sel,v] of FR) if(f.matches(sel)) return v; return null};
+ const framed=f=>!!famOf(f);
+ const bw=(f,side)=>{const v=famOf(f),c=getComputedStyle(f),k=px(c.borderImageWidth.split(' ')[0])/v[5];return (v[{Top:0,Left:1,Bottom:2,Right:3}[side]]-v[4])*k};
+ const lab=e=>(e.id?'#'+e.id:'')+(typeof e.className==='string'&&e.className?'.'+e.className.trim().split(/\s+/).slice(0,2).join('.'):e.tagName.toLowerCase())+' 「'+(e.textContent||'').trim().slice(0,10)+'」';
+ const onTop=(e,r)=>{const t=document.elementFromPoint(Math.min(W-1,Math.max(0,r.left+r.width/2)),Math.min(H-1,Math.max(0,r.top+r.height/2)));return t&&(t===e||e.contains(t)||t.contains(e))};
+ const inScrollView=(e,r)=>{for(let a=e.parentElement;a;a=a.parentElement){const c=getComputedStyle(a);if(/(auto|scroll)/.test(c.overflowY)){const R=a.getBoundingClientRect();return r.top>=R.top-1&&r.bottom<=R.bottom+1}}return true};
+ const items=[];
+ for(const e of document.querySelectorAll('#app *')){
+   if(!vis(e))continue;const r=e.getBoundingClientRect();if(r.width<4||r.height<4||r.right<0||r.left>W||r.bottom<0||r.top>H)continue;
+   const btn=e.matches('button,[role=button],.price,.tagown,.tg,.cnt,.buy,.x');
+   const txt=!btn&&[...e.childNodes].some(n=>n.nodeType===3&&n.textContent.trim())&&!e.closest('button,.price,.tagown,.tg');
+   if(!btn&&!txt)continue; if(!inScrollView(e,r)||!onTop(e,r))continue;
+   items.push([e,r,btn]);
+   let f=e.parentElement; while(f&&f.id!=='app'&&!framed(f)) f=f.parentElement; if(!f||f.id==='app')continue;
+   const F=f.getBoundingClientRect(), g={l:r.left-(F.left+bw(f,'Left')),r:(F.right-bw(f,'Right'))-r.right,t:r.top-(F.top+bw(f,'Top')),b:(F.bottom-bw(f,'Bottom'))-r.bottom};
+   const lim=btn?5:4;
+   for(const [k,v] of Object.entries(g)) if(v<lim) out.push({m:`${btn?'ボタン':'字'}と 枠が ちかい(${k} ${v.toFixed(1)}px) ${lab(e)} in ${lab(f)}`,F:[F.left,F.top,F.width,F.height],E:[r.left,r.top,r.width,r.height],k:lab(f).split(' ')[0]+'|'+lab(e).split(' ')[0]+'|'+k});
+ }
+ const bs=items.filter(x=>x[2]);
+ for(let i=0;i<bs.length;i++)for(let j=i+1;j<bs.length;j++){const [a,A]=bs[i],[b,B]=bs[j];if(a.contains(b)||b.contains(a))continue;
+   const dx=Math.max(B.left-A.right,A.left-B.right), dy=Math.max(B.top-A.bottom,A.top-B.bottom);
+   if(dx<6&&dy<6&&Math.max(dx,dy)>-1&&(dx<0||dy<0)) out.push({m:`ボタンどうし ちかい(${Math.max(dx,dy).toFixed(1)}px) ${lab(a)} / ${lab(b)}`,F:[Math.min(A.left,B.left),Math.min(A.top,B.top),Math.max(A.right,B.right)-Math.min(A.left,B.left),Math.max(A.bottom,B.bottom)-Math.min(A.top,B.top)],E:[A.left,A.top,A.width,A.height],k:lab(a).split(' ')[0]+'~'+lab(b).split(' ')[0]})}
+ for(const [t,T] of items.filter(x=>!x[2]))for(const [b,B] of bs){if(b.contains(t)||t.contains(b))continue;
+   const ix=Math.min(T.right,B.right)-Math.max(T.left,B.left), iy=Math.min(T.bottom,B.bottom)-Math.max(T.top,B.top);
+   if(ix>2&&iy>2) out.push({m:`字と ボタンが 重なる ${lab(t)} × ${lab(b)}`,F:[Math.min(T.left,B.left),Math.min(T.top,B.top),Math.max(T.right,B.right)-Math.min(T.left,B.left),Math.max(T.bottom,B.bottom)-Math.min(T.top,B.top)],E:[T.left,T.top,T.width,T.height],k:lab(t).split(' ')[0]+'x'+lab(b).split(' ')[0]})}
+ const seen=new Set();return out.filter(o=>!seen.has(o.k)&&seen.add(o.k))}"""
 PREP="""()=>{const T=window.__T,G=T.G;G.cleared=[0,1,2,3];G.bought=[0,1,2,3,4];G.balls=500000;T.openHub('board');
   for(const k of Object.keys(T.BALLS)) if(k!=='normal') (G.owned||(G.owned={}))[k]=Math.max(G.owned[k]||0,(T.BALLS[k].board||0)<=3?2:0)}"""
 async def run(b,name,W,H,D,rep):
-    ctx=await b.new_context(viewport={'width':W,'height':H},device_scale_factor=D,has_touch=W<900,is_mobile=W<900)
+    ctx=await b.new_context(viewport={'width':W,'height':H},device_scale_factor=D,has_touch=True)
     pg=await ctx.new_page(); errs=[]
     pg.on('pageerror',lambda e:errs.append(str(e)))
     await pg.goto('file://'+os.path.join(HERE,'game.html')); await pg.wait_for_timeout(2600)
@@ -58,6 +92,16 @@ async def run(b,name,W,H,D,rep):
         f=os.path.join(OUT,f'_{name}_{len(shots):02d}.png'); await pg.screenshot(path=f)
         found=await pg.evaluate(CHECK,label); shots.append((label,f))
         for x in found: rep.append(f'{name} / {label}: {x}')
+        if SPACE:
+            sp=await pg.evaluate(SPACEJS); im=Image.open(f).convert('RGB')
+            os.makedirs(os.path.join(OUT,'space'),exist_ok=True)
+            for i,o in enumerate(sp):
+                rep.append(f'{name} / {label}: すきま {o["m"]}')
+                x,y,w,h=[v*D for v in o['F']]; ex,ey,ew,eh=[v*D for v in o['E']]; pad=10*D
+                box=(max(0,int(x-pad)),max(0,int(y-pad)),min(im.width,int(x+w+pad)),min(im.height,int(y+h+pad)))
+                if box[2]-box[0]<4 or box[3]-box[1]<4: continue
+                c=im.crop(box); dd=ImageDraw.Draw(c); dd.rectangle([ex-box[0],ey-box[1],ex+ew-box[0],ey+eh-box[1]],outline=(255,40,40),width=max(1,int(D)))
+                c.save(os.path.join(OUT,'space',f'{name}_{len(shots):02d}_{i:02d}.png'))
     async def tap(sel):
         try: await pg.click(sel,timeout=2500)
         except Exception as e: rep.append(f'{name}: タップ できない {sel} ({str(e).splitlines()[0][:80]})')
