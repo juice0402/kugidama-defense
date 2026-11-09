@@ -1,0 +1,26 @@
+# main に push されたら、RELEASES.md の版でまだタグのないものに、タグと Releases を作る（司令塔の決まり 11/5）
+name: release-tags
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-tags
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: まだタグのない版にタグと Releases を作る
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 tools/release/tag_releases.py
