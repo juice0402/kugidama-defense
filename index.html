@@ -268,8 +268,9 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
   transform:scale(.86);opacity:.62;filter:saturate(.6) brightness(.75);transition:transform .3s,opacity .3s,filter .3s}
 .slot.cur{transform:none;opacity:1;filter:none}
 .cab{width:100%;display:flex;flex-direction:column;padding:0;border:0;background:none;color:inherit;font:inherit;cursor:pointer;text-align:center}
-/* 台の 看板と わく：Canva の 銀の わくの 絵（UI_ART の cabinet。大きさは 台の はば --cw に 合わせる）。台の 色（--nc）は 文字と まわりの 光 */
-.topper{position:relative;display:block;height:calc(var(--cw)*.22);border-radius:calc(var(--cw)*.05);--k:calc(var(--cw)*.0016);
+/* 台の 看板と わく：Canva の 銀の わくの 絵（UI_ART の cabinet。大きさは 台の はば --cw に 合わせる）。台の 色（--nc）は 文字と まわりの 光
+   角の まるみ（border-radius）は 絵の 角（45px）× --k に 合わせる（光の 角が 絵より 四角いと、角に 黒い すきまが 見えた。11/9） */
+.topper{position:relative;display:block;height:calc(var(--cw)*.22);border-radius:calc(var(--cw)*.072);--k:calc(var(--cw)*.0016);
   box-shadow:0 0 14px var(--ng)}
 .topper::after{content:"";position:absolute;left:12%;right:12%;bottom:21%;height:6px;opacity:.9;
   background:radial-gradient(circle at 4.5px 3px,#fff3c4 0 1.2px,var(--nc) 1.9px,transparent 2.6px) 0 0/9px 6px repeat-x}
@@ -280,10 +281,10 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .tname b{font:500 calc(var(--cw)*.13)/1 var(--f-disp);color:#fff;white-space:nowrap;text-shadow:0 0 3px #fff,0 0 10px var(--nc),0 0 22px var(--nc)}
 .tname small{font-size:.6em;margin-left:.08em}
 .topper .stamp{top:-9px;right:-7px;font-size:calc(var(--cw)*.062);padding:2px 7px 1px}
-.cframe{position:relative;display:block;margin-top:3px;padding:calc(var(--cw)*.055);border-radius:calc(var(--cw)*.05);--k:calc(var(--cw)*.0022);
+.cframe{position:relative;display:block;margin-top:3px;padding:calc(var(--cw)*.055);border-radius:calc(var(--cw)*.099);--k:calc(var(--cw)*.0022);
   box-shadow:0 0 18px var(--ng)}
 .cface>canvas.face{position:absolute;inset:0;width:100%;height:100%}
-.cface{position:relative;display:block;width:100%;aspect-ratio:3/5;border-radius:4px;overflow:hidden;background-size:cover!important;background-position:center!important;
+.cface{position:relative;display:block;width:100%;aspect-ratio:3/5;border-radius:calc(var(--cw)*.06);overflow:hidden;background-size:cover!important;background-position:center!important;
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
 .cface::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.15) 0 16%,transparent 32%,transparent 68%,rgba(255,255,255,.07) 76%,transparent 84%)}
 .shutter{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:#5d5580;
