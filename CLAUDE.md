@@ -9,5 +9,5 @@
 - BGM（11/8）：コードで鳴らす（音のファイル0）。台ごとに1曲＋ホール・エンディング・ジングル、FEVER とボスで速く派手に。index.html の「BGM ここから」の区切り。試しは dev/sim の bgmcheck.py（音の大きさ）
 - Canva の絵（11/8〜）：絵柄は A ネオン（しょーくんが4案から選んだ）。おばけは Canva で作って SPRITE_SRC（WebP）に入れる。作り方・できた台・注意は dev/canva.md、道具は dev/canva/（neoncut.py・pack.py）。ゆっくり作る（一度に大量に作らない）
 - 動き（11/9〜）：画面の切りかえ・シート・タブ・ボタン・玉のセット・タワーを置く などの アニメーション。transform と opacity だけ・動きを へらす 設定では 出さない。index.html の「動き ここから」と JS の「動き（11/9）」、くわしくは dev/anim.md。ためしは dev/sim/animrec.py（動画）
-- iPhone・iPad（11/9〜）：さいごは iOS アプリに したい。いろいろな 画面の ためしは dev/sim の devsweep.py（11機種）・animstress.py（れんだ・とちゅうで とじる）・canvmem.py（キャンバスの メモリ。iOS は 合計 およそ 224MB が 上限）。直したこと・アプリに する 道すじは dev/ios.md。iPad など 大きい 画面は #app を uiZ 倍に（applyZ。CSS の vw・vh は --vw・--vh を 使う）。枠と ボタン・字の すきまは SPACE=1 devsweep.py と panelshots.py。しょーくんは Mac が ない（アプリは クラウドの Mac で 作る 予定）
+- iPhone・iPad（11/9〜）：さいごは iOS アプリに したい。いろいろな 画面の ためしは dev/sim の devsweep.py（11機種）・animstress.py（れんだ・とちゅうで とじる）・canvmem.py（キャンバスの メモリ。iOS は 合計 およそ 224MB が 上限）。直したこと・アプリに する 道すじは dev/ios.md。iPad など 大きい 画面は #app を uiZ 倍に（applyZ。CSS の vw・vh は --vw・--vh を 使う）。枠と ボタン・字の すきまは SPACE=1 devsweep.py と panelshots.py。アプリは juice0402/ios-kobo の apps/pachioba（GitHub Actions の Mac で 組み立て・Mac は いらない）。アプリの 中だけ APP_PLATFORM='ios'・APP_HAPTIC、ストアの スクショは 自動の ためしの ときだけ #shot=
 - 決まっていない中身を勝手に足さない。迷ったらしょーくんに聞く

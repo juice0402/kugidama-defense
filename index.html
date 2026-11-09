@@ -10377,9 +10377,10 @@ function gameOver(){
 /* ---------- 持ち玉とセット ---------- */
 // セットはいつも5つ。持っている数より多くは入れられない。あいた所は通常弾
 function fitDeck(deck,owned){
-  const use={}, out=[];
-  for(const k of deck){if(out.length>=DECK_N)break;if(k==='normal'||!BALLS[k])continue;if((use[k]||0)<(owned[k]||0)){use[k]=(use[k]||0)+1;out.push(k)}}
-  while(out.length<DECK_N) out.push('normal');
+  // 11/9 穴の 場所は そのまま（前は 開きなおすと 通常弾が うしろへ よって、ならべた 順が かわった）。持っていない 玉の 穴は 通常弾
+  const use={}, ok=k=>k&&k!=='normal'&&BALLS[k]&&(use[k]||0)<(owned[k]||0), out=[];
+  for(let i=0;i<DECK_N;i++){const k=deck[i];if(ok(k)){use[k]=(use[k]||0)+1;out.push(k)}else out.push('normal')}
+  for(const k of deck.slice(DECK_N)){const j=out.indexOf('normal');if(j<0)break;if(ok(k)){use[k]=(use[k]||0)+1;out[j]=k}}   // 古い セーブの 6こ目より うしろ
   return out;
 }
 const inSet=k=>G.deck.filter(x=>x===k).length;

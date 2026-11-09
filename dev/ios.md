@@ -49,19 +49,16 @@
 
 - 横むきの スマホは アプリでは たて固定に する つもり（いまも 動くが 小さい）
 
-## アプリに する 道すじ（まだ 始めていない。しょーくんに 聞いてから）
+## アプリに する しくみ（11/9 しょーくん「公開の しくみは 司令塔の ほうで できてる」）
 
-1. Apple Developer Program（1年 99ドル。日本だと 12,800円 くらい）
-   - 2026/4/28 から App Store に 出す アプリは Xcode 26・iOS 26 SDK で 作る きまり（Xcode は Mac だけ）
-   - しょーくんは Mac が ない（11/9）→ クラウドの Mac で 作る（Codemagic・Capgo Build・GitHub Actions の macOS など）。
-     Codemagic は 個人なら 月 500分 まで ただ（2026/9 の しらべ。使う 前に 料金ページで たしかめる）
-   - 証明書も Mac なしで 作れる（OpenSSL で 申しこみ → Apple の サイト）。できた アプリは TestFlight で しょーくんの iPhone に 入れて ためす
-   - Mac が ないと できない こと：iOS の シミュレーター・Safari の 開発ツール。こまった ときは Mac を 1時間 単位で かりる
-2. index.html を そのまま 入れる 入れもの（Capacitor 8 ＝ いまの 版。Node 22 以上）。ゲームの 中身は ほぼ そのまま
-3. アプリに する ときに やる こと
-   - Google Fonts を ファイルに して いっしょに 入れる（ネットが なくても 同じ 字。いまは ネットの フォント だけ）
-   - セーブ：いまは localStorage。アプリでも のこるが、iPhone の 空きが へると 消される ことが あるので、Capacitor の Preferences にも 書く
-   - 画面：iPhone は たて固定。iPad は「全画面だけ」に するか、たて／よこ 両方
-   - 音：iPhone の 消音スイッチで 音が 止まる（ゲームでは ふつう）。止めない ほうが いいか 決める
-   - アイコン（1024px）・起動画面・プライバシーポリシーの ページ（集める データが なくても いる）・スクショ（iPhone 6.9インチ・iPad 13インチ）
-   - 審査の 4.2（ウェブの 中身を 包んだ だけの アプリは だめ）：ネットなしで 全部 動く ゲームなので 大丈夫 そう。オフラインで 動くのを たしかめてから 出す
+- juice0402/ios-kobo（【ios】の チャットが 作った・公開）：GitHub Actions の Mac（公開リポジトリなので 無料）で 組み立てて TestFlight → 審査。Mac は いらない
+- パチおばは apps/pachioba/（app.json・icon.png・store/ja・pages.json・ART.md）。ゲームは app.json の game.ref の コミットを そのまま 同梱（Google Fonts は prepare.py が ファイルに して 同梱・ネットなしで 動く 点検つき）
+- 11/9 に しょーくんと 決めた こと：アイコンは タイトルの 絵の アーチと おばけ5体（A）・配信は 日本だけ・英語の 名前は PachiOba・ブラウザ版は まだ 工房に ない（サポートの ページは 工房の トップへ）
+- ゲームの 側で やった こと（11/9）
+  - アプリの 中だけ `window.APP_PLATFORM='ios'`・`APP_HAPTIC(kind)`。振動：玉を はめる light・持ち上げ select・タワー着地 medium・買う／アンロック／クリア success・FEVER heavy・ボス出現 warning・ゲームオーバー error
+  - アプリでは ためしモード（ロゴ5回 タップ）は なし（審査 2.3.1 かくれた 機能）
+  - ストアの スクショの 場面：`#shot=hall|set|shop|play|boss:台`（navigator.webdriver の ときだけ。セーブは べつの 名前）。app.json の screenshots の 台本が location.hash を かえる
+  - app.json：safeArea "ignore"（ゲームが env(safe-area-inset-*) で よける）・zoom "game"（iPad は ゲームの applyZ）・iPhone は たて だけ・iPad は 全部の 向き
+  - ふちの 色（上の 島・下の バー）は こい 紺 #07040f（app.json の background も 同じ）
+- まだ 手で やる こと（App Store Connect・初回だけ）：アプリの 作成（主な 言語＝日本語）・価格（無料）・配信の 国（日本だけ）・App の プライバシー（データの 収集なし）・年齢区分・審査の 連絡先・TestFlight の テスター
+  - 年齢区分の 質問：パチンコが テーマ（玉で コインが ふえる）なので「ギャンブルの シミュレーション」の 答えに 注意（本物の お金・景品は ない）
