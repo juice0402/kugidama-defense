@@ -28,7 +28,7 @@
 - 森（11/8）：kinoko・kitsune・hari（まるまり hari_curl）・kuma（なめる kuma_lick・ツボなし kuma_nopot）・taiboku
 - 洋館（11/8）：neko（しっぽ1本 neko_1・天使の輪 neko_rev）・koumori（天井で ねむる koumori_hang）・yoroi（よろいが ずれる yoroi_off）・fukurou（羽をためる fukurou_up）・ookami（遠ぼえ ookami_howl）。あせ・いかりマークと 遠ぼえの音は over で 絵の上に
 - 砂漠（11/8）：mia（もぐっている間は sprKey が null＝コードの絵、もぐりかけの すなの山は over）・tokage（しっぽ切れ tokage_cut・リボン tokage_knot）・rakuda（こぶが しぼむ rakuda_flat）・sasori（ねらう sasori_aim・だらん sasori_stop）・sphinx（すなのたては over）
-  - サソリの だらん（sasori_stop）は 1回目 うでが 細くて はさみが はなれて 見えた（しょーくん「やられたとき 手と ハサミが 分離」。玉で たおすと この絵で 消える）→ 11/9 sasori を 参考に「はさみは 体の よこから のびる 赤い 太い うでの 先に しっかり ついている」で 作りなおし
+  - サソリの だらん（sasori_stop）は 1回目 うでが 細くて はさみが はなれて 見えた（しょーくん「やられたとき 手と ハサミが 分離」。玉で たおすと この絵で 消える）→ 11/9 sasori を 参考に「はさみは 体の よこから のびる 赤い 太い うでの 先に しっかり ついている」で 作りなおし → 2回目（MAHaY4VfKq8）は うでが 長すぎた（しょーくん「サソリの ウデ、めっちゃ 長く なってない？」）→ 3回目（MAHaZPq3ZSQ）「はさみと うでの 大きさ・長さは 参考と 同じ（短く 太い）。はさみは 体の よこで だらんと たれて、先は すその 少し上（はみ出さない）」
   - らくだは 1回目 こぶが 耳に見えたので「頭のうしろに 大きな ふたこぶ・らくだらしい顔」で 作りなおし。しぼんだ こぶも 1回目は 羊の角に見えたので「風船のように 平たく しぼむ・まるまらない」
 - 雪山（11/8）：okojo（雪に まぎれる白い おおいと 見つかった輪は over。P.spr＝いまの絵と 場所）・penguin・tonakai（氷のよろい → ひび tonakai_crack → われた tonakai_bare）・seiuchi（ねそべる seiuchi_lie。絵のときは pose で つぶさない）・mammoth（鼻を ふり上げる mammoth_up、鼻の先の 雪玉は over で 絵の中の 鼻の先に）
   - mammoth_up は 1回目 鼻の 付け根が 口の上を とおって 口に 白い すじ（しょーくん「口に 謎の白」）→ 11/9 mammoth を 参考に「鼻の 付け根は 目と目の あいだ（口より 上）・口は 鼻の すぐ下に はっきり 見える」で 作りなおし（雪玉の 場所も 新しい 鼻の 先 .51,.045 に）
