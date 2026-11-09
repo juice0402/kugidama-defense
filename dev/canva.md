@@ -33,6 +33,7 @@
 - 雪山（11/8）：okojo（雪に まぎれる白い おおいと 見つかった輪は over。P.spr＝いまの絵と 場所）・penguin・tonakai（氷のよろい → ひび tonakai_crack → われた tonakai_bare）・seiuchi（ねそべる seiuchi_lie。絵のときは pose で つぶさない）・mammoth（鼻を ふり上げる mammoth_up、鼻の先の 雪玉は over で 絵の中の 鼻の先に）
   - mammoth_up は 1回目 鼻の 付け根が 口の上を とおって 口に 白い すじ（しょーくん「口に 謎の白」）→ 11/9 mammoth を 参考に「鼻の 付け根は 目と目の あいだ（口より 上）・口は 鼻の すぐ下に はっきり 見える」で 作りなおし（雪玉の 場所も 新しい 鼻の 先 .51,.045 に）
 - 火山（11/8）：buta（タオル buta_soak。ゆげ・ひやっの しずくは over）・hinotori（黒こげ hinotori_burnt）・sai（角のよろい → ひび sai_crack → われた sai_bare）・inoshishi（はないきは over）・dragon（火を はく口 dragon_fire。むねの光と 口の光は over）
+  - dragon は 1回目 お腹の クリーム色の 板が すそで 切れて、火を はく 絵では 大きな 口が 板に くっついていた（しょーくん「お腹も 下 見切れてるし、口 被ってる」）→ 11/9 dragon を 参考に「お腹の 板は 小さく 上も 下も まるい たまご形・口から はなれて すきま・すそより 上」（MAHaZNPQ1lc）、その 絵を 参考に dragon_fire（MAHaZEVYDGM）。口の 光・むねの 光・はなの けむりの 場所も 絵の 口（-.07,-.7）と お腹（-.09,-.17）に 合わせ、火の ほのおは 絵の ときは 体の すその 下から（お腹に かさねない・とどく 先は 同じ）
 - 魔王城（11/8）：karasu（ぬすんだ宝石は over で くちばしに）・hebi（ぬけがらは コードの絵、ばんそうこう・ぴかぴかは over）・kaeru（石 kaeru_stone）・yagi（となえる yagi_chant、足もとの まほうじんは under）・kujaku（羽を広げる kujaku_fan。広げた絵は 体が 下に ずれていたので sprites.json の place で [0,-40,1.05] ずらして 体を そろえた）
 - 宇宙（11/8）：kurage（からまって リボン kurage_knot）・iruka（足もとの 流れ星は under）・kame（星のバリアは over で コードの top を そのまま）・tako（ほっぺ ぷくー tako_puff）・kujira（口を あける kujira_open、しおふきは over で 絵の 頭の上から）。しょくしゅや しっぽが 下に のびる おばけは by を 大きく（クラゲ 1.45・タコ 1.4）して 体の まん中を 合わせる
 - 天国（11/8）：hitsuji（のっている 雲は under）・hato（羽が ちる hato_walk）・unicorn（角が くもる unicorn_fog、光る角は over）・panda（おいのり panda_pray）・ousama（口を あける ousama_open。まおうの おうぎは under、すなのたて・ふきだしは over）。光のたて（drawLShield）は 天国の 5体 みんな over で
