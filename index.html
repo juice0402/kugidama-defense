@@ -158,7 +158,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .item>div{min-width:0}
 .item .t{font-weight:800} .item .d{font-size:12px;color:var(--dim);line-height:1.45}
 .item.locked{opacity:.55}
-.trow{grid-template-columns:44px 1fr auto;padding:7px 10px 8px 6px}
+.trow{grid-template-columns:44px 1fr auto;padding:11px 12px 15px 9px}   /* タグと 枠の 下の ふちの 間を あける（11/9） */
 .tico{width:44px;height:44px}
 .tinfo{display:flex;flex-direction:column;gap:10px}
 .gauges{display:flex;flex-direction:column;gap:6px}
@@ -1971,6 +1971,7 @@ const XP_NEED=[0,12,36,80];                  // Lv2・Lv3・Lv4（最大）に�
 const BOSS_RES=.3;                            // 中ボス・ボスの状態異常の耐性（やけど・どく・おそい・しびれ・止まるが3割早くとけ、おそさも3割弱い）
 const BOSS_HOLD={max:2.5, guard:3, back:.5}; // 中ボス・ボスの止まりにくさ：止まっている時間（しびれ・ねむり・こおり・根っこ…）が max 秒たまると「がまん」→ guard 秒は止める効き目を受けつけない。動いている間は1秒に back 秒ずつへる
 const DECK_N=5;                               // セットは5つ固定。あいた所は通常弾
+const BALL_MAX=DECK_N;                        // 1しゅるいの 玉は 5こまで 持てる（セットの 穴が 5つなので。11/9 しょーくん）
 const START_DECK=['normal','normal','normal','fire','ice'], START_OWNED={fire:1,ice:1};
 // ためしモード（しょーくんの見直し用・11/6）：タイトルのロゴを5回タップで ON/OFF（この端末に覚える）。
 // セーブは本番と別のキー。全部の台が開く・はじめのコイン5000・ロビーでコインを足せる・台の中でウェーブとばし
@@ -10542,7 +10543,7 @@ function tabBall(body){
   const g=el('div','list');
   for(const k of SHOP_BALLS){
     const B=BALLS[k], n=G.owned[k]||0; if(!avail(B)) continue;
-    g.append(card({row:true,icon:['ball',k],color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,price:B.price,key:'ball:'+k,tap:()=>openBuy('ball',k)}));
+    g.append(card({row:true,icon:['ball',k],color:B.color,name:B.name,desc:B.desc,cnt:n?'×'+n:null,own:n>=BALL_MAX?'MAX':null,price:B.price,key:'ball:'+k,tap:()=>openBuy('ball',k)}));
   }
   body.append(g);
 }
@@ -10770,16 +10771,18 @@ document.addEventListener('touchmove',e=>{if(ammoDrag&&ammoDrag.lifted)e.prevent
 let buyFn=null;
 function openBuy(kind,k){
   const D=kind==='ball'?BALLS[k]:kind==='tower'?TOWERS[k]:GIMMICKS[k];
+  const full=kind==='ball'&&(G.owned[k]||0)>=BALL_MAX;   // 玉は 5こまで
   const own=kind==='tower'?G.unlocked[k]:kind==='gimmick'?G.gimmicks[k]:false, price=kind==='ball'?D.price:D.unlock;
   paint($('buyIn'),D.color);
   $('buyIco').src=icon(kind,k); $('buyKind').textContent={ball:'BALL',tower:'TOWER',gimmick:'GIMMICK'}[kind]; $('buyName').textContent=D.name;
   $('buyDesc').textContent=D.desc;
-  $('buyNote').innerHTML=kind==='ball'?`持ち玉 ${G.owned[k]||0}こ・セットに入っているのは ${inSet(k)}こ`:
+  $('buyNote').innerHTML=kind==='ball'?`持ち玉 ${G.owned[k]||0}こ・セットに入っているのは ${inSet(k)}こ`+(full?`<br>セットの 穴は ${DECK_N}つなので、${BALL_MAX}こまで 持てるよ`:''):
     kind==='tower'?`台で建てるのは ${COIN}${D.cost}・とどく広さ ${D.range}`:`砲台につけるのは ${COIN}${D.cost}・1つの砲台に1つ`;
   const y=$('buyYes'); y.className='nbtn gold';
   if(own){y.disabled=true;y.textContent=k==='basic'?'さいしょから持ってる':'持ってる';buyFn=null}
+  else if(full){y.disabled=true;y.textContent=`もう ${BALL_MAX}こ 持ってる`;buyFn=null}
   else{y.disabled=G.balls<price;y.innerHTML=G.balls<price?'コインがたりない':`${COIN}${price.toLocaleString()} で買う`;buyFn=()=>buy(kind,k,price)}
-  sheetShow($('buy')); (own?$('buyNo'):y).focus();
+  sheetShow($('buy')); (own||full?$('buyNo'):y).focus();
 }
 // まだできていない台：値段と「アンロックしますか？」を出す（中身ができるまでボタンは押せない）
 // 台をアンロックするシート：まだできていない台（soon）はボタンを押せない。前の台をクリアした台は、コインで買える
@@ -10845,6 +10848,7 @@ function openReset(){
 }
 function buy(kind,k,price){
   if(G.balls<price) return;
+  if(kind==='ball'&&(G.owned[k]||0)>=BALL_MAX) return;
   G.balls-=price; closeBuy(); setCoins(true);
   let msg;
   if(kind==='ball'){
@@ -10895,6 +10899,7 @@ const tagEsc=t=>String(t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/
 function towerTags(k,T){
   const D=TOWERS[k], o=[];
   if(D.el) o.push([ELEM[D.el].tag,ELEM[D.el].color,null,`この砲台の弾に「${ELEM[D.el].name}」がつく。${elDesc(D.el)}。同じ属性の玉で とくしゅ効果が出るよ`]);
+  else if(!(T&&T.elT>0&&T.el)) o.push(['無属','#c3cbd8',null,'属性の ない 砲台（無属性）。属性の玉が 当たると、しばらく その属性が つくよ']);   // 属性の ない 砲台にも タグ（行の 高さが そろう。11/9 しょーくん）
   if(D.aoe) o.push(['範囲',D.color,null,'まわりの敵に まとめて当たる']);
   if(D.tag) o.push([D.tag,D.color,null,D.desc]);
   if(T){
