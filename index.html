@@ -124,13 +124,19 @@ img{-webkit-user-drag:none}   /* iPad：長おしで 絵が ドラッグで 持�
 .tglow{position:absolute;left:50%;top:7%;width:min(118*var(--vw),64*var(--vh));height:30%;transform:translateX(-50%);pointer-events:none;
   background:radial-gradient(closest-side,rgba(255,120,220,.34),rgba(120,200,255,.14) 55%,transparent);opacity:.55;animation:tglow 3.2s ease-in-out infinite;will-change:opacity}
 @keyframes tglow{50%{opacity:1}}
-.logo{position:absolute;left:0;right:0;top:12.5%;margin:0;display:flex;justify-content:center;gap:.02em;line-height:1;white-space:nowrap;cursor:default;
+/* ロゴは 2まいの 層（11/10 しょーくん「おばの オーラで パチが かくれてる」iPhone の Safari）：
+   下の 層 .lb＝こい ふちどり・あつみ・まわりの 光（2つの ことばの ぶん まとめて うしろ）、上の 層 .lt＝白い ふち と グラデーションの 文字。
+   前は ことばごとに ぜんぶ 重ねて いたので、あとの「おば」の ふちと 光が「パチ」の 上に かぶっていた */
+.logo{position:absolute;left:0;right:0;top:12.5%;margin:0;line-height:1;white-space:nowrap;cursor:default;
   font:800 min(20*var(--vw),11*var(--vh))/1 var(--f-body);letter-spacing:-.02em}
-.logo span{position:relative;display:inline-block;padding:.06em .03em .12em;color:var(--lo);-webkit-text-stroke:.19em var(--lo);
-  text-shadow:0 .07em 0 var(--lo),0 .11em 0 var(--lo),0 0 .34em var(--lg),0 0 .8em var(--lg)}
-.logo span::before,.logo span::after{content:attr(data-t);position:absolute;inset:0;padding:inherit;text-shadow:none}
-.logo span::before{color:#fff;-webkit-text-stroke:.085em #fff}
-.logo span::after{color:transparent;-webkit-text-stroke:0;-webkit-background-clip:text;background-clip:text;background-image:var(--lf)}
+.logo .lb,.logo .lt{display:flex;justify-content:center;gap:.04em}
+.logo .lt{position:absolute;inset:0}
+.logo span span{position:relative;display:inline-block;padding:.06em .03em .12em}
+.logo .lb span{color:var(--lo);-webkit-text-stroke:.19em var(--lo);text-shadow:0 .07em 0 var(--lo),0 .11em 0 var(--lo),0 0 .34em var(--lg),0 0 .8em var(--lg)}
+.logo .lt span{color:transparent}
+.logo .lt span::before,.logo .lt span::after{content:attr(data-t);position:absolute;inset:0;padding:inherit}
+.logo .lt span::before{color:#fff;-webkit-text-stroke:.085em #fff}
+.logo .lt span::after{color:transparent;-webkit-text-stroke:0;-webkit-background-clip:text;background-clip:text;background-image:var(--lf)}
 .logo .a{--lo:#3a0a3c;--lg:rgba(255,79,216,.75);transform:rotate(-4deg) translateY(.03em);--lf:linear-gradient(180deg,#fffbe8 20%,#ffe27a 50%,#ffab2e 84%)}
 .logo .b{--lo:#072a40;--lg:rgba(62,242,255,.7);transform:rotate(3deg) translateY(-.02em);--lf:linear-gradient(180deg,#f2fff6 20%,#8ff5c0 50%,#2fd6ff 86%)}
 #title .ttest{position:absolute;left:0;right:0;top:calc(12.5% + min(20*var(--vw),11*var(--vh)) + 24px);margin:0}
@@ -292,7 +298,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .topper .stamp{top:-9px;right:-7px;font-size:calc(var(--cw)*.062);padding:2px 7px 1px}
 .cframe{position:relative;display:block;margin-top:3px;padding:calc(var(--cw)*.055);border-radius:calc(var(--cw)*.099);--k:calc(var(--cw)*.0022);
   box-shadow:0 0 18px var(--ng)}
-.cface>canvas.face{position:absolute;inset:0;width:100%;height:100%}
+.cface>.face{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .cface{position:relative;display:block;width:100%;aspect-ratio:3/5;border-radius:calc(var(--cw)*.06);overflow:hidden;background-size:cover!important;background-position:center!important;
   box-shadow:inset 0 0 0 1px rgba(0,0,0,.6)}
 .cface::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.15) 0 16%,transparent 32%,transparent 68%,rgba(255,255,255,.07) 76%,transparent 84%)}
@@ -673,7 +679,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
   <div class="overlay" id="title">
     <div class="tart" aria-hidden="true"></div>
     <div class="tglow" aria-hidden="true"></div>
-    <h1 class="logo" aria-label="パチおば"><span class="a" data-t="パチ" aria-hidden="true">パチ</span><span class="b" data-t="おば" aria-hidden="true">おば</span></h1>
+    <h1 class="logo" aria-label="パチおば"><span class="lb" aria-hidden="true"><span class="a">パチ</span><span class="b">おば</span></span><span class="lt" aria-hidden="true"><span class="a" data-t="パチ">パチ</span><span class="b" data-t="おば">おば</span></span></h1>
     <p class="test-tag ttest" id="titleTest" hidden>ためしモード</p>
     <div class="tstart"><button class="btn primary" id="startBtn">スタート</button></div>
   </div>
@@ -881,7 +887,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        シートは 出て 0.35秒は タップが きかない（2回 タップで すぐ とじる・買って しまう のを ふせぐ。sheetShow の _at）。2本ゆびの 拡大・2回 タップの 拡大は しない（gesturestart・touch-action）
        iPad など 大きい 画面（11/9）：applyZ が #app を uiZ 倍に（transform:scale。CSS の zoom は Safari で 指の 位置が ずれるので 使わない）。中の 広さは 画面÷uiZ、
        台の 細かさ dpr は ×uiZ、台を タップした 位置は ÷uiZ、CSS の vw・vh の かわりに --vw・--vh。中の はば 900 以上は #app.wide（一覧 2れつ）
-   ・ロビーとシートを軽く（11/7）：一覧のアイコンは ICO()＋fillIco(root)（キャンバスに写す。data URL の画像を作らない・読みこまない）／ホールの台の顔は faceCv（キャンバスのまま置く）／
+   ・ロビーとシートを軽く（11/7）：一覧のアイコンは ICO()＋fillIco(root)（キャンバスに写す。data URL の画像を作らない・読みこまない）／ホールの台の顔は faceCv で 描いて faceEncode で JPEG の 絵に（11/10 iPhone の Safari で キャンバスの まま だと 出なかった。faceImg の <img>）／
        warmIcons がひまな時間にアイコンと台の顔を先に作る／一時停止中（シート・もどる）は台を描かない（G.frozenN）／CSS で box-shadow や filter を動かさない（光の層の opacity だけ動かす。スタートの光・ホールのわく・走る電球）／タイトルのうしろの台は描いたら止める（G.titleN）。重さは dev/sim の uiperf.py（CPU 6倍おそく）
    ・ハンドルと タイトルの 絵（11/8 Canva）：CSS の HANDLE_ART（#app[data-board] ごとの 板 --h-plate・つまみ --h-knob と 大きさ）と TITLE_ART（--t-art）。
        中身は dev/canva/hfit.py・titlefit.py が 書く。ハンドルは setStrength が つまみ（#dialKnob）の rotate と 強さの輪（#ring の --p）を かえるだけ。タイトルは 絵の上に コードの 文字（.logo）と スタート
@@ -4371,6 +4377,11 @@ function sprite(key,w,h,ax,ay,paint,res){
   return o;
 }
 const blit=(o,x,y)=>ctx.drawImage(o.c,x-o.ax,y-o.ay,o.w,o.h);
+// キャンバスの 一部を うつす：切りぬく 四角が 元の キャンバスから はみ出したら 内がわだけに（古い Safari は はみ出すと 何も 描かない。11/10）
+function blitIn(g,src,sx,sy,sw,sh,dx,dy,dw,dh){
+  const x0=Math.max(0,sx),y0=Math.max(0,sy),x1=Math.min(src.width,sx+sw),y1=Math.min(src.height,sy+sh); if(x1<=x0||y1<=y0) return;
+  const kx=dw/sw,ky=dh/sh; g.drawImage(src,x0,y0,x1-x0,y1-y0,dx+(x0-sx)*kx,dy+(y0-sy)*ky,(x1-x0)*kx,(y1-y0)*ky);
+}
 // UI の 絵（11/8 Canva）：CSS の 変数 --i-〇〇（UI_ART。dev/canva/uifit.py が 書く）を 台の キャンバスでも 使う（受け皿の ハート）。よめるまでは null
 const uiIm={}, uiUrl={};
 // CSS の 変数の 絵の URL：<style> の 文字から じかに よむ（11/9：iPhone・iPad の Safari は getComputedStyle で とれず、もどるの 絵・見出しの リボンなどが 出なかった）。なければ getComputedStyle
@@ -10470,7 +10481,7 @@ function warmIcons(){
     while(q.length&&(one||d.timeRemaining()>(q[0][0]==='face'?10:3))){
       one=false;
       if(!ok(q[0])){setTimeout(()=>idle(step,{timeout:2000}),1500);return}
-      const [kind,k]=q.shift(); kind==='face'?faceCv(k):iconCv(kind,k);
+      const [kind,k]=q.shift(); kind==='face'?faceEncode(k):iconCv(kind,k);
     }
     if(q.length) idle(step,{timeout:2000});
   };
@@ -10508,18 +10519,20 @@ function setStrip(){
   return d;
 }
 // 台の顔（台を描いた静止画をまるごと切りぬく）。台ごとに1回だけ作る
-// ホールには キャンバスのまま置く（JPEG にすると1枚30ms・読みこみもかかる。11/7 軽く）。1枚だけのシートは boardFace() の URL
-const faceCache=new Map(), faceUrl=new Map();
+// 11/10：ホールには 絵（JPEG の blob の URL を <img>）で 置く。iPhone の Safari で キャンバスの まま 置くと 台えらびの 台が 出なかった
+//   （はなれた ところで 描いて あとから 入れる・大きさが % で かわる・スクロールの 中で filter と transform が かかる キャンバスは iOS で 出ない ことが ある）。
+//   絵に する（toBlob）のは 1まい 1回だけ・1コマに 1まい・タイトルの ひまな 時間にも 先に 作る（warmIcons）。絵に したら キャンバスは すてる（iOS の キャンバスの メモリ）
+const faceCache=new Map(), faceUrl=new Map(), faceBusy=new Set();
 function faceCv(stage){
   if(faceCache.has(stage)) return faceCache.get(stage);
   const c=document.createElement('canvas'); c.width=432; c.height=720; c.className='face';
   const miss=faceDraw(stage,c); if(miss===null) return null;
   if(!miss) faceCache.set(stage,c);
-  else{   // Canva の絵が まだ よめていない：よめたら 同じキャンバスに 描きなおす（ホールに もう置いてあっても 絵が かわる）。台に 座っている間は まつ
+  else{   // Canva の絵が まだ よめていない：よめたら 描きなおして 絵に する（ホールに もう置いてあっても 絵が かわる）。台に 座っている間は まつ
     const retry=n=>setTimeout(()=>{
-      if(faceCache.has(stage)||n>40) return;
+      if(faceCache.has(stage)||faceUrl.has(stage)||n>40) return;
       if(!((G.state==='title'||G.state==='hub')&&!$('hub').classList.contains('sitting'))) return retry(n+1);
-      if(faceDraw(stage,c)===false) faceCache.set(stage,c); else retry(n+1);
+      if(faceDraw(stage,c)===false){faceCache.set(stage,c);faceEncode(stage)} else retry(n+1);
     },150);
     retry(0);
   }
@@ -10530,17 +10543,35 @@ function faceDraw(stage,c){
   let miss=false; const keep=G.stage;
   try{
     G.stage=stage; setupStage();
-    const k=scale*dpr; c.getContext('2d').drawImage(staticCv,ox*dpr,oy*dpr,W*k,H*k,0,0,c.width,c.height);
+    const k=scale*dpr; blitIn(c.getContext('2d'),staticCv,ox*dpr,oy*dpr,W*k,H*k,0,0,c.width,c.height);
     miss=artMiss;
   }catch(_){miss=null}
   G.stage=keep; setupStage();
   return miss;
 }
+// 台の顔の 絵（URL）を 作る。できたら ホールに 置いてある <img> にも 入れる
+function faceEncode(stage){
+  if(faceUrl.has(stage)||faceBusy.has(stage)) return;
+  const c=faceCv(stage); if(!c||!faceCache.has(stage)) return;   // こわれた・Canva の 絵が まだ（よめたら faceCv が また よぶ）
+  faceBusy.add(stage);
+  const done=url=>{
+    faceBusy.delete(stage); if(!url) return;
+    faceUrl.set(stage,url); faceCache.delete(stage); c.width=c.height=0;
+    for(const im of document.querySelectorAll('img.face')) if(+im.dataset.stage===stage) im.src=url;
+  };
+  try{ if(c.toBlob) c.toBlob(b=>done(b?URL.createObjectURL(b):c.toDataURL('image/jpeg',.85)),'image/jpeg',.86); else done(c.toDataURL('image/jpeg',.85)) }
+  catch(_){faceBusy.delete(stage)}
+}
+function faceImg(stage){
+  const im=new Image(); im.className='face'; im.alt=''; im.decoding='async'; im.draggable=false; im.dataset.stage=stage;
+  if(faceUrl.has(stage)) im.src=faceUrl.get(stage); else faceEncode(stage);
+  return im;
+}
 function boardFace(B){
   if(boardState(B)==='soon') return null;
   if(faceUrl.has(B.stage)) return faceUrl.get(B.stage);
   const c=faceCv(B.stage); if(!c) return null;
-  const url=c.toDataURL('image/jpeg',.85); if(faceCache.has(B.stage)) faceUrl.set(B.stage,url); return url;
+  const url=c.toDataURL('image/jpeg',.85); faceEncode(B.stage); return url;   // 1まいだけの シート：すぐ ほしいので その場で（つぎからは faceUrl）
 }
 // 台のタブ：パチンコ屋さんのホールのように、台が目の前にならぶ。左右にスワイプで台をかえて、まん中の台をタップで座る
 let hallIdx=0, hallRO=null;
@@ -10566,9 +10597,9 @@ function tabBoard(body){
   });
   wrap.append(aisle); body.append(wrap);
   // 台の顔：まん中の台はすぐ、ほかは1フレームに1枚ずつ（ロビーを出たら やめる）
-  const putFace=i=>{const B=BOARDS[i];if(boardState(B)==='soon')return;const c=faceCv(B.stage),f=slots[i].querySelector('.cface');if(c&&f&&!f.querySelector('canvas.face'))f.prepend(c)};
+  const putFace=i=>{const B=BOARDS[i];if(boardState(B)==='soon')return;const f=slots[i].querySelector('.cface');if(f&&!f.querySelector('.face'))f.prepend(faceImg(B.stage))};
   const order=BOARDS.map((_,i)=>i).sort((a,b)=>Math.abs(a-hallIdx)-Math.abs(b-hallIdx));
-  const fq=order.filter(i=>{const B=BOARDS[i];if(boardState(B)==='soon')return false;if(faceCache.has(B.stage)||i===hallIdx){putFace(i);return false}return true});
+  const fq=order.filter(i=>{const B=BOARDS[i];if(boardState(B)==='soon')return false;if(faceUrl.has(B.stage)||i===hallIdx){putFace(i);return false}return true});
   const faceStep=()=>{if(!fq.length||G.state!=='hub'||!aisle.isConnected||$('hub').classList.contains('sitting'))return;putFace(fq.shift());requestAnimationFrame(faceStep)};
   requestAnimationFrame(faceStep);
   const center=i=>slots[i].offsetLeft+slots[i].offsetWidth/2-aisle.clientWidth/2;
