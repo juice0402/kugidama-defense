@@ -2,3 +2,6 @@ game.html
 *.png
 game_*.html
 bgm.html
+_video/
+*.webm
+animshots/
