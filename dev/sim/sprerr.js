@@ -1,0 +1,64 @@
+(()=>{   // Canvaの絵の おばけだけ：その台の おばけ × いろいろな状態で update と draw を すこし動かして、エラーがないか見る（drawcheck.js の かるい版。先に mk.py）
+const T=window.__T,G=T.G,errs=[];let n=0;
+const states=[{},{stun:1},{sleep:1},{freeze:1,stun:1},{ghost:1},{hurtT:.3,flash:.1},{psnT:3,psnD:1},{wet:3},{burn:2,burnD:1},{fear:2},{rush:2},{dying:true},
+  {hatGone:true},{leaf:false},{curl:2},{lick:1},{potGone:1},{lives:0},{lives:0,revived:true},{bp:'hang',bt:9},{armorOff:3},{wind:2},{flap:.4},{howl:2},
+  {mp:'dig',mt:.3},{mp:'under',mt:1},{tail:false},{knot:true},{hump:0},{drink:1},{aim:1},{clawStop:1},{shield:2},{crack:1},
+  {found:1},{found:0},{armor:0},{crk:2},{melt:1},{lie:2},{sb:1},{sb:1,aim:.5},{sb:.6,toss:.3},{pp:'slide',pt:1},{pp:'fall',pt:.5},
+  {soak:.5},{cool:2},{fly:.5},{burnt:true},{horn:0},{hcrk:2},{aim:.5,rush:0},{rush:1},{fall:.3},{inh:.5},{breath:1},
+  {grab:.5},{loot:{c:'#ff5fd2'}},{shell:true,life:1},{noShed:true},{fresh:.5},{stone:1},{chant:1},{fanUp:.5},{fan:1},
+  {knot:2},{rp:'ride',rt:1},{rp:'jump',rt:.2},{bar:true},{form:.3},{puff:.5},{op:.5},{gulp:1},
+  {clear:2},{hz:'hide'},{walk:2},{hz:'fly'},{ug:.5},{fog:2},{pray:1},{ki:0,kAct:1},{ki:2,kAct:1},{ki:3,kAct:1,ting:.3},{ki:4,kAct:1},{ki:5,kAct:1},{ki:6,kAct:1},{ki:7,kAct:1},{ki:1,kAim:.5},{shield:2,lsh:2}];
+for(let s=0;s<T.STAGES.length;s++){
+  try{T.playBoard(T.BOARDS.findIndex(b=>b.stage===s));G.paused=true}catch(x){errs.push('play'+s+':'+x.message);continue}
+  for(const t of T.STAGES[s].foes){
+    for(const st of states){
+      try{G.en=[];const e=T.addEnemy(t,188,260);Object.assign(e,st);T.draw();for(let i=0;i<5;i++){T.update(1/60);G.time+=1/60}T.draw();n++}catch(x){errs.push(s+'/'+t+'/'+JSON.stringify(st)+':'+x.message)}
+    }
+  }
+}
+// タワー 22種 × ギミック 10種（Canva の 絵・11/8 4.）：12本の 杭に ならべて、ふつうの 状態と 動いている 状態（撃った・ためる・宿った・はじいた など）で 数コマ 描く。お店の アイコンも
+try{T.playBoard(0);G.paused=true;G.en=[];G.bs=[]}catch(x){errs.push('tw play:'+x.message)}
+const tks=Object.keys(T.TOWERS), gks=[null,...Object.keys(T.GIMMICKS)], combos=[];
+for(const tk of tks) for(const gk of gks) combos.push([tk,gk]);
+const busy={shot:.08,chg:.3,chgMax:.55,el:'fire',elT:5,bump:.2,door:.2,jump:.2,whirl:.2,gulp:.2,boom:.3,flow:1,split:.2,spinK:.2,hfl:.2,pull:.1,near:.2,bless:9};
+for(let i=0;i<combos.length;i+=G.pegs.length){
+  for(const st of [{},busy]){
+    try{
+      G.pegs.forEach((p,j)=>{const c=combos[i+j];p.tower=c?Object.assign(T.newTower(c[0],p),{gm:c[1],pop:0,ang:j*.8,lv:1+j%4},st):null;if(p.tower&&st.spinK)p.tower.orbT=G.time});
+      T.draw();for(let f=0;f<3;f++){T.update(1/60);G.time+=1/60}T.draw();n++;
+    }catch(x){errs.push('tw '+combos.slice(i,i+12).map(c=>c.join('+')).join(',')+':'+x.message)}
+  }
+}
+for(const p of G.pegs) p.tower=null;
+try{for(const k of tks)T.icon('tower',k);for(const k of gks.slice(1))T.icon('gimmick',k);n++}catch(x){errs.push('icon:'+x.message)}
+// 玉 24種（Canva の 絵・11/8 5.）：台に ならべて、ふつう・金色・宿った・分身 で 数コマ 描く（まわる 玉・ボムの 火花も）。FEVER も。お店の アイコンも
+try{T.playBoard(0);G.paused=true;G.en=[];G.bs=[]}catch(x){errs.push('ball play:'+x.message)}
+const bks=Object.keys(T.BALLS);
+for(const st of [{},{gold:2},{inf:{el:'fire'}},{clone:true},{fev:1}]){
+  try{
+    G.fever=st.fev?8:0;
+    G.bs=bks.map((k,i)=>Object.assign({x:40+(i%6)*55,y:100+Math.floor(i/6)*60,vx:.5,vy:-.5,t:k,r:T.BALLS[k].r*G.bscale,age:st.clone?25:1,still:0,hit:{},gone:false,rail:false,s:0,e0:0},st));
+    T.draw();for(let f=0;f<4;f++){G.time+=1/60;T.draw()}n++;
+  }catch(x){errs.push('ball '+JSON.stringify(st)+':'+x.message)}
+}
+G.bs=[];G.fever=0;
+try{for(const k of bks)T.icon('ball',k);n++}catch(x){errs.push('ball icon:'+x.message)}
+// 演出（11/8 7.）：9台で 見出し（台の名前・WAVE・FEVER・ボス・中ボス）を いろいろな 時間で、FEVER の のこり・台の上の 文字・ボスを たおした 光・クリア／ゲームオーバーの 画面・エンディング
+for(let s=0;s<T.STAGES.length;s++){
+  try{
+    T.playBoard(T.BOARDS.findIndex(b=>b.stage===s));G.paused=true;G.en=[];
+    const F=T.STAGES[s].foes;
+    G.banners=[];T.startWave(3);T.spawn(F[4]);T.spawn(F[3]);T.heso(G.heso);
+    G.banners.push({text:T.STAGES[s].name+'の台',color:T.STAGES[s].accent,t:0,dur:2.2,y:200});
+    for(const u of [0,.05,.15,.3,.6,1.2,1.5,1.9,2.15]){for(const b of G.banners)b.t=Math.min(u,b.dur-.01);G.fever=8-u;T.draw();n++}
+    G.texts=[];for(const [x,c,b] of [['+5','#ffd84a',0],['WAVE クリア +15','#ffd84a',1],['ライフ +2','#7dffb0',1],['Lv3!','#ffd84a',1],['コイン +40','#ffd84a',1]])G.texts.push({x:188,y:300,s:x,c,big:!!b,t:.8});
+    const e=T.addEnemy(F[4],188,260);T.hurtEnemy(e,1e9);for(let f=0;f<20;f++){T.updateFx(1/60);G.time+=1/60;T.draw()}n++;
+    G.fever=0;G.banners=[];G.texts=[];G.poofs=[];
+    T.stageClear();T.draw();n++;
+    T.playBoard(T.BOARDS.findIndex(b=>b.stage===s));G.life=0;G.paused=false;T.update(1/60);n++;
+  }catch(x){errs.push('fx'+s+':'+x.message)}
+}
+try{T.showEnding(()=>{});for(let f=0;f<90;f++){G.time+=1/30;T.draw()}T.closeEnding();n++}catch(x){errs.push('ending:'+x.message)}
+try{T.openHub('board');G.balls=99999;T.buyBoard(1);T.openHub('set');T.openHub('zukan');n++}catch(x){errs.push('hub:'+x.message)}
+return n+' ok / errors '+errs.length+' '+errs.slice(0,6).join(' | ');
+})()

@@ -1,0 +1,459 @@
+{
+ "meadow_frame": {
+  "kind": "frame",
+  "src": "frame/grass_frame_full.png"
+ },
+ "meadow_bg": {
+  "kind": "bg",
+  "src": "bg/grass_full.png"
+ },
+ "forest_frame": {
+  "kind": "frame",
+  "src": "frame/forest_frame_full.png",
+  "q": 70
+ },
+ "forest_bg": {
+  "kind": "bg",
+  "src": "bg/forest_full.png"
+ },
+ "mansion_frame": {
+  "kind": "frame",
+  "src": "frame/mansion_frame_full.png"
+ },
+ "mansion_bg": {
+  "kind": "bg",
+  "src": "bg/mansion_full.png"
+ },
+ "desert_frame": {
+  "kind": "frame",
+  "src": "frame/desert_frame_full.png",
+  "q": 70
+ },
+ "desert_bg": {
+  "kind": "bg",
+  "src": "bg/desert_full.png",
+  "ridge": {
+   "y": [
+    405,
+    460
+   ],
+   "w": [
+    1,
+    1,
+    -0.6
+   ]
+  }
+ },
+ "snow_frame": {
+  "kind": "frame",
+  "src": "frame/snow_frame_full.png",
+  "basek": 0.4
+ },
+ "snow_bg": {
+  "kind": "bg",
+  "src": "bg/snow_full.png"
+ },
+ "volcano_frame": {
+  "kind": "frame",
+  "src": "frame/volcano_frame_full.png",
+  "basek": 0.45
+ },
+ "volcano_bg": {
+  "kind": "bg",
+  "src": "bg/volcano_full.png",
+  "ridge": {
+   "line": [
+    [
+     10,
+     412
+    ],
+    [
+     350,
+     412
+    ]
+   ]
+  }
+ },
+ "castle_frame": {
+  "kind": "frame",
+  "src": "frame/castle_frame_full.png"
+ },
+ "castle_bg": {
+  "kind": "bg",
+  "src": "bg/castle_full.png",
+  "ridge": {
+   "y": [
+    395,
+    445
+   ],
+   "w": [
+    1,
+    -1,
+    1
+   ]
+  }
+ },
+ "space_frame": {
+  "kind": "frame",
+  "src": "frame/space_frame_full.png"
+ },
+ "space_bg": {
+  "kind": "bg",
+  "src": "bg/space_full.png",
+  "ridge": {
+   "y": [
+    412,
+    455
+   ],
+   "w": [
+    -0.5,
+    1,
+    1
+   ]
+  }
+ },
+ "heaven_frame": {
+  "kind": "frame",
+  "src": "frame/heaven_frame_full.png"
+ },
+ "heaven_bg": {
+  "kind": "bg",
+  "src": "bg/heaven_full.png",
+  "ridge": {
+   "y": [
+    478,
+    512
+   ],
+   "w": [
+    1,
+    0.6,
+    -0.4
+   ]
+  }
+ },
+ "desert_pyr": {
+  "kind": "obj",
+  "src": "objs/src/pyramid.png",
+  "pts": [
+   [
+    598.7,
+    141,
+    188,
+    82
+   ],
+   [
+    -56.1,
+    1064,
+    -25.4,
+    470
+   ],
+   [
+    1255.0,
+    1064,
+    401.4,
+    470
+   ]
+  ],
+  "box": [
+   10,
+   70,
+   350,
+   478
+  ],
+  "q": 2.2,
+  "poly": [
+   [
+    188,
+    82
+   ],
+   [
+    -25.4,
+    470
+   ],
+   [
+    401.4,
+    470
+   ]
+  ],
+  "dark": 0.6,
+  "q_webp": 80,
+  "inner": [
+   0.72,
+   5
+  ],
+  "keep": [
+   [
+    188,
+    116,
+    16
+   ]
+  ]
+ },
+ "snow_flake": {
+  "kind": "obj",
+  "src": "objs/src/flake.png",
+  "pts": [
+   [
+    1154,
+    585,
+    306.0,
+    288.0
+   ],
+   [
+    902,
+    163,
+    247.0,
+    185.8
+   ],
+   [
+    295,
+    161,
+    129.0,
+    185.8
+   ],
+   [
+    37,
+    584,
+    70.0,
+    288.0
+   ],
+   [
+    283,
+    1026,
+    129.0,
+    390.2
+   ],
+   [
+    912,
+    1023,
+    247.0,
+    390.2
+   ],
+   [
+    600,
+    328,
+    188.0,
+    220.0
+   ],
+   [
+    826,
+    434,
+    246.9,
+    254.0
+   ],
+   [
+    828,
+    753,
+    246.9,
+    322.0
+   ],
+   [
+    600,
+    862,
+    188.0,
+    356.0
+   ],
+   [
+    370,
+    752,
+    129.1,
+    322.0
+   ],
+   [
+    372,
+    435,
+    129.1,
+    254.0
+   ],
+   [
+    599.3,
+    594,
+    188,
+    288
+   ]
+  ],
+  "box": [
+   54,
+   168,
+   322,
+   408
+  ],
+  "q": 2.2,
+  "dim": [
+   [
+    188,
+    288,
+    52,
+    0.62
+   ]
+  ],
+  "q_webp": 75
+ },
+ "volcano_mt": {
+  "kind": "obj",
+  "src": "objs/src/volcano.png",
+  "pts": [
+   [
+    385,
+    318,
+    152,
+    160
+   ],
+   [
+    815,
+    318,
+    224,
+    160
+   ],
+   [
+    600,
+    535,
+    188,
+    212
+   ],
+   [
+    298,
+    518,
+    124,
+    236
+   ],
+   [
+    217,
+    704,
+    96,
+    306
+   ],
+   [
+    108,
+    896,
+    68,
+    378
+   ],
+   [
+    19,
+    1050,
+    22,
+    436
+   ],
+   [
+    902,
+    518,
+    252,
+    236
+   ],
+   [
+    983,
+    704,
+    280,
+    306
+   ],
+   [
+    1091,
+    896,
+    308,
+    378
+   ],
+   [
+    1180,
+    1050,
+    354,
+    436
+   ],
+   [
+    600,
+    800,
+    188,
+    342
+   ],
+   [
+    600,
+    1050,
+    188,
+    436
+   ],
+   [
+    440,
+    700,
+    144,
+    302
+   ],
+   [
+    760,
+    700,
+    232,
+    302
+   ]
+  ],
+  "box": [
+   10,
+   96,
+   350,
+   478
+  ],
+  "q": 2.2,
+  "poly": [
+   [
+    -10,
+    480
+   ],
+   [
+    -10,
+    458
+   ],
+   [
+    22,
+    436
+   ],
+   [
+    68,
+    378
+   ],
+   [
+    96,
+    306
+   ],
+   [
+    124,
+    236
+   ],
+   [
+    152,
+    160
+   ],
+   [
+    224,
+    160
+   ],
+   [
+    252,
+    236
+   ],
+   [
+    280,
+    306
+   ],
+   [
+    308,
+    378
+   ],
+   [
+    354,
+    436
+   ],
+   [
+    386,
+    458
+   ],
+   [
+    386,
+    480
+   ]
+  ],
+  "shrink": 3,
+  "q_webp": 78,
+  "fadey": [
+   388,
+   436
+  ]
+ }
+}

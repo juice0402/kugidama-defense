@@ -1,0 +1,455 @@
+{
+ "groups": [
+  [
+   "kakashi",
+   "kakashi_nohat"
+  ],
+  [
+   "tanuki",
+   "tanuki_leaf"
+  ],
+  [
+   "hari",
+   "hari_curl"
+  ],
+  [
+   "kuma",
+   "kuma_lick",
+   "kuma_nopot"
+  ],
+  [
+   "neko",
+   "neko_1",
+   "neko_rev"
+  ],
+  [
+   "koumori",
+   "koumori_hang"
+  ],
+  [
+   "yoroi",
+   "yoroi_off"
+  ],
+  [
+   "fukurou",
+   "fukurou_up"
+  ],
+  [
+   "ookami",
+   "ookami_howl"
+  ],
+  [
+   "tokage",
+   "tokage_cut",
+   "tokage_knot"
+  ],
+  [
+   "rakuda",
+   "rakuda_flat"
+  ],
+  [
+   "sasori",
+   "sasori_aim",
+   "sasori_stop"
+  ],
+  [
+   "tonakai",
+   "tonakai_crack",
+   "tonakai_bare"
+  ],
+  [
+   "seiuchi",
+   "seiuchi_lie"
+  ],
+  [
+   "mammoth",
+   "mammoth_up"
+  ],
+  [
+   "buta",
+   "buta_soak"
+  ],
+  [
+   "hinotori",
+   "hinotori_burnt"
+  ],
+  [
+   "sai",
+   "sai_crack",
+   "sai_bare"
+  ],
+  [
+   "dragon",
+   "dragon_fire"
+  ],
+  [
+   "kaeru",
+   "kaeru_stone"
+  ],
+  [
+   "yagi",
+   "yagi_chant"
+  ],
+  [
+   "kujaku",
+   "kujaku_fan"
+  ],
+  [
+   "kurage",
+   "kurage_knot"
+  ],
+  [
+   "tako",
+   "tako_puff"
+  ],
+  [
+   "kujira",
+   "kujira_open"
+  ],
+  [
+   "hato",
+   "hato_walk"
+  ],
+  [
+   "unicorn",
+   "unicorn_fog"
+  ],
+  [
+   "panda",
+   "panda_pray"
+  ],
+  [
+   "ousama",
+   "ousama_open"
+  ]
+ ],
+ "size": {
+  "wata": [
+   2.5,
+   1.05
+  ],
+  "usagi": [
+   2.4,
+   1.05
+  ],
+  "kakashi": [
+   2.9,
+   1.05
+  ],
+  "kakashi_nohat": [
+   2.9,
+   1.05
+  ],
+  "tanuki": [
+   2.8,
+   1.05
+  ],
+  "tanuki_leaf": [
+   2.8,
+   1.05
+  ],
+  "uma": [
+   2.7,
+   1.05
+  ],
+  "kinoko": [
+   2.5,
+   1.05
+  ],
+  "kitsune": [
+   2.8,
+   1.05
+  ],
+  "hari": [
+   2.7,
+   1.05
+  ],
+  "hari_curl": [
+   2.7,
+   1.05
+  ],
+  "kuma": [
+   2.7,
+   1.05
+  ],
+  "kuma_lick": [
+   2.7,
+   1.05
+  ],
+  "kuma_nopot": [
+   2.7,
+   1.05
+  ],
+  "taiboku": [
+   3.5,
+   1.05
+  ],
+  "neko": [
+   3.2,
+   1.05
+  ],
+  "neko_1": [
+   3.2,
+   1.05
+  ],
+  "neko_rev": [
+   3.2,
+   1.05
+  ],
+  "koumori": [
+   3.55,
+   1.05
+  ],
+  "koumori_hang": [
+   3.55,
+   1.05
+  ],
+  "yoroi": [
+   2.6,
+   1.05
+  ],
+  "yoroi_off": [
+   2.6,
+   1.05
+  ],
+  "fukurou": [
+   3.3,
+   1.05
+  ],
+  "fukurou_up": [
+   3.3,
+   1.05
+  ],
+  "ookami": [
+   3.55,
+   1.05
+  ],
+  "ookami_howl": [
+   3.55,
+   1.05
+  ],
+  "mia": [
+   2.75,
+   1.05
+  ],
+  "tokage": [
+   3.1,
+   1.05
+  ],
+  "tokage_cut": [
+   3.1,
+   1.05
+  ],
+  "tokage_knot": [
+   3.1,
+   1.05
+  ],
+  "rakuda": [
+   2.6,
+   1.05
+  ],
+  "rakuda_flat": [
+   2.6,
+   1.05
+  ],
+  "sasori": [
+   3.45,
+   1.05
+  ],
+  "sasori_aim": [
+   3.45,
+   1.05
+  ],
+  "sasori_stop": [
+   3.45,
+   1.05
+  ],
+  "sphinx": [
+   3.0,
+   1.05
+  ],
+  "okojo": [
+   2.75,
+   1.05
+  ],
+  "penguin": [
+   2.75,
+   1.05
+  ],
+  "tonakai": [
+   2.65,
+   1.05
+  ],
+  "tonakai_crack": [
+   2.65,
+   1.05
+  ],
+  "tonakai_bare": [
+   2.65,
+   1.05
+  ],
+  "seiuchi": [
+   3.6,
+   1.05
+  ],
+  "seiuchi_lie": [
+   3.6,
+   1.05
+  ],
+  "mammoth": [
+   3.0,
+   1.05
+  ],
+  "mammoth_up": [
+   3.0,
+   1.05
+  ],
+  "buta": [
+   2.75,
+   1.05
+  ],
+  "buta_soak": [
+   2.75,
+   1.05
+  ],
+  "hinotori": [
+   2.85,
+   1.05
+  ],
+  "hinotori_burnt": [
+   2.85,
+   1.05
+  ],
+  "sai": [
+   3.05,
+   1.05
+  ],
+  "sai_crack": [
+   3.05,
+   1.05
+  ],
+  "sai_bare": [
+   3.05,
+   1.05
+  ],
+  "inoshishi": [
+   2.85,
+   1.05
+  ],
+  "dragon": [
+   3.5,
+   1.05
+  ],
+  "dragon_fire": [
+   3.5,
+   1.05
+  ],
+  "karasu": [
+   2.75,
+   1.05
+  ],
+  "hebi": [
+   3.0,
+   1.05
+  ],
+  "kaeru": [
+   2.75,
+   1.05
+  ],
+  "kaeru_stone": [
+   2.75,
+   1.05
+  ],
+  "yagi": [
+   3.0,
+   1.05
+  ],
+  "yagi_chant": [
+   3.0,
+   1.05
+  ],
+  "kujaku": [
+   3.4,
+   1.05
+  ],
+  "kujaku_fan": [
+   3.4,
+   1.05
+  ],
+  "kurage": [
+   2.5,
+   1.45
+  ],
+  "kurage_knot": [
+   2.5,
+   1.45
+  ],
+  "iruka": [
+   2.6,
+   1.25
+  ],
+  "kame": [
+   2.75,
+   1.15
+  ],
+  "tako": [
+   3.3,
+   1.4
+  ],
+  "tako_puff": [
+   3.3,
+   1.4
+  ],
+  "kujira": [
+   3.6,
+   1.05
+  ],
+  "kujira_open": [
+   3.6,
+   1.05
+  ],
+  "hitsuji": [
+   2.7,
+   1.05
+  ],
+  "hato": [
+   3.5,
+   1.05
+  ],
+  "hato_walk": [
+   3.5,
+   1.05
+  ],
+  "unicorn": [
+   2.7,
+   1.05
+  ],
+  "unicorn_fog": [
+   2.7,
+   1.05
+  ],
+  "panda": [
+   3.1,
+   1.05
+  ],
+  "panda_pray": [
+   3.1,
+   1.05
+  ],
+  "ousama": [
+   3.2,
+   1.05
+  ],
+  "ousama_open": [
+   3.2,
+   1.05
+  ]
+ },
+ "place": {
+  "kujaku_fan": [
+   0,
+   -40,
+   1.05
+  ]
+ }
+}

@@ -1,3 +1,10 @@
 game.html
 *.png
 game_*.html
+bgm.html
+_video/
+*.webm
+animshots/
+_fps9.json
+game_old.html
+_sweep*/

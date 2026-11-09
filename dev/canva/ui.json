@@ -1,0 +1,241 @@
+{
+ "plates": {
+  "gold": {
+   "src": "ui/src/btn_gold.png",
+   "gen": "MAHaT2Izbuk",
+   "r": 62,
+   "use": [
+    ".nbtn.gold",
+    ".price",
+    ".buy",
+    ".crownbar"
+   ]
+  },
+  "lime": {
+   "from": "gold",
+   "hue": 35,
+   "r": 62,
+   "use": [
+    ".btn.primary"
+   ]
+  },
+  "red": {
+   "from": "gold",
+   "hue": -55,
+   "r": 62,
+   "use": [
+    ".nbtn.danger"
+   ]
+  },
+  "grey": {
+   "from": "gold",
+   "hue": 200,
+   "sat": 0.1,
+   "val": 0.4,
+   "r": 62,
+   "use": [
+    ".nbtn.gold:disabled",
+    ".nbtn.danger:disabled",
+    ".price.short",
+    ".buy:disabled"
+   ]
+  },
+  "navy": {
+   "src": "ui/src/btn_navy.png",
+   "gen": "MAHaTyOsdyI",
+   "r": 62,
+   "use": [
+    ".btn",
+    ".nbtn",
+    ".x",
+    ".linkbtn",
+    ".zseg button",
+    ".buy.owned",
+    ".wallet",
+    ".tagown",
+    ".cnt",
+    ".toast"
+   ]
+  },
+  "pink": {
+   "from": "navy",
+   "hue": 100,
+   "r": 62,
+   "use": [
+    ".zseg button.on",
+    ".test-enter .nbtn.on",
+    ".newb"
+   ]
+  },
+  "panel": {
+   "src": "ui/src/panel.png",
+   "gen": "MAHaTzxnOpI",
+   "r": 80,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".panel",
+    ".buy-in",
+    ".sheet-in"
+   ]
+  },
+  "card": {
+   "from": "panel",
+   "hue": 0,
+   "sat": 0.5,
+   "val": 0.92,
+   "r": 80,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".card",
+    ".zrow",
+    ".item",
+    ".setstrip",
+    ".pouch"
+   ]
+  },
+  "cabinet": {
+   "src": "ui/src/cabinet.png",
+   "gen": "MAHaUDB9FwQ",
+   "r": 52,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".topper",
+    ".cframe"
+   ]
+  },
+  "case": {
+   "from": "cabinet",
+   "val": 0.8,
+   "r": 52,
+   "vsqueeze": 4,
+   "squeeze": 6,
+   "use": [
+    ".ammo-case",
+    ".ammo-lid"
+   ],
+   "note": "玉のセットの 鉄の 箱と ふた（台の わくの 銀を すこし こく。11/8 7.）"
+  }
+ },
+ "icons": {
+  "coin": {
+   "src": "ui/src/coin.png",
+   "gen": "MAHaUPipmvE",
+   "px": 96
+  },
+  "heart": {
+   "src": "ui/src/heart.png",
+   "gen": "MAHaUPZdp4I",
+   "px": 96
+  },
+  "snd": {
+   "src": "ui/src/snd.png",
+   "gen": "MAHaUJgzCx0",
+   "px": 96,
+   "c": [
+    106,
+    100
+   ],
+   "box": 156
+  },
+  "snd-off": {
+   "src": "ui/src/snd_off.png",
+   "gen": "MAHaUDcTYEc",
+   "px": 96,
+   "c": [
+    106,
+    100
+   ],
+   "box": 156
+  },
+  "back": {
+   "src": "ui/src/back.png",
+   "gen": "MAHaUJeC7VA",
+   "px": 240,
+   "q": 84
+  },
+  "t-board": {
+   "src": "ui/src/t_board.png",
+   "gen": "MAHaUO8Jqts",
+   "px": 96
+  },
+  "t-ball": {
+   "src": "ui/src/t_ball.png",
+   "gen": "MAHaUEOKJbk",
+   "px": 96
+  },
+  "t-tower": {
+   "src": "ui/src/t_tower.png",
+   "gen": "MAHaULGZr5o",
+   "px": 96
+  },
+  "t-gimmick": {
+   "src": "ui/src/t_gimmick.png",
+   "gen": "MAHaUJFYV1o",
+   "px": 96
+  },
+  "t-set": {
+   "src": "ui/src/t_set.png",
+   "gen": "MAHaUCNKvWU",
+   "px": 96
+  },
+  "t-zukan": {
+   "src": "ui/src/t_zukan.png",
+   "gen": "MAHaUNAGFVI",
+   "px": 96
+  },
+  "socket": {
+   "src": "fx/src/socket.png",
+   "gen": "MAHaUv4ucfs",
+   "px": 160,
+   "q": 84,
+   "note": "素材シート sheet1.png の 右下（玉のセットの 穴）"
+  }
+ },
+ "fx": {
+  "fever": {
+   "src": "fx/src/fever.png",
+   "gen": "MAHaUSeH5cQ",
+   "w": 720,
+   "q": 84
+  },
+  "boss": {
+   "src": "fx/src/boss.png",
+   "gen": "MAHaUdBLf3g",
+   "w": 720,
+   "q": 84,
+   "close": 8
+  },
+  "rays": {
+   "src": "fx/src/rays.png",
+   "rgba": true,
+   "w": 400,
+   "q": 72,
+   "pad": 0,
+   "note": "fxrays.py で 作る（Canva では ない）"
+  },
+  "wave": {
+   "src": "fx/src/wave.png",
+   "gen": "MAHaUv4ucfs",
+   "w": 560,
+   "q": 84,
+   "note": "素材シート sheet1.png の 左上"
+  },
+  "ribbon": {
+   "src": "fx/src/ribbon.png",
+   "gen": "MAHaUv4ucfs",
+   "w": 600,
+   "q": 84,
+   "note": "素材シート sheet1.png の 右上"
+  },
+  "crown": {
+   "src": "fx/src/crown.png",
+   "gen": "MAHaUv4ucfs",
+   "w": 360,
+   "q": 84,
+   "note": "素材シート sheet1.png の 左下"
+  }
+ }
+}

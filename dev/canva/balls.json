@@ -1,0 +1,31 @@
+{
+ "K": 48,
+ "q": 88,
+ "width": 760,
+ "balls": {
+  "normal": {},
+  "fire": {"hue": -14},
+  "ice": {"hue": -6},
+  "bolt": {},
+  "poison": {"hue": -11},
+  "lead": {},
+  "heal": {"hue": -6, "sat": 0.8},
+  "bb": {},
+  "water": {"hue": -7},
+  "vine": {"hue": 20},
+  "sound": {"hue": -15},
+  "shadow": {"hue": -14},
+  "sand": {},
+  "wind": {"hue": -5},
+  "snow": {},
+  "crystal": {"hue": -7},
+  "magma": {"hue": 10},
+  "bomb": {},
+  "curse": {"hue": -7, "spin": 1},
+  "chain": {"hue": 6},
+  "gravity": {"hue": -10},
+  "star": {"spin": 1},
+  "holy": {},
+  "rainbow": {"spin": 1}
+ }
+}
