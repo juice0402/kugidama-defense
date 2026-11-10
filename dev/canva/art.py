@@ -1,5 +1,6 @@
 # 台の奥の景色（bg）と 台の枠（frame）の 絵を ゲームに 入れる（11/8）
 # 使い方：python3 art.py          … art.json の 絵を ぜんぶ WebP にして、index.html の ART_SRC（「ART_SRC ここから」〜「ここまで」）を 書きかえる
+#         ONLY=meadow_frame,forest_frame python3 art.py … その 絵だけ 作りなおす（ほかの 行は そのまま）
 #         python3 art.py 見る.png … ついでに 枠と 景色を 台の 形に かさねた 見本を 出す（さいごの 1つ）
 #
 # bg   ：Canva の 9:16 の 絵（1180×2100 など）。台の アーチの はば（RO*2+8＝340）で、下を H-6 に そろえて 置く。アーチの外は 見えないので 1色に（軽く）
@@ -81,7 +82,12 @@ def frame_warp(src, key, th=130, nmax=24, basek=.85):
             if x < 0 or y < 0 or x >= w - 1 or y >= h - 1 or not m[int(y), int(x)]:
                 dd[i] = s; break
     dd[0], dd[-1] = acx - Lr[int(acy)], Rr[int(acy)] - acx   # 横は まっすぐの所と つなぐ
+    e0, e1 = dd[0], dd[-1]
     dd = nd.uniform_filter1d(nd.maximum_filter1d(dd, 41, mode='nearest'), 41, mode='nearest')   # こけが たれた所は 窓が せまく 見えるので 大きい方へ
+    # 11/10 しょーくん「アーチが はじまる 所で オレンジの 線が ずれてる」：ならしたので 横（はし）の きょりが まっすぐの所と 合わなく なっていた。
+    # はしから 15度 かけて まっすぐの所の きょりへ もどす（アーチと まっすぐの所の つなぎめで 線が つながる）
+    nr = 60; ramp = .5 + .5 * np.cos(np.pi * np.arange(nr) / nr)
+    dd[:nr] += (e0 - dd[0]) * ramp; dd[-nr:] += ((e1 - dd[-1]) * ramp)[::-1]
     # 台の座標 → 絵の 点
     x0, y0, fw, fh = FR
     W2, H2 = int(fw * FQ), int(fh * FQ)
@@ -184,7 +190,16 @@ def main():
     spec = json.load(open(os.path.join(HERE, 'art.json')))
     os.makedirs(os.path.join(HERE, 'art'), exist_ok=True)
     lines = []; last = {}
+    p = os.path.join(ROOT, 'index.html')
+    html = open(p, encoding='utf-8').read()
+    a, b = '// ART_SRC ここから\n', '// ART_SRC ここまで'
+    i, j = html.index(a) + len(a), html.index(b)
+    # ONLY=キー,キー で その 絵だけ 作りなおす（ほかは いまの 行の まま。11/10）
+    only = [k for k in os.environ.get('ONLY', '').split(',') if k]
+    old = {m.group(1): m.group(0) for m in re.finditer(r'^  (\w+):\{.*$', html[i:j], re.M)}
     for key, s in spec.items():
+        if only and key not in only and key in old:
+            lines.append(old[key]); continue
         src = os.path.join(HERE, s['src'])
         if s['kind'] == 'obj':   # 台の中の 大きな物（objfit.py）。すけすけの WebP
             from objfit import obj_fit
@@ -203,10 +218,6 @@ def main():
         if 'ridge' in meta: extra += ',ridge:[' + ','.join(f'[{a},{b}]' for a, b in meta['ridge']) + ']'
         lines.append(f"  {key}:{{x:{meta['x']},y:{meta['y']},w:{meta['w']},h:{meta['h']}{extra},src:'data:image/webp;base64,{base64.b64encode(data).decode()}'}},   // {im.width}×{im.height} {len(data)//1024}KB")
         print(key, im.size, len(data), 'bytes')
-    p = os.path.join(ROOT, 'index.html')
-    html = open(p, encoding='utf-8').read()
-    a, b = '// ART_SRC ここから\n', '// ART_SRC ここまで'
-    i, j = html.index(a) + len(a), html.index(b)
     html = html[:i] + '\n'.join(lines) + '\n' + html[j:]
     open(p, 'w', encoding='utf-8').write(html)
     print('index.html ART_SRC', len(lines))

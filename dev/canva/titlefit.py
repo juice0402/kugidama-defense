@@ -19,7 +19,7 @@ A = np.asarray(im).astype(float)
 sky = '#%02x%02x%02x' % tuple(int(v) for v in np.median(A[:8].reshape(-1, 3), axis=0))
 low = '#%02x%02x%02x' % tuple(int(v) for v in np.median(A[-8:].reshape(-1, 3), axis=0))
 print('title', im.size, '%dKB' % (len(data) / 1024 + .5), 'sky', sky, 'low', low)
-row = '#title{--t-art:url(data:image/webp;base64,%s);--t-sky:%s;--t-low:%s}' % (base64.b64encode(data).decode(), sky, low)
+row = '#title,.tut-guide{--t-art:url(data:image/webp;base64,%s);--t-sky:%s;--t-low:%s}' % (base64.b64encode(data).decode(), sky, low)
 p = os.path.join(ROOT, 'index.html')
 s = open(p, encoding='utf-8').read()
 a = s.index('/* TITLE_ART ここから'); a = s.index('*/', a) + 2

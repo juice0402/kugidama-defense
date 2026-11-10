@@ -31,6 +31,10 @@ async def main():
         # 台 → タワーを 建てる
         await pg.click('#tabs [data-tab="board"]'); await pg.wait_for_timeout(900)
         await pg.click('.slot.cur .cab'); await pg.wait_for_timeout(2500)
+        # 11/10 はじめての あそびかた：アプリ（人が さわる）では はじめての 台で 出る → とばす
+        ok(await pg.is_visible('#tutBox'),'はじめての あそびかたが 出る')
+        await pg.click('#tutSkip'); await pg.wait_for_timeout(400)
+        ok(await pg.evaluate("()=>!window.__T.G.tut&&window.__T.G.tutDone"),'あそびかたを とばせる')
         await pg.evaluate("()=>{const T=window.__T,G=T.G;const p=G.pegs.filter(p=>!p.fixed&&!p.tower)[2];T.openBuild(p)}"); await pg.wait_for_timeout(500)
         await pg.click('#sheetBody .trow:not(.locked) .buy >> nth=0'); await pg.wait_for_timeout(900)
         await pg.evaluate("()=>{const T=window.__T,G=T.G;G.fever=0;T.heso&&0}")
