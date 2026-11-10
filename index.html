@@ -847,7 +847,7 @@ const FIRE_GAP=1.2;                           // 1分に50発（タワーと一�
 const AIM=[145.7,145.7,145.1,144.2,143,141.2,139,136.1,132.7,128.3,122.9];
 const exitAngle=s=>{const v=Math.max(0,Math.min(1,s))*10,i=Math.min(9,Math.floor(v));return rad(AIM[i]+(AIM[i+1]-AIM[i])*(v-i))};
 const launchE=(s,g)=>g*(3*RB*Math.sin(exitAngle(s))+2*STRAIGHT); // 打ち出しの速さの2乗（その角度でちょうどはなれる勢い）
-const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強さで玉が落ちるあたり（上の▼）
+const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強さで玉が落ちるあたり（11/10 まで 上に ▼を 出していた）
 
 /* ==================== コードのしくみ（フック） ====================
    台ごとの中身は「表に行を足す＋小さな関数（フック）」で足す。共通のループ（update・stepBalls・draw・drawGhost…）は if をふやさずにフックを呼ぶ。
@@ -4552,7 +4552,7 @@ function feverMascots(u,t){
 function drawFeverTag(t){
   const n=Math.ceil(G.fever), fr=G.fever-Math.floor(G.fever), s=1+.16*Math.max(0,(fr-.82)/.18);
   ctx.save(); ctx.translate(CX,44); ctx.scale(s,s);
-  const P=artSpr('fever',106,1.5); if(P){ctx.globalAlpha=.8;blit(P,0,0);ctx.globalAlpha=1}   // うしろの ねらいの ▼が すこし 見えるように
+  const P=artSpr('fever',106,1.5); if(P){ctx.globalAlpha=.8;blit(P,0,0);ctx.globalAlpha=1}   // すこし すかす（11/10 までは うしろの ねらいの ▼が 見えるように）
   blit(logoSpr('FEVER '+n,LOGO.feverS,'fevs'),0,0);
   ctx.restore();
 }
@@ -10160,13 +10160,7 @@ function draw(){
     // 杭に玉が当たった・発射・ねらい（光らせずに線で見せる）
     for(const p of G.pegs) if(!p.tower&&p.flash>0){ctx.strokeStyle=`rgba(243,230,181,${Math.min(.9,p.flash*4)})`;ctx.lineWidth=2;circle(p.x,p.y,p.r+2+(.22-p.flash)*14);ctx.stroke()}
     if(G.launchFx>0){ctx.strokeStyle=`rgba(243,230,181,${Math.min(.9,G.launchFx*4)})`;ctx.lineWidth=1.5;circle(XB,LAUNCH_Y,6+(.2-G.launchFx)*30);ctx.stroke()}
-    if(G.state==='play'){
-      // ねらい：その強さで玉が落ちるあたりに▼と点線
-      const x=aimX(G.strength), y=CY-Math.sqrt(RO*RO-(x-CX)**2)+5, bob=Math.sin(t*5)*1.5;
-      ctx.strokeStyle='rgba(79,240,255,.35)'; ctx.lineWidth=1.2; ctx.setLineDash([3,5]);
-      ctx.beginPath(); ctx.moveTo(x,y+12); ctx.lineTo(x,y+48); ctx.stroke(); ctx.setLineDash([]);
-      ctx.fillStyle='#4ff0ff'; ctx.beginPath(); ctx.moveTo(x,y+11+bob); ctx.lineTo(x-6,y+1+bob); ctx.lineTo(x+6,y+1+bob); ctx.closePath(); ctx.fill();
-    }
+    // 上の ねらいの ▼と 点線は なくした（11/10 しょーくん「上の 矢印 いらない。もっと 直感で いい」。玉の とび方で わかる）
 
   // 選んだ杭
   if(G.sel){
@@ -11134,7 +11128,7 @@ function tutGo(step,t=0){const T=G.tut;T.step=step;T.t=t;sfx.tick();haptic('ligh
 function tutTick(dt){
   const T=G.tut; T.t+=dt;
   if(T.step==='handle'){
-    if(G.strength>=.3){T.noFire=false;G.fireT=0;tutGo('shoot');tutSay(1,'玉が 出た！ ハンドルで 玉の 落ちる 場所（上の <b>▼</b>）が かわるよ')}
+    if(G.strength>=.3){T.noFire=false;G.fireT=0;tutGo('shoot');tutSay(1,'玉が 出た！ <b>強く まわすほど</b> 玉が 遠くまで とぶよ')}
   }else if(T.step==='shoot'){
     if(T.t>3.4){
       let best=null,bd=Infinity;   // すすめる 杭：まん中の 少し 上の あいている 杭
@@ -11154,7 +11148,6 @@ function tutPlace(){
   let tg=null, rr=0, side=false;
   const sheet=!$('sheet').hidden&&!$('sheet').classList.contains('out');
   if(T.step==='handle'){const [x,y,w]=dom($('dial'));tg=[x,y];rr=w+18}
-  else if(T.step==='shoot'){const ax=aimX(G.strength);tg=bd(ax,CY-Math.sqrt(RO*RO-(ax-CX)**2)+8);rr=30}
   else if(T.step==='tower'){
     if(sheet!==T.sh){T.sh=sheet;tutSay(2,sheet?'<b>ノーマルタワー</b>の ボタンを おして 建てよう！':'<b>杭を タップ</b>して <b>タワー</b>を 建てよう。タワーは おばけを 自動で うつよ')}
     if(sheet){const b=$('sheetBody').querySelector('.trow:not(.locked) .buy');if(b){const [x,y,w]=dom(b);tg=[x,y];rr=w+16;side=true}}   // シートの ボタンは 左から（上は「とじる」）
