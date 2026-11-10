@@ -53,7 +53,7 @@ function shop(){
 function buyBoard(i){const B=T.BOARDS.find(b=>b.stage===i); if(!B||!B.price) return true; G.bought=G.bought||[]; if(G.bought.includes(i)) return true;
   if(!G.cleared.includes(B.need)||G.balls<B.price) return false; G.balls-=B.price; G.bought.push(i); return true}
 localStorage.clear(); T.G.state='hub';
-G.balls=150;G.deck=['normal','normal','normal','fire','ice'];G.owned={fire:1,ice:1};G.cleared=[];G.bought=[];
+G.balls=150;G.deck=['normal','normal','normal','normal','normal'];G.owned={};G.cleared=[];G.bought=[];   // はじめは 通常弾だけ（11/10 しょーくん）
 for(const k in G.unlocked) G.unlocked[k]=k==='basic'; for(const k in G.gimmicks) G.gimmicks[k]=false;
 if(opts.gm) for(const k in T.GIMMICKS) G.gimmicks[k]=true;   // gm：ギミックは全部 持っている（お店で買わない）
 const out={};
