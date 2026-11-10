@@ -1,6 +1,6 @@
 # はじめての あそびかた（11/10）を さいごまで 動かして、だんごとに 撮る
 # 使い方: python3 mk.py && python3 tutcheck.py [はば x 高さ x 倍率] [出す フォルダ]
-#   ① ハンドル（右へ まわす＝キーの →）② おばけ ③ 杭を タップ → シート → 建てる → おわり。とちゅうの エラー・止まった ものを しらべる
+#   ① ハンドル（右へ まわす＝キーの →）② 杭を タップ → シート → 建てる → おわり（11/10 おばけの だんは なくした）。とちゅうの エラー・止まった ものを しらべる
 #   SKIP=1 で とちゅうの「とばす」も ためす
 import asyncio, sys, os
 from playwright.async_api import async_playwright
@@ -28,10 +28,6 @@ async def main():
         await pg.focus('#handle')
         for i in range(7): await pg.keyboard.press('ArrowRight'); await pg.wait_for_timeout(60)
         await pg.wait_for_timeout(1200); await shot(2,'玉が 出た')
-        for i in range(40):
-            await pg.wait_for_timeout(250); r=await st()
-            if r['step']=='ghost' and r['en']: break
-        await pg.wait_for_timeout(700); await shot(3,'おばけ')
         for i in range(120):
             await pg.wait_for_timeout(250); r=await st()
             if r['step']=='tower': break

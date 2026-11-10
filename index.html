@@ -467,7 +467,6 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .tut-box{position:absolute;left:50%;bottom:150px;width:min(calc(100*var(--vw) - 24px),380px);margin-left:calc(min(calc(100*var(--vw) - 24px),380px)/-2);display:flex;align-items:center;gap:10px;
   padding:12px 12px 12px 14px;border:0;background:transparent;--k:.2px;color:#fff;transition:opacity .25s}
 .tut-box.top{bottom:auto;top:calc(54px + env(safe-area-inset-top,0px))}
-.tut-box.dim{opacity:.32}
 .tut-guide{flex:none;width:54px;height:54px;border-radius:50%;background:#1b0f3a var(--t-art) 51.6% 63.6%/219% auto no-repeat;box-shadow:0 0 0 2px #fff,0 0 0 4px #ff63c8,0 0 14px 4px rgba(255,99,200,.55)}
 .tut-txt{flex:1;min-width:0}
 .tut-txt small{display:block;margin-bottom:3px;font:800 10px/1 var(--f-body);letter-spacing:.06em;color:#ffd96b}
@@ -475,7 +474,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
 .tut-txt b{color:#ffe46b}
 .tut-skip{pointer-events:auto;flex:none;align-self:flex-start;min-height:30px;margin:-4px -2px 0 0;padding:4px 10px;border:1.5px solid rgba(255,255,255,.35);border-radius:99px;background:rgba(10,8,32,.55);
   color:#d6d1f2;font:800 11px var(--f-body);cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
-.tut.done .tut-skip{visibility:hidden}
+.tut.done .tut-skip{display:none}
 .tut-ring{position:absolute;left:0;top:0;width:var(--rr,56px);height:var(--rr,56px);margin:calc(var(--rr,56px)/-2) 0 0 calc(var(--rr,56px)/-2);border-radius:50%;
   border:3px solid #ffe46b;box-shadow:0 0 12px 3px rgba(255,214,90,.7),inset 0 0 10px 2px rgba(255,214,90,.5)}
 .tut-ring::after{content:"";position:absolute;inset:-3px;border-radius:50%;border:3px solid #ffe46b;opacity:0}
@@ -901,7 +900,7 @@ const aimX=s=>158+142*Math.pow(Math.max(0,Math.min(1,s)),2.2);    // その強�
        しゅくふく：砲台の T.bless（G.time より大きい間）は towerDmg×T.blessK・towerCd×T.blessC（天使タワー・金色の玉）。金色の玉 b.gold は pegHit で goldHit（光の輪）
        台の みんなに 効く いたずら（王さまの 遠ぼえ・パンダの 光のたて）は heavenTick・heavenBullet・heavenBall を 天国の おばけの tick・bulletHit・ballHit で よぶ
        エンディング：G.ending の間は draw が drawEnding だけ描く（さいごの台を はじめて クリア → showEnding。hideOverlays で おわる）
-   ・はじめての あそびかた（11/10）：G.tut（step＝handle→shoot→ghost→tower→done）。update の はじめに tutTick、noFire で 玉・hold で おばけと ウェーブの 時間を 止める。ふきだし・輪・矢じるしは #tut を tutPlace が 毎コマ 置く。セーブの tut
+   ・はじめての あそびかた（11/10）：G.tut（step＝handle→shoot→tower→done）。update の はじめに tutTick、noFire で 玉・hold で おばけと ウェーブの 時間を 止める。ふきだし・輪・矢じるしは #tut を tutPlace が 毎コマ 置く。セーブの tut
    ・技の文字（11/6 夜）：hitText(x,y,名前,色1,色2,tier)＝わざ（fxCombo）・とくしゅ効果（fxSpecial）・強撃・速射（towerHit）のたびに その場所の少し上へ。格闘ゲーム風の帯（drawHitFight）。大きさは tier で分ける（HIT_PX）・おばけの後ろに描く。文字と帯の絵は hitPrep で出たときに1回だけ用意して hit に持たせる（11/7 軽く。毎フレーム字を測らない）
    ・光の重ね描き（11/7）：lazyLay(L,fn)＝fn で描いた光を 1/4 のピクセルのキャンバスに 2フレームに1回だけ描いて重ねる（粒の光は LAY_MIN こ以上のとき・FEVER中の ホタル/杭/木の実・余白はいつも）
    ・まとめ描き（11/7）：粒は全部 fxPath（まわした形は rx/ry で点を計算）。あし・しっぽは taperPath（1こまずつ太さのちがう丸いはしの線を 1つの形に）。台の上の文字は txtSpr（絵を使いまわす）。
@@ -11107,12 +11106,13 @@ function finishHooks(){
 
 /* ---------- はじめての あそびかた（11/10 しょーくん「本当の いちばん さいしょだけ かんたんな チュートリアル」） ----------
    はじめて 台に 入った ときだけ（セーブの tut。前から あそんでいる セーブは もう おわり）。
-   ① ハンドルを まわす → 玉が 出はじめる ② おばけが 1ぴき だけ 出る → 玉で やっつける ③ 杭を タップして タワーを 建てる → ふつうの ウェーブへ
-   とちゅうは 玉を 止める（noFire）・ほかの おばけと ウェーブの 時間を 止める（hold）。「とばす」で いつでも おわる。
+   ① ハンドルを まわす → 玉が 出はじめる ② 杭を タップして タワーを 建てる → ふつうの ウェーブへ
+   （玉で おばけを やっつける だんは なし。11/10 しょーくん「とばして タワーを 建てる 場面で いい」）
+   とちゅうは 玉を 止める（noFire）・おばけと ウェーブの 時間を 止める（hold）。ふきだしは タイトルの 絵の うさぎおばけ（しょーくん「かわいいから このまま」）。「とばす」で いつでも おわる。
    ふきだし・輪・矢じるしは #tut（DOM。指は とおす）。場所は 毎コマ tutPlace（台の 座標 → 画面）。自動の ためし（AUTO）では 出さない（#tut を つけると 出す） */
 const TUT_OFF=AUTO&&!/tut/.test(location.hash);
 const tutWant=()=>!G.tutDone&&!TEST&&!TUT_OFF&&G.stage===0&&G.testLobby==null;
-const TUT_N=3;
+const TUT_N=2;
 function tutSay(n,html,top){
   const T=G.tut; if(!T) return;
   $('tutStep').textContent=n?`はじめての あそびかた ${n}/${TUT_N}`:'はじめての あそびかた';
@@ -11120,7 +11120,7 @@ function tutSay(n,html,top){
   const b=$('tutBox'); if(!reduce){b.classList.remove('pop');void b.offsetWidth;b.classList.add('pop')}
 }
 function tutStart(){
-  G.tut={step:'handle',t:0,noFire:true,hold:true,peg:null,top:false,en:0};
+  G.tut={step:'handle',t:0,noFire:true,hold:true,peg:null,top:false};
   setStrength(0); $('tut').hidden=false; $('tut').classList.remove('done');
   tutSay(1,'右下の <b>ハンドル</b>を <b>右へ まわして</b> みてね。玉が 出るよ！');
 }
@@ -11136,19 +11136,17 @@ function tutTick(dt){
   if(T.step==='handle'){
     if(G.strength>=.3){T.noFire=false;G.fireT=0;tutGo('shoot');tutSay(1,'玉が 出た！ ハンドルで 玉の 落ちる 場所（上の <b>▼</b>）が かわるよ')}
   }else if(T.step==='shoot'){
-    if(T.t>3.4&&G.spawnQ.length){spawn(G.spawnQ.shift());T.en=1;tutGo('ghost');tutSay(2,'<b>おばけ</b>が 来た！ 玉を 当てて やっつけよう。下まで 来ると ライフが へるよ')}
-  }else if(T.step==='ghost'){
-    if(!G.en.length&&!G.pend.length&&T.t>.6){
+    if(T.t>3.4){
       let best=null,bd=Infinity;   // すすめる 杭：まん中の 少し 上の あいている 杭
       for(const p of G.pegs){if(p.fixed||p.tower)continue;const d=Math.abs(p.y-300)+Math.abs(p.x-CX)*.6;if(d<bd){bd=d;best=p}}
-      T.peg=best; tutGo('tower');
-      tutSay(3,(G.kills?'やったね！ ':'')+'つぎは <b>杭を タップ</b>して <b>タワー</b>を 建てよう。タワーは おばけを 自動で うつよ');
+      T.peg=best; T.sh=false; tutGo('tower');
+      tutSay(2,'つぎは <b>杭を タップ</b>して <b>タワー</b>を 建てよう。タワーは おばけを 自動で うつよ');
     }
   }else if(T.step==='tower'){
-    if(G.pegs.some(p=>p.tower)){tutGo('done');tutSay(0,'ばっちり！ あとは 玉と タワーで おばけを やっつけてね');$('tut').classList.add('done')}
-  }else if(T.step==='done'&&T.t>2.8) tutEnd();
+    if(G.pegs.some(p=>p.tower)){tutGo('done');tutSay(0,'ばっちり！ もうすぐ <b>おばけ</b>が 来るよ。玉と タワーで やっつけて、下まで 来させないでね');$('tut').classList.add('done')}
+  }else if(T.step==='done'&&T.t>3.4) tutEnd();
 }
-// 毎コマ：輪と 矢じるしを ねらう 所へ・ふきだしの 場所（シートが 出ている ときは 上）・おばけが 下に いると うすく
+// 毎コマ：輪と 矢じるしを ねらう 所へ・ふきだしの 場所（シートが 出ている ときは 上）
 function tutPlace(){
   const T=G.tut; if(!T) return;
   const app=$('app').getBoundingClientRect(), dom=e=>{const r=e.getBoundingClientRect();return [(r.left+r.width/2-app.left)/uiZ,(r.top+r.height/2-app.top)/uiZ,r.width/uiZ]};
@@ -11157,9 +11155,8 @@ function tutPlace(){
   const sheet=!$('sheet').hidden&&!$('sheet').classList.contains('out');
   if(T.step==='handle'){const [x,y,w]=dom($('dial'));tg=[x,y];rr=w+18}
   else if(T.step==='shoot'){const ax=aimX(G.strength);tg=bd(ax,CY-Math.sqrt(RO*RO-(ax-CX)**2)+8);rr=30}
-  else if(T.step==='ghost'){const e=G.en[0]||G.pend[0];if(e){tg=bd(e.x,e.y);rr=Math.max(46,e.r*2.6*scale)}}
   else if(T.step==='tower'){
-    if(sheet!==!!T.sh){T.sh=sheet;tutSay(3,sheet?'<b>ノーマルタワー</b>の ボタンを おして 建てよう！':'<b>杭を タップ</b>して <b>タワー</b>を 建てよう。タワーは おばけを 自動で うつよ')}
+    if(sheet!==T.sh){T.sh=sheet;tutSay(2,sheet?'<b>ノーマルタワー</b>の ボタンを おして 建てよう！':'<b>杭を タップ</b>して <b>タワー</b>を 建てよう。タワーは おばけを 自動で うつよ')}
     if(sheet){const b=$('sheetBody').querySelector('.trow:not(.locked) .buy');if(b){const [x,y,w]=dom(b);tg=[x,y];rr=w+16;side=true}}   // シートの ボタンは 左から（上は「とじる」）
     else if(T.peg){tg=bd(T.peg.x,T.peg.y);rr=Math.max(40,T.peg.r*5*scale)}
   }
@@ -11180,12 +11177,6 @@ function tutPlace(){
     b=Math.round(b)+'px'; if(box.style.bottom!==b) box.style.bottom=b;
   }
   else if(box.style.bottom) box.style.bottom='';
-  let dim=false;
-  if(!top&&(T.step==='ghost'||T.step==='tower')){
-    const r=box.getBoundingClientRect(), y0=(r.top-app.top)/uiZ-12, y1=(r.bottom-app.top)/uiZ;
-    for(const e of G.en){const y=oy+e.y*scale;if(y>y0&&y<y1){dim=true;break}}
-  }
-  box.classList.toggle('dim',dim);
 }
 $('tutSkip').onclick=()=>{sfx.tick();tutEnd()};
 
