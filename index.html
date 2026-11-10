@@ -124,15 +124,17 @@ img{-webkit-user-drag:none}   /* iPad：長おしで 絵が ドラッグで 持�
 .tglow{position:absolute;left:50%;top:7%;width:min(118*var(--vw),64*var(--vh));height:30%;transform:translateX(-50%);pointer-events:none;
   background:radial-gradient(closest-side,rgba(255,120,220,.34),rgba(120,200,255,.14) 55%,transparent);opacity:.55;animation:tglow 3.2s ease-in-out infinite;will-change:opacity}
 @keyframes tglow{50%{opacity:1}}
-/* ロゴは 2まいの 層（11/10 しょーくん「おばの オーラで パチが かくれてる」iPhone の Safari）：
-   下の 層 .lb＝こい ふちどり・あつみ・まわりの 光（2つの ことばの ぶん まとめて うしろ）、上の 層 .lt＝白い ふち と グラデーションの 文字。
-   前は ことばごとに ぜんぶ 重ねて いたので、あとの「おば」の ふちと 光が「パチ」の 上に かぶっていた */
+/* ロゴは 3まいの 層（11/10 しょーくん「おばの オーラで パチが かくれてる」iPhone・iPad の Safari）：
+   いちばん 下 .lg＝まわりの 光（2つの ことばの ぶん）、まん中 .lb＝こい ふちどり・あつみ、上 .lt＝白い ふち と グラデーションの 文字。
+   前は ことばごとに ぜんぶ 重ねて いたので、あとの「おば」の ふちと 光が「パチ」の 上に かぶっていた。
+   2まいの ときも「おば」の 水色の 光が「パチ」の こい ふちの 上に のって 青っぽく 見えた → 光は いちばん 下に */
 .logo{position:absolute;left:0;right:0;top:12.5%;margin:0;line-height:1;white-space:nowrap;cursor:default;
   font:800 min(20*var(--vw),11*var(--vh))/1 var(--f-body);letter-spacing:-.02em}
-.logo .lb,.logo .lt{display:flex;justify-content:center;gap:.04em}
-.logo .lt{position:absolute;inset:0}
+.logo .lg,.logo .lb,.logo .lt{display:flex;justify-content:center;gap:.1em}   /* パチ と おば の ふちが くっつかない すきま */
+.logo .lb,.logo .lt{position:absolute;inset:0}
 .logo span span{position:relative;display:inline-block;padding:.06em .03em .12em}
-.logo .lb span{color:var(--lo);-webkit-text-stroke:.19em var(--lo);text-shadow:0 .07em 0 var(--lo),0 .11em 0 var(--lo),0 0 .34em var(--lg),0 0 .8em var(--lg)}
+.logo .lg span{color:var(--lo);-webkit-text-stroke:.19em var(--lo);text-shadow:0 .07em 0 var(--lo),0 .11em 0 var(--lo),0 0 .34em var(--lg),0 0 .8em var(--lg)}
+.logo .lb span{color:var(--lo);-webkit-text-stroke:.19em var(--lo);text-shadow:0 .07em 0 var(--lo),0 .11em 0 var(--lo)}
 .logo .lt span{color:transparent}
 .logo .lt span::before,.logo .lt span::after{content:attr(data-t);position:absolute;inset:0;padding:inherit}
 .logo .lt span::before{color:#fff;-webkit-text-stroke:.085em #fff}
@@ -710,7 +712,7 @@ h3 small{color:var(--dim);font-weight:500;margin-left:4px}
   <div class="overlay" id="title">
     <div class="tart" aria-hidden="true"></div>
     <div class="tglow" aria-hidden="true"></div>
-    <h1 class="logo" aria-label="パチおば"><span class="lb" aria-hidden="true"><span class="a">パチ</span><span class="b">おば</span></span><span class="lt" aria-hidden="true"><span class="a" data-t="パチ">パチ</span><span class="b" data-t="おば">おば</span></span></h1>
+    <h1 class="logo" aria-label="パチおば"><span class="lg" aria-hidden="true"><span class="a">パチ</span><span class="b">おば</span></span><span class="lb" aria-hidden="true"><span class="a">パチ</span><span class="b">おば</span></span><span class="lt" aria-hidden="true"><span class="a" data-t="パチ">パチ</span><span class="b" data-t="おば">おば</span></span></h1>
     <p class="test-tag ttest" id="titleTest" hidden>ためしモード</p>
     <div class="tstart"><button class="btn primary" id="startBtn">スタート</button></div>
   </div>
