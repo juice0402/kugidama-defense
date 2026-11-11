@@ -10,8 +10,12 @@ R=[("e.dead=true; const r=E.reward; G.balls+=r;","e.dead=true; const r=E.reward;
 ("G.waveGap=2.5;G.balls+=15;","G.waveGap=2.5;G.balls+=15;if(G.ec)G.ec.wave+=15;"),
 ("G.balls+=HALO.coin;","G.balls+=HALO.coin;if(G.ec)G.ec.halo+=HALO.coin;"),
 ("const bonus=30+G.life*3; G.balls+=bonus;","const bonus=30+G.life*3; G.balls+=bonus; if(G.ec)G.ec.clear+=bonus;"),
-("G.state='over'; closeSheet(); G.balls+=G.feverPay;","G.state='over'; closeSheet(); G.balls+=G.feverPay; if(G.ec)G.ec.fev+=G.feverPay;"),
+("G.state='over'; tutStop(); closeSheet(); G.balls+=G.feverPay;","G.state='over'; tutStop(); closeSheet(); G.balls+=G.feverPay; if(G.ec)G.ec.fev+=G.feverPay;"),
 ("  G.balls--;\n","  G.balls--; if(G.ec)G.ec.shot++;\n")]
+R+=[("e.dead=true; const r=killCoin(E); G.balls+=r;","e.dead=true; const r=killCoin(E); G.balls+=r; if(G.ec)G.ec.kill+=r;")]   # 11/11 から（おばけの コインは killCoin）
 for a,b in R:
-    assert s.count(a)==1,('見つからない／2つある：',a); s=s.replace(a,b)
+    n=s.count(a)
+    if n==0: continue   # 11/11 から：玉・FEVER・ウェーブ・クリア・光の輪の コインは もう ない
+    assert n==1,('2つある：',a); s=s.replace(a,b)
+assert 'G.ec.kill+=' in s,'おばけの コインが 見つからない'
 open(os.path.join(here,'game_ec.html'),'w',encoding='utf-8').write(s); print('game_ec.html ok')
