@@ -1656,7 +1656,7 @@ const BUNSHIN={pad:1, per:3, cap:10, life:6, lift:.6, drag:.02, ringR:40, cd:.5,
 const LASER={charge:.55, len:1.7, w:5, fx:2};   // 光線タワー：ためる秒・光の長さ（とどく広さに対して）・光の太さ（おばけの半径に足す）・とくしゅ効果・わざが出る数（属性は 光の中 みんな。砲台に近い順）
 const WAKU={pad:1.5, R:13, sq:.5, tl:-.3, w:.14, out:4.2, use:2, xp:1, float:3.5, lift:.8, drag:.02, flow:2.5, cd:.45, ringR:46};   // 惑星リング：玉が のる広さ（杭のふちから）・わっかの半径（杭のふちから）・わっかの たて横の比・かたむき・1コマに まわる角度・とんでいく速さ・1つの玉が のれる リングの数・まわり終わりの経験値・とんでいった玉が ふわふわ（むじゅうりょく）する秒・そのとき重さを消す割合・速さがへる割合・まわったあと わっかが まわりつづける秒・宿った技のつぎまで（秒）・宿った技の広さ
 const ANGEL={k:[1.2,1.26,1.32,1.4], cd:[.85,.81,.77,.72], every:2, keep:4};   // 天使タワー：しゅくふくの ダメージの倍率・撃つ間の倍率（Lv1〜4）・効き目を 分ける 間（秒）・分けた 効き目の のこり秒
-const HALO={y:-18, w:15, t:6, float:2.5, lift:.55, drag:.015, xp:1, long:1.5, k:1.25, keep:4, coin:1, ringR:44, cd:.4};   // 光の輪：輪の高さ（杭のまん中から）・輪の はば（半分）・金色の玉の秒・ふわっと おちる秒・そのとき重さを消す割合・速さがへる割合・金色の玉が当たった砲台：経験値＋・バフの のび（倍）・しゅくふくの ダメージ倍率・その秒・コイン＋・宿った技の広さ・つぎまで（秒）
+const HALO={y:-18, w:15, t:6, float:2.5, lift:.55, drag:.015, xp:1, long:1.5, k:1.25, keep:4, ringR:44, cd:.4};   // 光の輪：輪の高さ（杭のまん中から）・輪の はば（半分）・金色の玉の秒・ふわっと おちる秒・そのとき重さを消す割合・速さがへる割合・金色の玉が当たった砲台：経験値＋・バフの のび（倍）・しゅくふくの ダメージ倍率・その秒・コイン＋・宿った技の広さ・つぎまで（秒）
 // ならび：お店・砲台のシートの順。自動プレイ（dev/sim）は いちばん下の持っているギミックを全部の砲台につける（sim.js の gm で えらべる）。雪山のジャンプ台は 蟻地獄の上に置いた（蟻地獄の方が強い。記録の雪山）。火山の噴火口は いちばん下（蟻地獄・ジャンプ台と分けて測って そろえた。記録の火山）
 const GIMMICKS={
   bumper:{name:'バンパー',color:'#e8f4ff',unlock:600,cost:20,pad:BUMP_R,ring:2.5,desc:'当たった玉をボヨンと強くはじく。まわりが少し広くなって、玉が当たりやすい。属性のある砲台なら、はね返すたびに属性の輪がはじける'},
@@ -1668,7 +1668,7 @@ const GIMMICKS={
   funka:{name:'噴火口',color:'#ff6a5a',unlock:1100,cost:45,board:5,pad:FUNKA.pad,ring:2.5,desc:'杭の上に 小さな 噴火口。上から入った玉を ためて、3つ たまると 上へ いっせいに ふき上げる（もう一度 杭に当たれる）。属性のある砲台なら、ふき上げた玉に その効き目が宿って、ふき上げるときに まわりの おばけにも効く'},
   bunshin:{name:'分身ミラー',color:'#d8c8ff',unlock:1200,cost:50,board:6,pad:BUNSHIN.pad,ring:2.5,desc:'杭のまわりに 魔法の かがみ。当たった玉が 2つに 分かれる（分身の玉は 少しで きえて、ヘソには 入らない・コインは かからない）。属性のある砲台なら、分身の玉に その効き目が宿って、分かれるときに まわりの おばけにも効く'},
   wakusei:{name:'惑星リング',color:'#ffd27a',unlock:1300,cost:55,board:7,pad:WAKU.pad,ring:3,desc:'杭のまわりに わくせいの わっか。当たった玉は 砲台の まわりを 1周 まわってから とんでいく（まわりの 杭や おばけに 当たりやすい）。属性のある砲台なら、まわっている間 まわりの おばけに その効き目、とんでいく玉にも 効き目が 宿る'},
-  halo:{name:'光の輪',color:'#ffe08a',unlock:1400,cost:60,board:8,ring:2.5,desc:'砲台の 上に 光の輪。玉が 輪を くぐると 金色の玉に なる（その玉が 砲台に当たると 経験値が 多めで、バフが 長く・つよく なって、コインも 少し もらえる）。属性のある砲台なら、くぐった玉に 効き目が 宿って、くぐるときに まわりの おばけにも 効く'},
+  halo:{name:'光の輪',color:'#ffe08a',unlock:1400,cost:60,board:8,ring:2.5,desc:'砲台の 上に 光の輪。玉が 輪を くぐると 金色の玉に なる（その玉が 砲台に当たると 経験値が 多めで、バフが 長く・つよく なる）。属性のある砲台なら、くぐった玉に 効き目が 宿って、くぐるときに まわりの おばけにも 効く'},
 };
 // おばけ（イタズラ好きの白いおばけに動物の特ちょう。gh＝おばけの絵）。台ごとの顔ぶれは STAGES の foes（ふつう・はやい・かたい・中ボス・ボス）
 // 中ボス（5ウェーブ目）とボス（10ウェーブ目）：call 秒ごとに calls の手下を呼ぶ。boss＝受け皿に来たときの重さ（1＝ライフ-5、2＝ゲームオーバー）。いたずらはフック（草原・森の区切り）
@@ -2027,11 +2027,15 @@ const BOARDS=[
 ];
 // お金のバランス（11/7 しょーくん「1ゲーム終わったら、新しいタワー1個か弾2種類買えるくらい」）：
 //  ・台の中のお金（おばけのコイン・砲台の値段・1発1コイン）は そのまま（むずかしさが変わらないように）
-//  ・FEVER のコインを半分（前は 入ったとき60・FEVER中のヘソ1回10）。入ったときに FEVER_PAY を少しずつ・FEVER 中にヘソに入るたび FEVER_HIT
+//  ・（11/11 まで）FEVER のコインを半分（前は 入ったとき60・FEVER中のヘソ1回10）
 //  ・お店の値段を2倍（弾 400＋50×(n−1)・タワー 800＋100×(n−1)・ギミック 600〜1400。n＝台の番号で森が1。台の値段は そのまま）
 //  ・台に入るとき MIN_COINS（前は100）まで足す：お店で使いきっても、ためしモードと同じ300で遊べる（使いきると すぐ負けて かせげなくなるのを ふせぐ）
-const FEVER_PAY=30, FEVER_HIT=5;
-const START_COINS=300, MIN_COINS=300;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（打てなくなって進めなくならないように）
+// 11/11 App Store の 審査（疑似ギャンブルの ある アプリは 個人の 開発者では 出せない）→「払って 当たると ふえる」形を なくした：
+//  ・玉は 無料（前は 1発1コイン）。FEVER・ヘソ・ウェーブ クリア・台の クリア・光の輪 では コインは 出ない。台の中で コインが 入るのは おばけを 倒した ときだけ
+//  ・そのぶん おばけの コインを COIN_K 倍（台ごとに STAGES の coinK）。1ゲームの 終わりの コインと クリアまでの 回数が 前と 同じ くらいに なるよう dev/sim の econ.js で 合わせた
+const COIN_K=1;
+const killCoin=E=>Math.max(1,Math.round(E.reward*(STAGES[G.stage].coinK??COIN_K)));
+const START_COINS=300, MIN_COINS=300;         // 台に入るときコインが MIN_COINS より少なければ、そこまで足す（タワーを 建てられなくて 進めなくならないように。運では ない）
 const XP_NEED=[0,12,36,80];                  // Lv2・Lv3・Lv4（最大）になる経験値。いちばん上のまん中の杭に最初に建てると、5ウェーブごろに最大
 const BOSS_RES=.3;                            // 中ボス・ボスの状態異常の耐性（やけど・どく・おそい・しびれ・止まるが3割早くとけ、おそさも3割弱い）
 const BOSS_HOLD={max:2.5, guard:3, back:.5}; // 中ボス・ボスの止まりにくさ：止まっている時間（しびれ・ねむり・こおり・根っこ…）が max 秒たまると「がまん」→ guard 秒は止める効き目を受けつけない。動いている間は1秒に back 秒ずつへる
@@ -2058,7 +2062,7 @@ const avail=D=>!D.board||stageOpen(D.board);
 const G={waves:[],cfl:null,found:new Set(),fresh:new Set(),fx:[],obs:[],sx:{},poofs:[],fruits:[],msp:[],pend:[],portals:[],fw:[],conf:[],alarm:0,alarmC:'#ff4f5e',cheer:0,cheerMax:1,cheerC:'#ffd84a',bossC:'#ff4f5e',zaps:[],rings:[],zones:[],state:'title',stage:0,wave:1,life:10,lifeShow:10,balls:START_COINS,deck:START_DECK.slice(),unlocked:NEW_UNLOCKED(),gimmicks:NEW_GIMMICKS(),cleared:[],bought:[],owned:{...START_OWNED},
   pegs:[],walls:[],heso:null,
   bs:[],en:[],bl:[],parts:[],texts:[],banners:[],spawnQ:[],spawnT:0,waveDone:false,waveGap:0,
-  fever:0,feverPay:0,feverPayT:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
+  fever:0,flash:0,strength:.5,fireT:0,launchFx:0,paused:false,shake:0,time:0,kills:0,sel:null,eid:0,stat:{}};
 let scale=1, dpr=1, ox=0, oy=0, VW=W, VH=H, dprCap=2;   // dprCap＝台の キャンバスの 細かさの 上の 限り（重い スマホでは 自動で 下げる：下の「自動の 細かさ」）   // ox,oy＝画面の中の台の位置(px)、VW,VH＝画面の大きさ(px)
 
 /* ---------- 描画の道具 ---------- */
@@ -2798,7 +2802,7 @@ function setupStage(){
   G.heso=L.heso?{...L.heso}:null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
   clearPlay(); G.sx={}; if(S.setup) S.setup(L);
-  G.life=G.lifeShow=LIFE_MAX;G.fever=0;G.feverPay=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
+  G.life=G.lifeShow=LIFE_MAX;G.fever=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
   G.flies=Array.from({length:S.flies??28},()=>({x:45+rnd()*285,y:120+rnd()*420,ph:rnd()*6.28,sp:.3+rnd()*.5,bl:.8+rnd()*1.6}));
@@ -3130,7 +3134,7 @@ Object.assign(STAGES[0],{
   // 自動プレイ（はじめの玉セット）：1回目は6回とも失敗（9〜10ウェーブ）・クリアは2〜6回目（まん中4〜5回目。人は自動プレイより強いので、だいたい3回目ごろのつもり）
   // 11/10 はじめの玉を 通常弾だけに（しょーくん）→ そのままだと クリアまで まん中7.5回・10回で だめも 2/16（前の 火炎弾・氷結弾つきは まん中3回）
   //   → ざこの HP を 2割 へらす（hpW×0.8）：まん中5回（3〜8回、12回 ためした）。11/6 の めあて「まん中4〜5回目」に もどした
-  hpW:[4.8,7.8,10.8,13.2,13.6,14,14.4,14.8,15.2,15.2], bossN:.4,
+  hpW:[4.8,7.8,10.8,13.2,13.6,14,14.4,14.8,15.2,15.2], bossN:.4, coinK:1,
   build:buildMeadow,
   setup(){G.sx.nuts=[];G.sx.nutT=4},
   tick(dt,f){const X=G.sx;X.nutT-=dt;if(X.nutT<=0){X.nutT=NUT.every*(.7+Math.random()*.6);dropNut()}stepNuts(f,dt)},
@@ -3210,7 +3214,7 @@ Object.assign(STAGES[1],{
   // 11/6 草原と同じ直し方。直す前は ざこが上ですぐ倒れて（深さ0.1）、中ボス くまが壁（全部の回で まん中89秒・倒せず40/52）→ ざこは ウェーブごとの表で強く（はじめから手ごわく、あとは たいら）、
   // 中ボスのウェーブの ざこは4割・くまは midHp .4（ボスのHPとかけて 前の1/4ほど）・手下は8秒ごと、ボスのHP .8→.5（ざこの表で手下も強くなるので）
   // 自動プレイ（from・30回）：1回目は26回失敗（10ウェーブ）・クリアまで まん中4回目（1〜10回目）・ざこの深さ0.14〜0.24・くまは まん中47秒・ボス戦 まん中107秒
-  hpW:[7,11,15,17.5,18,18,18.5,18.5,19,19], bossN:.4, midHp:.4, bossHp:.5,
+  hpW:[7,11,15,17.5,18,18,18.5,18.5,19,19], bossN:.4, coinK:0.9, midHp:.4, bossHp:.5,
   build:buildForest,
   setup(L){G.sx.bigs=(L.bigs||[]).map(o=>({...o}));G.sx.mush=(L.mush||[]).map((m,i)=>({...m,r:MUSH.r,cd:.5+i*.4,puff:0,bop:0}))},
   tick(dt){for(const m of G.sx.mush){m.cd=Math.max(0,m.cd-dt);m.puff=Math.max(0,m.puff-dt);m.bop=Math.max(0,m.bop-dt)}},
@@ -3274,8 +3278,7 @@ const TLOCK={
 /* ---------- 遊びの中身 ---------- */
 function launch(){
   if(G.bs.length>=32) return false;
-  const t=G.deck[Math.floor(Math.random()*G.deck.length)];
-  G.balls--;
+  const t=G.deck[Math.floor(Math.random()*G.deck.length)];   // 玉は 無料（11/11 審査：払って 当たると ふえる 形を なくす。前は 1発1コイン）
   const e0=launchE(G.strength,BALLS[t].g)*(.992+Math.random()*.016);
   G.bs.push({x:XB,y:LAUNCH_Y,vx:0,vy:0,t,r:BALLS[t].r*G.bscale,age:0,still:0,hit:{},gone:false,rail:true,s:0,e0});
   G.launchFx=.2; sfx.launch(); return true;
@@ -3563,7 +3566,7 @@ function hurtEnemy(e,d,dot){
   if(e.hp<=0){
     if(e.fake){vanishFake(e);return}                       // たぬきのにせもの：ドロンと消えるだけ
     const E=ENEMIES[e.t];
-    e.dead=true; const r=E.reward; G.balls+=r; G.kills++;
+    e.dead=true; const r=killCoin(E); G.balls+=r; G.kills++;
     addText(e.x,e.y,'+'+r,GOLD); burst(e.x,e.y,E.color,12); if(E.boss) sfx.bossDown(E.boss); else sfx.kill();
     if(E.gh){G.poofs.push({e:Object.assign({},e,{dying:true,flash:0,hurtT:0,ghost:0,trail:[],oops:0,stun:0,sleep:0}),t:0,dir:Math.random()<.5?-1:1});
       for(let i=0;i<(E.boss?5:2);i++) fxAdd({k:'wisp',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*.3,vx:(Math.random()-.5)*.4,vy:-(.6+Math.random()*.5),max:1.1+Math.random()*.5,s:e.r*(.22+Math.random()*.12),ph:Math.random()*6.28,c:'#ffffff'})}   // たましいが ふわっと上へ
@@ -3767,8 +3770,8 @@ function ballElOnEnemy(e,el,dmg){
 function heso(q,b){
   const hl=b&&BALLS[b.t].heal;
   if(hl&&G.life<LIFE_MAX){const n=Math.min(hl,LIFE_MAX-G.life);G.life+=n;addText(q.x,q.y-30,'ライフ +'+n,'#7dffb0',true);burst(q.x,q.y,'#7dffb0',22);sfx.lv()}
-  if(G.fever>0){G.balls+=FEVER_HIT;addText(q.x,q.y-12,'+'+FEVER_HIT,GOLD,true);burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}
-  G.fever=8; G.feverPay=FEVER_PAY; G.feverPayT=0; G.flash=.6;
+  if(G.fever>0){burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}   // FEVER 中の ヘソ：光と 音だけ（11/11 コインは 出さない）
+  G.fever=8; G.flash=.6;   // FEVER の ごほうびは 砲台の 威力・連射と 玉の 威力が 2倍（towerDmg・towerCd・玉）と 演出だけ。コインは 出ない（11/11 審査）
   banner('FEVER!!','rainbow',2.2,250); burst(q.x,q.y+6,'rainbow',40); sfx.fever(); haptic('heavy');
 }
 // ヘソ：受け口のふちの2本の柱。間から落ちた玉が入る
@@ -3950,8 +3953,8 @@ function bossGuard(e){
 function update(dt){
   const f=dt*60, S=STAGES[G.stage];
   const tut=G.tut; if(tut) tutTick(dt);         // はじめての あそびかた（11/10）
-  // 発射（ずっと出続ける。あそびかたの はじめは ハンドルを まわすまで 出さない）
-  if(G.balls>0&&!(tut&&tut.noFire)){G.fireT-=dt;if(G.fireT<=0) G.fireT=launch()?FIRE_GAP:.1}
+  // 発射（ずっと出続ける・コインは いらない。あそびかたの はじめは ハンドルを まわすまで 出さない）
+  if(!(tut&&tut.noFire)){G.fireT-=dt;if(G.fireT<=0) G.fireT=launch()?FIRE_GAP:.1}
   stepBalls(f);
   if(S.tick) S.tick(dt,f);                      // ステージギミック
   G.launchFx=Math.max(0,G.launchFx-dt);
@@ -4024,11 +4027,7 @@ function update(dt){
   G.en=G.en.filter(e=>!e.dead);
   emitFx(dt);
   // フィーバー
-  if(G.fever>0){
-    G.fever-=dt;
-    if(G.feverPay>0){G.feverPayT+=dt;while(G.feverPayT>.1&&G.feverPay>0){G.feverPayT-=.1;G.feverPay--;G.balls++}}
-    if(G.fever<=0){G.fever=0;G.balls+=G.feverPay;G.feverPay=0}
-  }
+  if(G.fever>0){G.fever-=dt;if(G.fever<=0)G.fever=0}
   for(const p of G.pegs) if(p.flash>0) p.flash-=dt;
   G.shake=Math.max(0,G.shake-dt); G.flash=Math.max(0,G.flash-dt);
   if(G.life<=0){G.life=0;gameOver();return}
@@ -4037,7 +4036,7 @@ function update(dt){
   if(G.wave>=WAVES){if(cleared){stageClear();return}}
   else{
     if(!(tut&&tut.hold)) G.waveT-=dt;
-    if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;G.balls+=15;addText(190,300,'WAVE クリア +15',GOLD,true);cheerRun(GOLD);sfx.wclear()}
+    if(cleared&&!G.waveDone){G.waveDone=true;G.waveGap=2.5;addText(190,300,'WAVE クリア',GOLD,true);cheerRun(GOLD);sfx.wclear()}
     if(G.waveDone?(G.waveGap-=dt)<=0:G.waveT<=0) startWave(G.wave+1);
   }
 }
@@ -5556,7 +5555,7 @@ Object.assign(STAGES[2],{
   // 自動プレイ（from・30回）：1回目は30回とも失敗（ほぼ10ウェーブ）・クリアまで まん中3回目（2〜10回目）・ざこの深さ0.18〜0.27・ふくろうは まん中48秒・ボス戦 まん中96秒
   // 11/7 お金のバランス（お店の値段2倍）で 品を買うのが ゆっくりになり、クリアまで まん中3→6回目（ほとんど ボスで負け。オオカミの のこりHP 2〜9割で受け皿へ）
   // → ボス .45→.36（中ボスは midHp .38→.475 で そのまま）。自動プレイ（from・12回）：1回目の失敗91%・まん中5回目（.30 でも5回目・オオカミを2割おそくしても5回目。この台の品が よく効く台）
-  hpW:[13.5,21,29.5,34.5,36,37,38,39,40,40], bossN:.4, midHp:.475, bossHp:.36,
+  hpW:[13.5,21,29.5,34.5,36,37,38,39,40,40], bossN:.4, coinK:1.1, midHp:.475, bossHp:.36,
   build:buildMansion,
   setup(L){G.sx.candles=(L.candles||[]).map((c,i)=>({...c,r:CANDLE.r,lit:0,cd:.3+i*.2,pop:0,bop:0}))},
   tick(dt){stepCandles(dt)},
@@ -6078,7 +6077,7 @@ Object.assign(STAGES[3],{
   // 自動プレイ（from・30回）：1回目は29回失敗（10ウェーブ）・クリアまで まん中4〜5回目（10回でクリアできないのは2回）・ざこの深さ0.19〜0.21・さそりは まん中51秒・ボス戦 まん中118秒
   // 11/7 お金のバランス（お店の値段2倍）で 品を買うのが ゆっくりになり、クリアまで まん中3→4.5回目（ほとんど ボスで負け）
   // → ボス .75→.67（中ボスは midHp .32→.358 で そのまま）。自動プレイ（from・12回）：1回目の失敗83%・まん中3.5回目
-  hpW:[6,9.5,13.5,17.5,20,22,23.5,24.5,25.5,26], bossN:.4, midHp:.358, bossHp:.67,
+  hpW:[6,9.5,13.5,17.5,20,22,23.5,24.5,25.5,26], bossN:.4, coinK:0.95, midHp:.358, bossHp:.67,
   build:buildDesert,
   setup(){G.sx.tw={x:(TWISTER.x0+TWISTER.x1)/2,dir:Math.random()<.5?-1:1,pulse:0}},
   tick(dt,f){stepTwister(dt,f)},
@@ -6700,7 +6699,7 @@ Object.assign(STAGES[4],{
   // 11/6 草原と同じ直し方。雪山は ざこの深さは前から0.2ほどあったが、中ボス セイウチが長い（まん中117秒）→ ざこは ウェーブごとの表で少しだけ強く（はじめの方1.2倍ほど・おわりは前と同じくらい）、
   // 中ボスのウェーブの ざこは4割・セイウチは midHp .27（前の1/4ほど）・手下は8秒ごと（ボスのHPは そのまま1）
   // 自動プレイ（from・30回）：1回目は26回失敗（10ウェーブ）・クリアまで まん中3回目（1〜9回目）・ざこの深さ0.20〜0.28・セイウチは まん中56秒・ボス戦 まん中114秒
-  hpW:[5.5,9.5,14,18.5,22,25,27,29,30.5,32], bossN:.4, midHp:.27,
+  hpW:[5.5,9.5,14,18.5,22,25,27,29,30.5,32], bossN:.4, coinK:0.95, midHp:.27,
   build:buildSnow,
   setup(){icicleSetup()},
   tick(dt,f){stepIcicles(dt,f)},
@@ -7250,7 +7249,7 @@ Object.assign(STAGES[5],{
   // → おわりの方の ざこを 47〜68 → 40〜52・ボス 1.65→1.55。コイン3000〜5000なら1〜3回目でクリア。ふつう（30回の形で16回）：1回目の失敗87%・まん中2.5回目
   // 11/7 お金のバランス（お店の値段2倍）で 品を買うのが ゆっくりになり、クリアまで まん中4→6回目（10回でだめ 3/12・7〜8ウェーブと ボスで負け）
   // → おわりの方の ざこ 33〜52 → 30〜46・ボス 1.55→1.35（中ボスは midHp .4→.46 で そのまま）。自動プレイ（from・12回）：1回目の失敗83%・まん中3回目
-  hpW:[5.5,9,13,17,25,30,35,40,43,46], bossN:.4, midHp:.46, bossHp:1.35,
+  hpW:[5.5,9,13,17,25,30,35,40,43,46], bossN:.4, coinK:1.1, midHp:.46, bossHp:1.35,
   build:buildVolcano,
   setup(){fountSetup()},
   tick(dt){stepFount(dt)},
@@ -7957,7 +7956,7 @@ Object.assign(STAGES[6],{
   // 11/6 草原と同じ考え方で：前は ざこが上ですぐ倒れて、中ボス黒ヤギ（手下にバリア）が壁（倒せず31/41・10回でクリアできない 7/8）
   // → ざこは ウェーブごとの表（はじめから手ごわく、あとは ゆるやかに）・中ボスのウェーブの ざこは4割・中ボスのHPは4割・手下は8秒ごと・ボスは1.3→1
   // 自動プレイ（前の台までクリアした形・30回）：1回目は9割失敗（ほぼ10ウェーブ）・クリアは1〜9回目（まん中3.5回目）・中ボス まん中44秒・ボス戦 まん中134秒
-  hpW:[3,5.5,8,10.5,12.5,14,15,16,17,18], bossN:.4, midHp:.4, bossHp:1,
+  hpW:[3,5.5,8,10.5,12.5,14,15,16,17,18], bossN:.4, coinK:0.9, midHp:.4, bossHp:1,
   build:buildCastle,
   setup(){mjSetup()},
   tick(dt){stepMJ(dt)},
@@ -8758,7 +8757,7 @@ Object.assign(STAGES[7],{
   // 11/6 草原と同じ考え方で：ざこは ウェーブごとの表（はじめから手ごわく、あとは ゆるやかに）・中ボスのウェーブの ざこは4割・中ボスのHPは5.5割・手下は8秒ごと・
   // ボスは1.3→.9（ボス戦が長すぎた。クジラは弾を すいこんで回復するので、HPのわりに長い）
   // 自動プレイ（前の台までクリアした形・30回）：1回目は9割失敗（10ウェーブ）・クリアは1〜7回目（まん中3回目）・中ボス まん中36秒・ボス戦 まん中143秒
-  hpW:[4,7.5,10.5,13,15,16.5,17.5,18.5,19.5,20], bossN:.4, midHp:.55, bossHp:.9,
+  hpW:[4,7.5,10.5,13,15,16.5,17.5,18.5,19.5,20], bossN:.4, coinK:1, midHp:.55, bossHp:.9,
   build:buildSpace,
   setup(){planetSetup()},
   tick(dt){stepPlanets(dt)},
@@ -9486,7 +9485,7 @@ Object.assign(STAGES[8],{
   // 自動プレイ（前の台までクリアした形・30回）：1回目は30回とも失敗（ほぼ10ウェーブ）・クリアは3〜10回目（まん中4回目）・中ボス まん中32秒・ボス戦 まん中98秒
   // 11/7 お金のバランス（お店の値段2倍）で 品を買うのが ゆっくりになり、クリアまで まん中3.5→6回目（ほとんど ボスで負け）
   // → ボス 1.4→1（中ボスは midHp .55→.77 で そのまま）。自動プレイ（from・12回）：1回目の失敗100%・まん中4回目（さいごの台なので 少し手ごわいまま）
-  hpW:[4.5,8.5,12.5,16,17.5,18.5,19.5,20.5,21,21.5], bossN:.4, midHp:.77, bossHp:1,
+  hpW:[4.5,8.5,12.5,16,17.5,18.5,19.5,20.5,21,21.5], bossN:.4, coinK:1.05, midHp:.77, bossHp:1,
   build:buildHeaven,
   setup(){hornSetup()},
   tick(dt){stepHorn(dt)},
@@ -9627,7 +9626,7 @@ Object.assign(TOWERS.tenshi,{
 
 // ---- 光の輪（ギミック） ----
 // 砲台の 上に 光の輪。玉が 輪を くぐると 金色の玉（b.gold＝HALO.t 秒）になって 少し ふわっと おちる（HALO.float 秒）。1つの玉は 同じ輪で1回。
-// 金色の玉が 砲台に当たると（pegHit の goldHit）：経験値 +HALO.xp・いまの バフが HALO.long 倍 長く・HALO.keep 秒 ダメージ×HALO.k（しゅくふく）・コイン +HALO.coin。
+// 金色の玉が 砲台に当たると（pegHit の goldHit）：経験値 +HALO.xp・いまの バフが HALO.long 倍 長く・HALO.keep 秒 ダメージ×HALO.k（しゅくふく）（11/11 まで コイン +1 も）。
 // 宿った輪は、くぐった玉に 効き目を 宿す（b.inf）＋ くぐるとき まわり HALO.ringR の おばけに 効き目（属性は みんな、とくしゅ効果・わざは 受け皿に近い2体。HALO.cd 秒に1回）
 function haloPass(b,p,T){
   (b.halo||(b.halo={}))[p.id]=1; b.gold=HALO.t; b.goldF=HALO.float; b.goldFrom=p.id; T.hfl=.35;
@@ -9649,7 +9648,6 @@ function goldHit(p,b){
   const L=BUFF_T*HALO.long; for(const k of ['elT','spT','comboT','pow','rapid']) if(T[k]>0) T[k]=Math.max(T[k],L);
   if(!(T.bless>G.time)){T.blessK=HALO.k;T.blessC=1}else T.blessK=Math.max(T.blessK||1,HALO.k);
   T.bless=Math.max(T.bless||0,G.time+HALO.keep);
-  G.balls+=HALO.coin; if(G.time-(T.gtx??-9)>.6){T.gtx=G.time;addText(p.x,p.y-18,'+'+HALO.coin,GOLD)}
   burst(p.x,p.y,'#ffe08a',4);
 }
 Object.assign(GIMMICKS.halo,{
@@ -10364,11 +10362,11 @@ function startStage(){
 }
 function stageClear(){
   G.state='clear'; tutStop(); G.fever=0; G.bs=[]; G.bl=[];
-  const bonus=30+G.life*3; G.balls+=bonus; bgmJingle('clear'); haptic('success'); burst(188,300,'rainbow',30);
+  bgmJingle('clear');   // クリアの コインは なし（11/11：コインは おばけを 倒した ときだけ） haptic('success'); burst(188,300,'rainbow',30);
   const S=STAGES[G.stage], first=!G.cleared.includes(G.stage);
   if(first) G.cleared.push(G.stage);
   writeSave();
-  const lines=[`のこりライフ ${G.life}`,`クリアボーナス ${COIN}+${bonus.toLocaleString()}`,`お金 ${COIN}${G.balls.toLocaleString()}`,'ここまでセーブしたよ'];
+  const lines=[`のこりライフ ${G.life}`,`お金 ${COIN}${G.balls.toLocaleString()}`,'ここまでセーブしたよ'];
   // はじめてクリアで次の台が開いたら、お知らせ（お店にふえた品も）。コインで買う台なら「買えるようになったよ」
   if(first) for(const B of BOARDS){
     if(B.need!==G.stage) continue;
@@ -10402,7 +10400,7 @@ function openQuit(){
 }
 function closeQuit(){sheetHide($('quit')); if(G.state==='play') G.paused=false}
 function quitBoard(){
-  {const q=$('quit');clearTimeout(q._t);q.classList.remove('out');q.hidden=true} G.paused=false; G.state='over'; G.fever=0; G.feverPay=0;
+  {const q=$('quit');clearTimeout(q._t);q.classList.remove('out');q.hidden=true} G.paused=false; G.state='over'; G.fever=0;
   if(G.testLobby==null&&G.pre){G.balls=G.pre.balls;G.kills=G.pre.kills}   // 台に入る前のコインにもどす（ためしモードは openHub でロビーのコインにもどる）
   G.pre=null;
   const S=STAGES[G.stage]; hallIdx=G.boardIdx??hallIdx; openHub('board'); toast(`${S.name}の台をやめたよ`);
@@ -10412,7 +10410,7 @@ $('quitNo').onclick=closeQuit; $('quitBack').onclick=closeQuit;
 $('quitYes').onclick=()=>{ensureAudio();quitBoard()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('quit').hidden)closeQuit()});
 function gameOver(){
-  G.state='over'; tutStop(); closeSheet(); G.balls+=G.feverPay; G.feverPay=0; G.fever=0; writeSave(); bgmJingle('over'); haptic('error');
+  G.state='over'; tutStop(); closeSheet(); G.fever=0; writeSave(); bgmJingle('over'); haptic('error');
   const S=STAGES[G.stage], i=G.boardIdx??0;
   showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,`お金 ${COIN}${G.balls.toLocaleString()}`,'かせいだお金はそのまま残るよ。お店で強くなって、もう一度！'],
     'もう一度この台',()=>playBoard(i),'台えらびへ',()=>openHub('board'),'over');
@@ -11311,7 +11309,7 @@ function shotScene(){
   buildStatic();
   const step=n=>{for(let i=0;i<n;i++){G.life=10;update(1/60);updateFx(1/60);G.time+=1/60}};
   if(kind==='boss'){step(60*3);G.fever=0;G.en=[];G.pend=[];G.portals=[];G.spawnQ=[];startWave(10);step(60*7)}
-  else{let g=0;while(G.wave<3&&g<60*120){step(1);g++} step(60*4); G.fever=8; G.feverPay=FEVER_PAY}
+  else{let g=0;while(G.wave<3&&g<60*120){step(1);g++} step(60*4); G.fever=8}
   G.banners=[]; G.hits=[];
 }
 window.addEventListener('hashchange',shotScene); setTimeout(shotScene,0);

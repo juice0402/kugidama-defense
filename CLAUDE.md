@@ -11,5 +11,6 @@
 - 動き（11/9〜）：画面の切りかえ・シート・タブ・ボタン・玉のセット・タワーを置く などの アニメーション。transform と opacity だけ・動きを へらす 設定では 出さない。index.html の「動き ここから」と JS の「動き（11/9）」、くわしくは dev/anim.md。ためしは dev/sim/animrec.py（動画）
 - iPhone・iPad（11/9〜）：さいごは iOS アプリに したい。いろいろな 画面の ためしは dev/sim の devsweep.py（11機種）・wk.py（WebKit＝Safari と 同じ エンジンで 開く・11/10）・animstress.py（れんだ・とちゅうで とじる）・canvmem.py（キャンバスの メモリ。iOS は 合計 およそ 224MB が 上限）。直したこと・アプリに する 道すじは dev/ios.md。iPad など 大きい 画面は #app を uiZ 倍に（applyZ。CSS の vw・vh は --vw・--vh を 使う）。枠と ボタン・字の すきまは SPACE=1 devsweep.py と panelshots.py。アプリは juice0402/ios-kobo の apps/pachioba（GitHub Actions の Mac で 組み立て・Mac は いらない）。アプリの 中だけ APP_PLATFORM='ios'・APP_HAPTIC、ストアの スクショは 自動の ためしの ときだけ #shot=
 - はじめての あそびかた（11/10）：はじめて 台に 入った ときだけ（セーブの tut）。ハンドル → 杭に タワー の 2だん（おばけを やっつける だんは なし・うさぎおばけの ふきだし）。index.html の「はじめての あそびかた」（G.tut・tutTick・tutPlace・#tut）。自動の ためしでは 出ない（#tut を つけると 出す）。ためしは dev/sim/tutcheck.py
+- コイン（11/11 App Store の 審査）：玉は 無料・コインが 入るのは おばけを 倒した ときだけ（FEVER・ヘソ・クリアでは 出ない＝疑似ギャンブルに しない）。台ごとの おばけの コインの 倍は STAGES の coinK。くわしくは dev/plan.md
 - ゲーム工房（11/9〜）：あそびトークの /kobo/pachioba で公開。工房に出したい版ができたら RELEASES.md のいちばん上に版を足す（書き方はファイルの上）。main にマージされると Actions（release.yml・tools/release/tag_releases.py）がタグを作り、司令塔が工房に取りこむ
 - 決まっていない中身を勝手に足さない。迷ったらしょーくんに聞く
