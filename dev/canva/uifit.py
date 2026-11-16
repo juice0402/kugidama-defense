@@ -1,6 +1,6 @@
 # UI の 絵（ボタンの 板・パネルの わく・アイコン）を ゲームに 入れる（11/8 6. の 後半）
 # 使い方：cd dev/canva && python3 uifit.py [見本.png]
-#   ui.json の 絵を すけすけに して WebP に し、index.html の CSS の UI_ART（「UI_ART ここから」〜「ここまで」）を 書きかえる。手で 書かない
+#   ui.json の 絵を すけすけに して WebP に し、src/index.html の CSS の UI_ART（「UI_ART ここから」〜「ここまで」）を 書きかえる。手で 書かない
 #
 # もとの絵（ui/src/〇〇.png）：Canva の 絵（こい紺の 無地の 背景）。板・わくは 作業用デザインの 480×480 の ページの 見本（600×600）
 # すけすけ：背景の 色との ちがいが 大きい 太い かたまり（穴は うめる）＝不とうめい、まわりの 光は ちがいの 大きさで うすく（neoncut.py と 同じ 考え）
@@ -13,7 +13,7 @@
 #   まん中の のびる 所は 1/4 に ちぢめて 入れる（つづいているので つなぎめは 出ない）
 # icons（アイコン）："src"・"px"＝WebP の 大きさ（正方形・ふつう 96＝32px を dpr3）・"pad"（まわりの すきま 割合）・"q"
 #   ゲームの中：CSS の 変数 --i-〇〇（:root。background-image に 使う。台の ハートは JS が この 変数から 絵を よむ）
-import sys, os, json, io, base64, re
+import sys, os, json, io, base64, re, subprocess
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage as nd
@@ -196,13 +196,14 @@ def main():
         v, img = fxpic(key, J); vars_.append(v); X[key] = img
         img.save(os.path.join(HERE, 'fx', key + '.png'))
     block = ':root{' + ';'.join(vars_) + '}\n' + '\n'.join(rules) + '\n'
-    path = os.path.join(ROOT, 'index.html')
+    path = os.path.join(ROOT, 'src', 'index.html')
     html = open(path, encoding='utf-8').read()
     a = '/* UI_ART ここから（dev/canva/uifit.py が 書く。手で 書かない） */\n'
     b = '/* UI_ART ここまで */'
     i, j = html.index(a), html.index(b)
     html = html[:i + len(a)] + block + html[j:]
     open(path, 'w', encoding='utf-8').write(html)
+    subprocess.run(['node', os.path.join(ROOT, 'tools', 'build.mjs')], check=True)   # 11/16〜 絵を assets/ に 出して index.html を 作る（tools/build.mjs）
     print('index.html UI_ART', len(block) // 1024, 'KB')
     if len(sys.argv) > 1: sheet(P, I, sys.argv[1], X)
 

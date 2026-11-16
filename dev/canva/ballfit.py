@@ -1,5 +1,5 @@
 # 玉の 絵を ゲームに 入れる（11/8 5.）
-# 使い方：python3 ballfit.py            … balls.json の 玉を ぜんぶ 切りぬいて 1まいの 絵（アトラス・WebP）に ならべ、index.html の BALL_ART（「BALL_ART ここから」〜「ここまで」）を 書きかえる
+# 使い方：python3 ballfit.py            … balls.json の 玉を ぜんぶ 切りぬいて 1まいの 絵（アトラス・WebP）に ならべ、src/index.html の BALL_ART（「BALL_ART ここから」〜「ここまで」）を 書きかえる
 #         python3 ballfit.py 見本.png   … ついでに 見本（大きい 玉と、ゲームの 中の 大きさの 玉）を 出す
 #
 # 絵は Canva の もとの絵 balls/src/〇〇.png（200×200・こい紺の 背景）。ballcut.py で まるく 切りぬく（背景けしは 使わない）。
@@ -7,7 +7,7 @@
 #   "hue"  色あいを まわす 度（hue.py と 同じ。白・灰色は かわらない）。"sat" あざやかさの 倍率。"val" 明るさの 倍率（白い ところは かわらない）
 #   "spin" 1 なら まわす 玉（流星・呪詛・七色）：つや（左上の 白い ハイライト）を 〇〇_g に 分けて、のこりの 〇〇 から つやを けす（ゲームでは 〇〇 を まわして、その上に つやを まわさずに かさねる）
 # 出すもの：BALL_ART={src, K, at:{名前:[sx,sy,sw,sh,ax,ay]}}（sx..sh＝アトラスの中の 場所、ax,ay＝その 左上から 玉の まん中まで。どれも ピクセル。K＝玉の 半径が 何ピクセル）
-import sys, os, io, json, base64
+import sys, os, io, json, base64, subprocess
 import numpy as np
 import cv2
 from PIL import Image, ImageDraw
@@ -119,11 +119,12 @@ def main():
     at.save(os.path.join(HERE, 'balls', 'atlas.png'))
     parts = ','.join(f"{k}:[{pos[k][0]},{pos[k][1]},{c.width},{c.height},{ax:.1f},{ay:.1f}]" for k, (c, ax, ay) in cells.items())
     line = f"const BALL_ART={{K:{K},at:{{{parts}}},\n  src:'data:image/webp;base64,{base64.b64encode(data).decode()}'}};   // {at.width}×{at.height} {len(data)}B"
-    path = os.path.join(ROOT, 'index.html')
+    path = os.path.join(ROOT, 'src', 'index.html')
     src = open(path, encoding='utf-8').read()
     a = src.index('// BALL_ART ここから\n') + len('// BALL_ART ここから\n'); b = src.index('// BALL_ART ここまで')
     src = src[:a] + line + '\n' + src[b:]
     open(path, 'w', encoding='utf-8').write(src)
+    subprocess.run(['node', os.path.join(ROOT, 'tools', 'build.mjs')], check=True)   # 11/16〜 絵を assets/ に 出して index.html を 作る（tools/build.mjs）
     print('balls', len(spec['balls']), 'cells', len(cells), 'atlas', at.size, 'bytes', len(data))
     if len(sys.argv) > 1:
         sheet(cells, spec, sys.argv[1])

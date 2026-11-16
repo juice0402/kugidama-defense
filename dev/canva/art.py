@@ -1,5 +1,5 @@
 # 台の奥の景色（bg）と 台の枠（frame）の 絵を ゲームに 入れる（11/8）
-# 使い方：python3 art.py          … art.json の 絵を ぜんぶ WebP にして、index.html の ART_SRC（「ART_SRC ここから」〜「ここまで」）を 書きかえる
+# 使い方：python3 art.py          … art.json の 絵を ぜんぶ WebP にして、src/index.html の ART_SRC（「ART_SRC ここから」〜「ここまで」）を 書きかえる
 #         ONLY=meadow_frame,forest_frame python3 art.py … その 絵だけ 作りなおす（ほかの 行は そのまま）
 #         python3 art.py 見る.png … ついでに 枠と 景色を 台の 形に かさねた 見本を 出す（さいごの 1つ）
 #
@@ -10,7 +10,7 @@
 #        ゆがめる（アーチの所は 角度ごとに、まっすぐの所は 行ごとに。窓の外の はばは そのままの 大きさ）。
 #        できた 絵は 台の座標の FR（x -45〜405・y -60〜740）を おおう。外がわは base の色に だんだん とけこむ（コードで base を ぬってから 絵を 置く）。
 #        光る木の実・宝石など 明るい 丸い 点を さがして glow（G.fruits の 光の ゆらぎ）に する
-import sys, os, json, io, base64, re
+import sys, os, json, io, base64, re, subprocess
 import numpy as np
 from PIL import Image
 from scipy import ndimage as nd
@@ -190,7 +190,7 @@ def main():
     spec = json.load(open(os.path.join(HERE, 'art.json')))
     os.makedirs(os.path.join(HERE, 'art'), exist_ok=True)
     lines = []; last = {}
-    p = os.path.join(ROOT, 'index.html')
+    p = os.path.join(ROOT, 'src', 'index.html')
     html = open(p, encoding='utf-8').read()
     a, b = '// ART_SRC ここから\n', '// ART_SRC ここまで'
     i, j = html.index(a) + len(a), html.index(b)
@@ -220,6 +220,7 @@ def main():
         print(key, im.size, len(data), 'bytes')
     html = html[:i] + '\n'.join(lines) + '\n' + html[j:]
     open(p, 'w', encoding='utf-8').write(html)
+    subprocess.run(['node', os.path.join(ROOT, 'tools', 'build.mjs')], check=True)   # 11/16〜 絵を assets/ に 出して index.html を 作る（tools/build.mjs）
     print('index.html ART_SRC', len(lines))
     if len(sys.argv) > 1 and 'frame' in last and 'bg' in last:   # 見本：枠＋景色
         fim, fm = last['frame']; bim, bm = last['bg']

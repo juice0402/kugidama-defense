@@ -1,6 +1,6 @@
 # 台ごとの ハンドル（強さの ダイヤル）の 絵を ゲームに 入れる（11/8 6.）
 # 使い方：python3 hfit.py [見本.png]   … handles.json の 絵を 板（plate＝止まった ふち）と つまみ（knob＝回る）に 分けて WebP に して、
-#         index.html の CSS の HANDLE_ART（「HANDLE_ART ここから」〜「ここまで」）を 書きかえる。見本.png は 9つを ならべた 絵（しらべ用の 線つき）
+#         src/index.html の CSS の HANDLE_ART（「HANDLE_ART ここから」〜「ここまで」）を 書きかえる。見本.png は 9つを ならべた 絵（しらべ用の 線つき）
 #
 # もとの絵（handles/src/〇〇.png）：Canva の 正方形の 絵を 作業用デザインの 480×480 の ページに 置いた 見本（600×600）。
 #   こい紺の 無地の 背景に、まるい ふち（その台の 枠の 素材）＋ まん中の まるい つまみ（たての にぎり・上に 光る 目じるし）。
@@ -10,7 +10,7 @@
 #   grip＝[はばの 半分, とどく 半径]（にぎりが つまみより 外へ はみ出す 絵だけ。はみ出しも つまみと いっしょに 回す）・q＝WebP の 質（ふつう 80）
 #   みぞが こくない 絵（氷 など）は "groove":"light"（明るさの かわりめで さがす）か c・rk を 手で
 # ゲームの中：ふちの 外の 半径（ro）を ダイヤルの 半径 36px（.dial は 72px）に 合わせる。板は --h-ps、つまみは --h-ks の 大きさ（px）
-import sys, os, json, io, base64, re
+import sys, os, json, io, base64, re, subprocess
 import numpy as np
 from PIL import Image, ImageDraw
 from scipy import ndimage as nd
@@ -147,12 +147,13 @@ def main():
         u = lambda b: 'url(data:image/webp;base64,' + base64.b64encode(b).decode() + ')'
         rows.append('#app[data-board="%s"]{--h-plate:%s;--h-knob:%s;--h-ps:%.1fpx;--h-ks:%.1fpx}' % (key, u(pb), u(kb), R['ps'], R['ks']))
     print('ぜんぶで %dKB' % (tot / 1024 + .5))
-    p = os.path.join(ROOT, 'index.html')
+    p = os.path.join(ROOT, 'src', 'index.html')
     s = open(p, encoding='utf-8').read()
     a = s.index('/* HANDLE_ART ここから'); a = s.index('*/', a) + 2
     b = s.index('/* HANDLE_ART ここまで')
     s = s[:a] + '\n' + '\n'.join(rows) + '\n' + s[b:]
     open(p, 'w', encoding='utf-8').write(s)
+    subprocess.run(['node', os.path.join(ROOT, 'tools', 'build.mjs')], check=True)   # 11/16〜 絵を assets/ に 出して index.html を 作る（tools/build.mjs）
     print('index.html ok')
     if len(sys.argv) > 1:   # 見本：もとの絵に 見つけた 円（みどり＝つまみ・水色＝ふちの外・ピンク＝板）／板と つまみを かさねた 絵（0°・−135°・135°）
         T = 220; sheet = Image.new('RGB', (T * 4 + 30, T * len(res) + 10 * (len(res) - 1)), (40, 40, 48))

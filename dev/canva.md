@@ -1,5 +1,7 @@
 # Canva の絵（11/8〜）
 
+> 11/16〜：絵の 道具（art.py・uifit.py・titlefit.py・hfit.py・tfit.py・ballfit.py）は index.html では なく **src/index.html** に 書いて、そのまま `node tools/build.mjs` を よぶ（base64 は assets/ の ファイルに 出て、index.html が 作りなおされる）。pack.py の sprite_src.js も src/index.html の SPRITE_SRC に はって ビルド。下の「index.html の 〇〇」は src/index.html の こと
+
 しょーくんの依頼（11/8）：「Canva の作成に移行しよう。一度に大量に作ると規制がかかるかもしれないから、時間かかってもいいし、ゆっくりやってね」。順番は決めていないので全部。絵柄は 4案（ネオン・ぷにぷに3D・パステル手描き・ドット絵）から **A ネオン** に決定。
 
 ## 作るもの（ぜんぶ）
