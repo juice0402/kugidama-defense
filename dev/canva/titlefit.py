@@ -1,8 +1,8 @@
 # タイトル画面の 絵を ゲームに 入れる（11/8 6.）
 # 使い方：python3 titlefit.py [はば=720] [質=78]
 #   title.json の "src"（Canva の 9:16 の 絵を ページの 見本を つないで 大きく した もの。stitch.py で 989×1760）を 幅 W の WebP に して、
-#   index.html の CSS の TITLE_ART（「TITLE_ART ここから」〜「ここまで」）に --t-art（絵）と --t-sky（上の はしの 色＝よこ長の 画面の 上を ぬる）を 書く
-import sys, os, io, json, base64
+#   src/index.html の CSS の TITLE_ART（「TITLE_ART ここから」〜「ここまで」）に --t-art（絵）と --t-sky（上の はしの 色＝よこ長の 画面の 上を ぬる）を 書く
+import sys, os, io, json, base64, subprocess
 import numpy as np
 from PIL import Image
 
@@ -20,10 +20,11 @@ sky = '#%02x%02x%02x' % tuple(int(v) for v in np.median(A[:8].reshape(-1, 3), ax
 low = '#%02x%02x%02x' % tuple(int(v) for v in np.median(A[-8:].reshape(-1, 3), axis=0))
 print('title', im.size, '%dKB' % (len(data) / 1024 + .5), 'sky', sky, 'low', low)
 row = '#title,.tut-guide{--t-art:url(data:image/webp;base64,%s);--t-sky:%s;--t-low:%s}' % (base64.b64encode(data).decode(), sky, low)
-p = os.path.join(ROOT, 'index.html')
+p = os.path.join(ROOT, 'src', 'index.html')
 s = open(p, encoding='utf-8').read()
 a = s.index('/* TITLE_ART ここから'); a = s.index('*/', a) + 2
 e = s.index('/* TITLE_ART ここまで')
 s = s[:a] + '\n' + row + '\n' + s[e:]
 open(p, 'w', encoding='utf-8').write(s)
+subprocess.run(['node', os.path.join(ROOT, 'tools', 'build.mjs')], check=True)   # 11/16〜 絵を assets/ に 出して index.html を 作る（tools/build.mjs）
 print('index.html ok')

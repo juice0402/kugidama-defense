@@ -1,6 +1,7 @@
 # パチおば（記号 pachi・旧名 くぎだまディフェンス）
 
-- ゲームは index.html 1ファイル（HTML・CSS・JS を全部入れる）。外部はGoogle Fontsだけ
+- ゲームは index.html 1ファイル（HTML・CSS・JS・絵を全部入れる）。外部はGoogle Fontsだけ
+- 作り（11/16〜 code-rules.md の B）：index.html は ビルドで 作る（手で 直さない）。直すのは src/index.html（絵は @@assets/…@@）と assets/（絵の ファイル）→ node tools/build.mjs。--check で ずれを しらべる。dev/canva の 絵の 道具は src/index.html に 書いて ビルドまで する
 - 企画と決まったことは claude.ai プロジェクト「ネット副業」の claude/pachi-game-idea.md
 - 見た目：1面はネオンな夜の草原（木のフレームに草とつる・光る木の実、月・星・光るふちの丘・木の杭）。台は画面いっぱい、表示とハンドルは台に重ねる。縦画面・スマホで片手
 - 敵はイタズラ好きの白いおばけ＋動物の特ちょう（ENEMIES。台ごとの顔ぶれは STAGES の foes）。森は11/5に作りかえ済み、洋館（3台目）・砂漠（4台目）・雪山（5台目）は11/5、火山（6台目）・魔王城（7台目）・宇宙（8台目）・天国（9台目・さいご）とエンディングは11/6に作成

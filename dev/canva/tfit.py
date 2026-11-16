@@ -1,5 +1,5 @@
 # タワー（砲台）と ギミックの 絵を ゲームに 入れる（11/8 4.）
-# 使い方：python3 tfit.py            … towers.json の 絵を ぜんぶ 合わせて WebP にし、index.html の TWR_SRC（「TWR_SRC ここから」〜「ここまで」）を 書きかえる
+# 使い方：python3 tfit.py            … towers.json の 絵を ぜんぶ 合わせて WebP にし、src/index.html の TWR_SRC（「TWR_SRC ここから」〜「ここまで」）を 書きかえる
 #         python3 tfit.py 見る.png   … ついでに 見本（ならべた 絵。杭の まると 砲身の先の しるし つき）を 出す
 #
 # 絵は neoncut.py で すけすけに した 200×200 の *_full.png（towers/ と gimmicks/）。
@@ -12,7 +12,7 @@
 #   "half" "front" なら 中心より 下の 半分だけ（惑星リングの 手前の 半分）
 #   "circle"（あれば）piv を 中心に この 半径（もとの絵の ピクセル）で まるく 切りぬく（まわす 部品）
 # 出すもの：TWR_SRC の 行 {w,h,ax,ay,src}（どれも R の 単位。ax,ay＝絵の 左上から 中心まで）。絵は 1R＝Q ピクセル
-import sys, os, json, io, base64, re
+import sys, os, json, io, base64, re, subprocess
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -69,11 +69,12 @@ def main():
             buf = io.BytesIO(); c.save(buf, 'WEBP', quality=o.get('q', 88), method=6, alpha_quality=100); data = buf.getvalue(); total += len(data)
             outs[k] = (c, ax, ay, group)
             lines.append(f"  {k}:{{w:{c.width / Q:.3f},h:{c.height / Q:.3f},ax:{ax:.3f},ay:{ay:.3f},src:'data:image/webp;base64,{base64.b64encode(data).decode()}'}},   // {c.width}×{c.height} {len(data)}B")
-    path = os.path.join(ROOT, 'index.html')
+    path = os.path.join(ROOT, 'src', 'index.html')
     src = open(path, encoding='utf-8').read()
     a = src.index('// TWR_SRC ここから\n') + len('// TWR_SRC ここから\n'); b = src.index('// TWR_SRC ここまで')
     src = src[:a] + '\n'.join(lines) + '\n' + src[b:]
     open(path, 'w', encoding='utf-8').write(src)
+    subprocess.run(['node', os.path.join(ROOT, 'tools', 'build.mjs')], check=True)   # 11/16〜 絵を assets/ に 出して index.html を 作る（tools/build.mjs）
     print('pictures', len(lines), 'bytes', total)
     if len(sys.argv) > 1:
         sheet(outs, spec, sys.argv[1])
