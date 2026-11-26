@@ -1,0 +1,255 @@
+{
+  "leaderboard": {
+    "id": "pachi_best",
+    "name": {
+      "ja": "おばけ退治の数",
+      "en-US": "Ghosts Defeated"
+    },
+    "suffix": {
+      "ja": "体",
+      "en-US": " ghosts"
+    }
+  },
+  "achievements": [
+    {
+      "id": "pachi_first_tower",
+      "points": 10,
+      "hidden": false,
+      "image": "achievements/pachi_first_tower.png",
+      "ja": {
+        "name": "はじめての砲台",
+        "before": "杭にタワーを建てる",
+        "after": "杭にタワーを建てた"
+      },
+      "en-US": {
+        "name": "First Tower",
+        "before": "Build a tower on a pin",
+        "after": "Built a tower on a pin"
+      }
+    },
+    {
+      "id": "pachi_first_fever",
+      "points": 10,
+      "hidden": false,
+      "image": "achievements/pachi_first_fever.png",
+      "ja": {
+        "name": "はじめてのFEVER",
+        "before": "ヘソに玉を入れて FEVER にする",
+        "after": "ヘソに玉を入れて FEVER にした"
+      },
+      "en-US": {
+        "name": "First FEVER",
+        "before": "Get a ball into the center pocket to start FEVER",
+        "after": "Started FEVER"
+      }
+    },
+    {
+      "id": "pachi_first_combo",
+      "points": 10,
+      "hidden": false,
+      "image": "achievements/pachi_first_combo.png",
+      "ja": {
+        "name": "はじめての技",
+        "before": "ちがう属性の玉で技を出す",
+        "after": "ちがう属性の玉で技を出した"
+      },
+      "en-US": {
+        "name": "First Combo",
+        "before": "Trigger a combo with balls of different elements",
+        "after": "Triggered a combo"
+      }
+    },
+    {
+      "id": "pachi_clear_meadow",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/pachi_clear_meadow.png",
+      "ja": {
+        "name": "草原クリア",
+        "before": "草原の台をクリアする",
+        "after": "草原の台をクリアした"
+      },
+      "en-US": {
+        "name": "Meadow Cleared",
+        "before": "Clear the meadow board",
+        "after": "Cleared the meadow board"
+      }
+    },
+    {
+      "id": "pachi_tower_max",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/pachi_tower_max.png",
+      "ja": {
+        "name": "最大レベル",
+        "before": "砲台を Lv4（最大）にする",
+        "after": "砲台を Lv4（最大）にした"
+      },
+      "en-US": {
+        "name": "Max Level",
+        "before": "Raise a tower to Lv 4 (max)",
+        "after": "Raised a tower to Lv 4"
+      }
+    },
+    {
+      "id": "pachi_full_pegs",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/pachi_full_pegs.png",
+      "ja": {
+        "name": "杭まんたん",
+        "before": "1つの台で、杭12本ぜんぶにタワーを建てる",
+        "after": "1つの台で、杭12本ぜんぶにタワーを建てた"
+      },
+      "en-US": {
+        "name": "Full Pins",
+        "before": "Build towers on all 12 pins of a board",
+        "after": "Built towers on all 12 pins"
+      }
+    },
+    {
+      "id": "pachi_kills_1000",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/pachi_kills_1000.png",
+      "ja": {
+        "name": "おばけ1000体",
+        "before": "おばけを合計1000体たおす",
+        "after": "おばけを合計1000体たおした"
+      },
+      "en-US": {
+        "name": "1,000 Ghosts",
+        "before": "Defeat 1,000 ghosts in total",
+        "after": "Defeated 1,000 ghosts"
+      }
+    },
+    {
+      "id": "pachi_clear_mansion",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/pachi_clear_mansion.png",
+      "ja": {
+        "name": "洋館クリア",
+        "before": "洋館の台をクリアする",
+        "after": "洋館の台をクリアした"
+      },
+      "en-US": {
+        "name": "Mansion Cleared",
+        "before": "Clear the mansion board",
+        "after": "Cleared the mansion board"
+      }
+    },
+    {
+      "id": "pachi_found_30",
+      "points": 25,
+      "hidden": false,
+      "image": "achievements/pachi_found_30.png",
+      "ja": {
+        "name": "技を30こ発見",
+        "before": "図鑑の技を30こ見つける",
+        "after": "図鑑の技を30こ見つけた"
+      },
+      "en-US": {
+        "name": "30 Combos Found",
+        "before": "Find 30 combos for the encyclopedia",
+        "after": "Found 30 combos"
+      }
+    },
+    {
+      "id": "pachi_no_damage",
+      "points": 50,
+      "hidden": false,
+      "image": "achievements/pachi_no_damage.png",
+      "ja": {
+        "name": "ノーダメージ",
+        "before": "ライフを減らさずに台をクリアする",
+        "after": "ライフを減らさずに台をクリアした"
+      },
+      "en-US": {
+        "name": "No Damage",
+        "before": "Clear a board without losing any life",
+        "after": "Cleared a board without losing any life"
+      }
+    },
+    {
+      "id": "pachi_clear_snow",
+      "points": 50,
+      "hidden": false,
+      "image": "achievements/pachi_clear_snow.png",
+      "ja": {
+        "name": "雪山クリア",
+        "before": "雪山の台をクリアする",
+        "after": "雪山の台をクリアした"
+      },
+      "en-US": {
+        "name": "Snowy Peak Cleared",
+        "before": "Clear the snowy mountain board",
+        "after": "Cleared the snowy mountain board"
+      }
+    },
+    {
+      "id": "pachi_found_100",
+      "points": 50,
+      "hidden": false,
+      "image": "achievements/pachi_found_100.png",
+      "ja": {
+        "name": "技を100こ発見",
+        "before": "図鑑の技を100こ見つける",
+        "after": "図鑑の技を100こ見つけた"
+      },
+      "en-US": {
+        "name": "100 Combos Found",
+        "before": "Find 100 combos for the encyclopedia",
+        "after": "Found 100 combos"
+      }
+    },
+    {
+      "id": "pachi_clear_volcano",
+      "points": 50,
+      "hidden": true,
+      "image": "achievements/pachi_clear_volcano.png",
+      "ja": {
+        "name": "火山クリア",
+        "before": "火山の台をクリアする",
+        "after": "火山の台をクリアした"
+      },
+      "en-US": {
+        "name": "Volcano Cleared",
+        "before": "Clear the volcano board",
+        "after": "Cleared the volcano board"
+      }
+    },
+    {
+      "id": "pachi_clear_heaven",
+      "points": 100,
+      "hidden": true,
+      "image": "achievements/pachi_clear_heaven.png",
+      "ja": {
+        "name": "天国クリア",
+        "before": "天国の台をクリアする",
+        "after": "天国の台をクリアした"
+      },
+      "en-US": {
+        "name": "Heaven Cleared",
+        "before": "Clear the heaven board",
+        "after": "Cleared the heaven board"
+      }
+    },
+    {
+      "id": "pachi_found_all",
+      "points": 100,
+      "hidden": false,
+      "image": "achievements/pachi_found_all.png",
+      "ja": {
+        "name": "図鑑コンプリート",
+        "before": "図鑑の技をすべて見つける",
+        "after": "図鑑の技をすべて見つけた"
+      },
+      "en-US": {
+        "name": "Encyclopedia Complete",
+        "before": "Find every combo for the encyclopedia",
+        "after": "Found every combo"
+      }
+    }
+  ]
+}

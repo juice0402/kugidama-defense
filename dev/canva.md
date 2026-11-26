@@ -330,3 +330,10 @@
 - ボスの 帯（MAHaUdBLf3g）：赤い ネオンの 管・こい 黒むらさきの 板・左右に 黄色と 黒の しましま・小さな つのと 金の びょう
 - 素材シート（MAHaUv4ucfs）：WAVE の 板（左右が とがった こい紺の 板・金の ふち・金の 羽）・金の リボン（つばめの しっぽ）・金の 王冠（天使の 羽・ピンク/水色/みどりの 宝石・真珠）・ソケット（銀の クロムの 輪・水色の ネオン・まっくらな 穴）
 - 光の すじ：fxrays.py（金と クリームの すじ 24本と きらきら）
+
+## Game Center の バッジ（11/26【ios】の 頼み・claude/gamecenter-spec.md）
+- 実績 15こ の バッジ：docs/kobo/achievements/pachi_〇〇.png（1024×1024・RGB・72ppi・透明なし・文字なし）。実績の 中身は docs/kobo/gamecenter.json
+- 作り方：dev/canva/badges.py。Canva の 新しい 生成は 0（全サイトで 共有の 枠を 使わない）。今ある 絵を のせる：台の 景色 bg/〇〇_full.png・おばけ ghosts/・タワー towers/（台座＋頭）・玉 balls/src/（A）、光の すじ fx/rays.png（fxrays.py の C）。ネオンの メダルの 輪と 点は コード（C）
+- 点で 輪が かわる：10＝輪1本・25＝内がわに 細い 輪・50＝まわりに 点・100＝外に 金の 輪
+- ネタバレ：隠さない 実績は 雪山までの 台・おばけ・玉だけ（火山・天国は 隠し実績 clear_volcano・clear_heaven だけ）
+- 実績を 足すときは gamecenter.json と badges.py の B（id → 景色・色・点・絵）を 両方 足して `python3 dev/canva/badges.py`。ならべて 見るのは `SHEET=/どこか/sheet.png python3 dev/canva/badges.py`
