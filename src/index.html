@@ -825,6 +825,7 @@ let ctx=cv.getContext('2d',{alpha:false}); const mainCtx=ctx;   // 不とうめ�
 const staticCv=document.createElement('canvas');
 // 11/9 iOS アプリ（juice0402/ios-kobo）：アプリの 中だけ window.APP_PLATFORM='ios'・APP_HAPTIC（振動）が 入る。
 //   AUTO＝自動の ためし（Playwright。ストアの スクショ・dev/sim）。人が さわる アプリでは 出ない しかけ（ためしモード・#shot=）は AUTO だけ
+//   11/26 Game Center：APP_SCORE（ランキング）・APP_ACHIEVE（実績）が あるときだけ 呼ぶ。下の「Game Center」（gcAch・gcScore・gcSync）と docs/kobo/gamecenter.json
 const IOS_APP=window.APP_PLATFORM==='ios', AUTO=navigator.webdriver===true;
 function haptic(kind,ms){try{if(window.APP_HAPTIC)window.APP_HAPTIC(kind);else if(ms&&navigator.vibrate)navigator.vibrate(ms)}catch(_){}}
 const reduceMQ=matchMedia('(prefers-reduced-motion: reduce)');
@@ -2803,7 +2804,7 @@ function setupStage(){
   G.heso=L.heso?{...L.heso}:null;
   G.bscale=S.scale||1; G.rscale=S.range||1;
   clearPlay(); G.sx={}; if(S.setup) S.setup(L);
-  G.life=G.lifeShow=LIFE_MAX;G.fever=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
+  G.life=G.lifeShow=LIFE_MAX;G.hurt=false;G.fever=0;G.flash=0;G.sel=null;G.waveDone=false;G.fireT=.4;
   const rnd=seeded(7+G.stage*31);
   const inField=(x,y,m)=>y>=CY||Math.hypot(x-CX,y-CY)<RO-m;
   G.flies=Array.from({length:S.flies??28},()=>({x:45+rnd()*285,y:120+rnd()*420,ph:rnd()*6.28,sp:.3+rnd()*.5,bl:.8+rnd()*1.6}));
@@ -3536,7 +3537,7 @@ function towerHit(p,b){
   const T=p.tower, D=TOWERS[T.type], B=BALLS[b.t];
   for(const k in TLOCK) if(T[k]>0) TLOCK[k].free(p,true);  // おばけのいたずら（帽子・ねむり・根っこ）は、玉が当たるととける
   T.xp++; T.pop=.3;
-  if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,D.color,14);sfx.lv()}
+  if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;if(T.lv>=4)gcAch('tower_max');addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,D.color,14);sfx.lv()}
   if(B.buff==='pow'){hitText(p.x,p.y,'強撃',B.color,B.color,1);T.pow=BUFF_T;fxBuff(p,B.color)}
   if(B.buff==='rapid'){hitText(p.x,p.y,'速射',B.color,B.color,1);T.rapid=BUFF_T;fxBuff(p,B.color)}
   let E=B.el;
@@ -3567,7 +3568,7 @@ function hurtEnemy(e,d,dot){
   if(e.hp<=0){
     if(e.fake){vanishFake(e);return}                       // たぬきのにせもの：ドロンと消えるだけ
     const E=ENEMIES[e.t];
-    e.dead=true; const r=killCoin(E); G.balls+=r; G.kills++;
+    e.dead=true; const r=killCoin(E); G.balls+=r; G.kills++; if(G.kills>=1000) gcAch('kills_1000');
     addText(e.x,e.y,'+'+r,GOLD); burst(e.x,e.y,E.color,12); if(E.boss) sfx.bossDown(E.boss); else sfx.kill();
     if(E.gh){G.poofs.push({e:Object.assign({},e,{dying:true,flash:0,hurtT:0,ghost:0,trail:[],oops:0,stun:0,sleep:0}),t:0,dir:Math.random()<.5?-1:1});
       for(let i=0;i<(E.boss?5:2);i++) fxAdd({k:'wisp',x:e.x+(Math.random()-.5)*e.r,y:e.y-e.r*.3,vx:(Math.random()-.5)*.4,vy:-(.6+Math.random()*.5),max:1.1+Math.random()*.5,s:e.r*(.22+Math.random()*.12),ph:Math.random()*6.28,c:'#ffffff'})}   // たましいが ふわっと上へ
@@ -3752,7 +3753,7 @@ function drawHitFight(h,a,out,px){
 // わざ・とくしゅ効果が敵に効いた（砲台の弾などで。小さな輪と音）
 function hitMark(e,c){G.rings.push({x:e.x,y:e.y,R:22,c,t:.32});sfx.zing()}
 // 図鑑：見つけた わざ・とくしゅ効果（キーは 'a+b' と 'sp:a'）。fresh＝まだ図鑑で見ていないもの
-function markFound(k){if(!G.found.has(k)){G.found.add(k);G.fresh.add(k)}}
+function markFound(k){if(!G.found.has(k)){G.found.add(k);G.fresh.add(k);for(const a of gcFound(G.found))gcAch(a)}}   // 図鑑の 数の 実績（Game Center）
 // 効き目をつける：eff は {combo}|{sp}|{el,lv}。タワーの弾・音の波・ギミック・新しいタワーは全部これ
 function applyEff(e,f,dmg){if(!f)return;if(f.combo)applyCombo(e,f.combo,dmg);else if(f.sp)applySpecial(e,f.sp,dmg);else applyEl(e,f.el,f.lv||1,dmg)}
 // 敵の今の属性（ELEM の has）
@@ -3772,7 +3773,7 @@ function heso(q,b){
   const hl=b&&BALLS[b.t].heal;
   if(hl&&G.life<LIFE_MAX){const n=Math.min(hl,LIFE_MAX-G.life);G.life+=n;addText(q.x,q.y-30,'ライフ +'+n,'#7dffb0',true);burst(q.x,q.y,'#7dffb0',22);sfx.lv()}
   if(G.fever>0){burst(q.x,q.y+6,GOLD,10);sfx.pocket();return}   // FEVER 中の ヘソ：光と 音だけ（11/11 コインは 出さない）
-  G.fever=8; G.flash=.6;   // FEVER の ごほうびは 砲台の 威力・連射と 玉の 威力が 2倍（towerDmg・towerCd・玉）と 演出だけ。コインは 出ない（11/11 審査）
+  G.fever=8; G.flash=.6; gcAch('first_fever');   // FEVER の ごほうびは 砲台の 威力・連射と 玉の 威力が 2倍（towerDmg・towerCd・玉）と 演出だけ。コインは 出ない（11/11 審査）
   banner('FEVER!!','rainbow',2.2,250); burst(q.x,q.y+6,'rainbow',40); sfx.fever(); haptic('heavy');
 }
 // ヘソ：受け口のふちの2本の柱。間から落ちた玉が入る
@@ -3991,7 +3992,7 @@ function update(dt){
     if(e.y>=578-(E.boss?e.r*.6:0)){
       if(e.fake){vanishFake(e);continue}                     // にせものは受け皿に来てもドロンと消えるだけ
       const loss=E.boss===2?G.life:E.boss===1?5:1;
-      e.dead=true; G.life-=loss; G.shake=E.boss?.8:.35; G.trayHurtAt=G.time; G.trayX=e.x;
+      e.dead=true; G.life-=loss; G.hurt=true; G.shake=E.boss?.8:.35; G.trayHurtAt=G.time; G.trayX=e.x;
       addText(e.x,562,'ライフ -'+loss,BERRY,true); burst(e.x,580,BERRY,E.boss?30:10); sfx.hurt();
     }
   }
@@ -9645,7 +9646,7 @@ function haloPass(b,p,T){
 }
 function goldHit(p,b){
   const T=p.tower; if(!T) return;
-  T.xp+=HALO.xp; if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,TOWERS[T.type].color,14);sfx.lv()}
+  T.xp+=HALO.xp; if(T.lv<4&&T.xp>=XP_NEED[T.lv]){T.lv++;if(T.lv>=4)gcAch('tower_max');addText(p.x,p.y-30,'Lv'+T.lv+'!',GOLD,true);burst(p.x,p.y,TOWERS[T.type].color,14);sfx.lv()}
   const L=BUFF_T*HALO.long; for(const k of ['elT','spT','comboT','pow','rapid']) if(T[k]>0) T[k]=Math.max(T[k],L);
   if(!(T.bless>G.time)){T.blessK=HALO.k;T.blessC=1}else T.blessK=Math.max(T.blessK||1,HALO.k);
   T.bless=Math.max(T.bless||0,G.time+HALO.keep);
@@ -10309,7 +10310,7 @@ function itemRow(color,name,desc,price,enabled,onBuy,owned){
 
 /* ---------- セーブ（台えらび・お店・台のクリアのときに、この端末へ保存） ---------- */
 // 台の中では保存しない。ゲームオーバーのときは、台に入る前の保存にもどる
-function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.testLobby??G.balls,deck:G.deck,owned:G.owned,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,bought:G.bought,kills:G.kills,found:[...G.found],fresh:[...G.fresh],tut:G.tutDone?1:0}))}catch(_){}}
+function writeSave(){try{localStorage.setItem(SAVE_KEY,JSON.stringify({v:2,balls:G.testLobby??G.balls,deck:G.deck,owned:G.owned,unlocked:G.unlocked,gimmicks:G.gimmicks,cleared:G.cleared,bought:G.bought,kills:G.kills,found:[...G.found],fresh:[...G.fresh],tut:G.tutDone?1:0,ach:[...(G.ach||[])]}))}catch(_){}}
 function readSave(){
   try{
     const s=JSON.parse(localStorage.getItem(SAVE_KEY)||'null');
@@ -10334,13 +10335,52 @@ function loadSave(){
   G.tutDone=!!s.tut||G.cleared.length>0||G.kills>0;   // 前から あそんでいる セーブは あそびかた なし（11/10）
   G.owned={...s.owned}; G.deck=s.deck.slice();
   G.found=new Set(Array.isArray(s.found)?s.found:[]); G.fresh=new Set(Array.isArray(s.fresh)?s.fresh.filter(k=>G.found.has(k)):[]);
+  G.ach=new Set(Array.isArray(s.ach)?s.ach.filter(k=>typeof k==='string'):[]);
   return true;
 }
 function continueRun(){if(!loadSave()){newRun();return} openHub('board')}
 
+/* ---------- Game Center（11/26【ios】・アプリの 中だけ。claude/gamecenter-spec.md） ----------
+   ランキング pachi_best＝たおした おばけの 合計（G.kills）。実績の id は docs/kobo/gamecenter.json と 同じ（pachi_〇〇。あとから かえない）
+   window.APP_SCORE・APP_ACHIEVE が あるときだけ 呼ぶ（工房の ウェブでは 何も おきない）。ためしモードは 送らない
+   とった 実績は セーブの ach（台の とちゅうでは 書かない＝もどるの コインを くずさない。次の writeSave で のこる）
+   開いたときと 'app-gamecenter'（あとから サインイン）に、セーブから わかる 分も 足して 全部 送りなおす（gcSync） */
+const GC_CLEAR={0:'clear_meadow',2:'clear_mansion',4:'clear_snow',5:'clear_volcano'};   // STAGES の 番号 → 実績（さいごの 台は clear_heaven）
+const gcFoundAll=()=>{const n=Object.keys(ELEM).length;return n+n*(n-1)/2};   // 図鑑の 技の 数（特殊効果 n＋ちがう属性 n(n−1)/2）
+function gcAch(k){
+  if(TEST) return; const id='pachi_'+k, A=G.ach||(G.ach=new Set());
+  if(A.has(id)) return; A.add(id);
+  try{if(window.APP_ACHIEVE)window.APP_ACHIEVE(id)}catch(_){}
+}
+function gcScore(n){if(TEST)return;try{if(window.APP_SCORE)window.APP_SCORE(Math.max(0,n|0))}catch(_){}}
+function gcFound(found){   // 図鑑の 数で とれる 実績（found は Set か 配列）
+  const out=[], n=found.size??found.length;
+  for(const k of found) if(!k.startsWith('sp:')){out.push('first_combo');break}
+  if(n>=30) out.push('found_30'); if(n>=100) out.push('found_100'); if(n>=gcFoundAll()) out.push('found_all');
+  return out;
+}
+function gcFrom(s){   // セーブから わかる 実績（前から あそんでいる 人の 分も 入るように）
+  const out=gcFound(Array.isArray(s.found)?s.found:[]), cl=s.cleared||[];
+  for(const i of cl){if(GC_CLEAR[i])out.push(GC_CLEAR[i]);if(i===LAST_STAGE())out.push('clear_heaven')}
+  if(cl.length) out.push('first_tower');
+  if((s.kills|0)>=1000) out.push('kills_1000');
+  return out;
+}
+function gcSync(){
+  if(TEST||!(window.APP_ACHIEVE||window.APP_SCORE)) return;
+  const s=readSave(); if(!s) return;
+  const ids=new Set(Array.isArray(s.ach)?s.ach.filter(k=>typeof k==='string'):[]);
+  for(const k of gcFrom(s)) ids.add('pachi_'+k);
+  if(G.ach) for(const id of G.ach) ids.add(id);   // この 回で とって まだ セーブして いない 分
+  try{if(window.APP_ACHIEVE)for(const id of ids)window.APP_ACHIEVE(id)}catch(_){}
+  gcScore(s.kills);
+}
+window.addEventListener('app-gamecenter',()=>{try{gcSync()}catch(_){}});
+setTimeout(()=>{try{gcSync()}catch(_){}},0);
+
 /* ---------- 流れ：タイトル → ロビー（台えらび）→ 台であそぶ → クリアでロビーへ ---------- */
 function newRun(){
-  G.balls=TEST?TEST_COINS:START_COINS; G.deck=START_DECK.slice(); G.owned={...START_OWNED}; G.unlocked=NEW_UNLOCKED(); G.gimmicks=NEW_GIMMICKS(); G.cleared=[]; G.bought=[]; G.kills=0; G.found=new Set(); G.fresh=new Set(); G.tutDone=false;
+  G.balls=TEST?TEST_COINS:START_COINS; G.deck=START_DECK.slice(); G.owned={...START_OWNED}; G.unlocked=NEW_UNLOCKED(); G.gimmicks=NEW_GIMMICKS(); G.cleared=[]; G.bought=[]; G.kills=0; G.found=new Set(); G.fresh=new Set(); G.tutDone=false; G.ach=new Set();
   openHub('board');
 }
 const boardName=b=>b.soon||!STAGES[b.stage]?(b.name||'？？？'):STAGES[b.stage].name;
@@ -10366,7 +10406,8 @@ function stageClear(){
   bgmJingle('clear');   // クリアの コインは なし（11/11：コインは おばけを 倒した ときだけ） haptic('success'); burst(188,300,'rainbow',30);
   const S=STAGES[G.stage], first=!G.cleared.includes(G.stage);
   if(first) G.cleared.push(G.stage);
-  writeSave();
+  if(GC_CLEAR[G.stage]) gcAch(GC_CLEAR[G.stage]); if(G.stage===LAST_STAGE()) gcAch('clear_heaven'); if(!G.hurt) gcAch('no_damage');   // Game Center の 実績
+  writeSave(); gcScore(G.kills);
   const lines=[`のこりライフ ${G.life}`,`お金 ${COIN}${G.balls.toLocaleString()}`,'ここまでセーブしたよ'];
   // はじめてクリアで次の台が開いたら、お知らせ（お店にふえた品も）。コインで買う台なら「買えるようになったよ」
   if(first) for(const B of BOARDS){
@@ -10411,7 +10452,7 @@ $('quitNo').onclick=closeQuit; $('quitBack').onclick=closeQuit;
 $('quitYes').onclick=()=>{ensureAudio();quitBoard()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('quit').hidden)closeQuit()});
 function gameOver(){
-  G.state='over'; tutStop(); closeSheet(); G.fever=0; writeSave(); bgmJingle('over'); haptic('error');
+  G.state='over'; tutStop(); closeSheet(); G.fever=0; writeSave(); gcScore(G.kills); bgmJingle('over'); haptic('error');
   const S=STAGES[G.stage], i=G.boardIdx??0;
   showResult('ゲームオーバー',[`${S.name}の台 WAVE ${G.wave} まで守った`,`お金 ${COIN}${G.balls.toLocaleString()}`,'かせいだお金はそのまま残るよ。お店で強くなって、もう一度！'],
     'もう一度この台',()=>playBoard(i),'台えらびへ',()=>openHub('board'),'over');
@@ -11005,6 +11046,7 @@ function openBuild(p){
     if(G.unlocked[k]){
       body.append(towerRow(k,t.cost,G.balls>=t.cost,()=>{
         G.balls-=t.cost; p.tower=newTower(k,p); p.r=Math.max(p.r,7);
+        gcAch('first_tower'); if(G.pegs.every(q=>q.fixed||q.tower)) gcAch('full_pegs');
         buildStatic(); towerDrop(p); closeSheet();
       }));
     }else more=true;   // まだ 買っていない タワーは 出さない（11/10 しょーくん）
